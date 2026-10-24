@@ -271,7 +271,7 @@ document.addEventListener('dragleave',ev=>{if(ev.target.closest('#dropzone'))$('
 document.addEventListener('drop',ev=>{if(ev.target.closest('#dropzone')){ev.preventDefault();$('#dropzone').classList.remove('dragging');readImport(ev.dataTransfer.files[0]);}});
 window.addEventListener('hashchange',setRoute);
 try {
-  const response=await fetch('/data/demo.json');if(!response.ok)throw new Error('Не вдалося завантажити початковий набір даних.');demo=validateBundle(await response.json());
+  const response=await fetch('./data/demo.json');if(!response.ok)throw new Error('Не вдалося завантажити початковий набір даних.');demo=validateBundle(await response.json());
   let stored;try{stored=localStorage.getItem(STORE);}catch{storageAvailable=false;}
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
   const years=yearsIn(data);year=years.includes(new Date().getFullYear())?new Date().getFullYear():years.at(-1)||new Date().getFullYear();setRoute();
