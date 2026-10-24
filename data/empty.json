@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "demo": false,
+  "updatedAt": "2026-10-24",
+  "institution": {
+    "name": "Державний університет «Київський авіаційний інститут»",
+    "shortName": "КАІ",
+    "subtitle": "Київський авіаційний інститут",
+    "website": "https://kai.edu.ua",
+    "accent": "#138b7b",
+    "sourceNote": "Вкажіть джерела даних вашого університету.",
+    "blocks": [
+      "publications",
+      "projects",
+      "patents",
+      "funding"
+    ]
+  },
+  "publications": [],
+  "projects": [],
+  "patents": [],
+  "revenues": []
+}

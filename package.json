@@ -1,0 +1,20 @@
+{
+  "name": "kai-science-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Налаштовувана аналітика наукової діяльності ЗВО",
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node --test",
+    "vendor": "node scripts/sync-vendor.mjs",
+    "preview:build": "node scripts/build-preview.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "exceljs": "4.4.0"
+  }
+}
