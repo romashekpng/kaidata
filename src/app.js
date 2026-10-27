@@ -12,7 +12,7 @@ const date = d => new Intl.DateTimeFormat('uk-UA', { timeZone: 'UTC' }).format(n
 const today = () => new Date().toISOString().slice(0, 10);
 const STORE = 'kai-science.v1';
 const THEME_STORE = 'kai-science.theme.v1';
-const THEMES = { standard: 'Стандартна', dark: 'Темна', warm: 'Тепла' };
+const THEMES = { standard: 'Стандартна', dark: 'Темна', warm: 'Тепла', blue: 'Синя' };
 let theme = 'standard';
 try { const saved = localStorage.getItem(THEME_STORE); if (Object.hasOwn(THEMES, saved)) theme = saved; } catch {}
 applyTheme(theme, false);
@@ -29,7 +29,7 @@ function applyTheme(value, save = true) {
   if (!Object.hasOwn(THEMES, value)) return;
   theme = value;
   document.documentElement.dataset.theme = theme;
-  document.querySelector('meta[name="theme-color"]').content = ({standard:'#101f2c',dark:'#0c1521',warm:'#302922'})[theme];
+  document.querySelector('meta[name="theme-color"]').content = ({standard:'#101f2c',dark:'#0c1521',warm:'#302922',blue:'#25395d'})[theme];
   document.querySelectorAll('#theme-select').forEach(el => { el.value = theme; });
   document.querySelectorAll('input[name="displayTheme"]').forEach(el => { el.checked = el.value === theme; });
   if (save) {
@@ -38,7 +38,7 @@ function applyTheme(value, save = true) {
   }
 }
 function themeSettings() {
-  const descriptions = {standard:'Світлий фон і прохолодні кольори',dark:'Темний фон і світлий контрастний текст',warm:'Кремовий фон і м’які теплі кольори'};
+  const descriptions = {standard:'Світлий фон і прохолодні кольори',dark:'Темний фон і світлий контрастний текст',warm:'Кремовий фон і м’які теплі кольори',blue:'Темно-синє меню, сині акценти та зелено-червоні індикатори'};
   return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається для цього браузера.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
 }
 function persist(next) {
@@ -105,7 +105,7 @@ function barChart(type) {
 function publicationChart() {
   return `<article class="panel trend-panel">${sectionHead('Публікації за роками', 'Динаміка наукових результатів університету', pill(chartYears('publications').length ? `${chartYears('publications')[0]}—${chartYears('publications').at(-1)}` : 'Немає даних'))}<div class="chart-legend"><span><i class="legend-square"></i>Scopus / Web of Science</span><span><i class="legend-square light"></i>Інші публікації</span></div>${barChart('publications')}<div class="chart-footnote">${icon('info')} Кожна публікація враховується один раз, навіть за індексації в обох базах.</div></article>`;
 }
-const QCOLORS = ['var(--accent)', '#60bba9', '#a2d6c9', '#d8eae4', '#d9dfe6'];
+const QCOLORS = ['var(--chart-q1)', 'var(--chart-q2)', 'var(--chart-q3)', 'var(--chart-q4)', 'var(--chart-qnone)'];
 function quartileChart() {
   const s = summarize(data, year); const keys = ['Q1','Q2','Q3','Q4',null];
   const counts = keys.map(q => s.indexed.filter(x => x.quartile === q).length);
