@@ -1,0 +1,101 @@
+{
+  "siteVersion": 1,
+  "updatedAt": "2026-10-27T00:00:00.000Z",
+  "pages": [
+    {
+      "id": "overview",
+      "kind": "builtin",
+      "title": "Огляд",
+      "heading": "Наука у цифрах",
+      "description": "Від досліджень до впливу. Результати, що рухають нас уперед.",
+      "slug": "overview",
+      "visible": true,
+      "showYear": true,
+      "blocks": [
+        {
+          "id": "original-overview",
+          "type": "existing",
+          "title": "Основна аналітика",
+          "visible": true,
+          "source": "overview"
+        }
+      ]
+    },
+    {
+      "id": "publications",
+      "kind": "builtin",
+      "title": "Публікації",
+      "heading": "Наукові публікації",
+      "description": "Динаміка публікацій, індексація та внесок наукових підрозділів.",
+      "slug": "publications",
+      "visible": true,
+      "showYear": true,
+      "blocks": [
+        {
+          "id": "original-publications",
+          "type": "existing",
+          "title": "Основна аналітика",
+          "visible": true,
+          "source": "publications"
+        }
+      ]
+    },
+    {
+      "id": "projects",
+      "kind": "builtin",
+      "title": "Грантові проєкти",
+      "heading": "Грантові проєкти",
+      "description": "Міжнародна співпраця та інвестиції в нові знання.",
+      "slug": "projects",
+      "visible": true,
+      "showYear": true,
+      "blocks": [
+        {
+          "id": "original-projects",
+          "type": "existing",
+          "title": "Основна аналітика",
+          "visible": true,
+          "source": "projects"
+        }
+      ]
+    },
+    {
+      "id": "patents",
+      "kind": "builtin",
+      "title": "Патенти",
+      "heading": "Патенти та винаходи",
+      "description": "Ідеї, що стають технологіями. Результати винахідницької діяльності.",
+      "slug": "patents",
+      "visible": true,
+      "showYear": true,
+      "blocks": [
+        {
+          "id": "original-patents",
+          "type": "existing",
+          "title": "Основна аналітика",
+          "visible": true,
+          "source": "patents"
+        }
+      ]
+    },
+    {
+      "id": "funding",
+      "kind": "builtin",
+      "title": "Фінансування",
+      "heading": "Фінансування науки",
+      "description": "Надходження на наукову діяльність за джерелами та роками.",
+      "slug": "funding",
+      "visible": true,
+      "showYear": true,
+      "blocks": [
+        {
+          "id": "original-funding",
+          "type": "existing",
+          "title": "Основна аналітика",
+          "visible": true,
+          "source": "funding"
+        }
+      ]
+    }
+  ]
+}

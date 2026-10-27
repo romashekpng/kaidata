@@ -66,13 +66,17 @@ function readSettings(sheet) {
   institution.blocks = institution.blocks ? institution.blocks.split('|') : [];
   return { schemaVersion: 1, demo: entries.get('demo') === 'true', updatedAt: entries.get('updatedAt'), institution };
 }
-export async function importXLSX(buffer, target, current, engine = globalThis.ExcelJS) {
+export async function readXLSXWorkbook(buffer, engine = globalThis.ExcelJS) {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
   if (bytes.byteLength > 5 * 1024 * 1024) fail('XLSX: файл перевищує 5 МБ.');
   checkArchive(bytes);
   const book = workbook(engine);
   try { await book.xlsx.load(bytes); } catch { fail('Не вдалося прочитати XLSX. Перевірте, що файл не пошкоджений і не захищений паролем.'); }
   if (!book.worksheets.length) fail('XLSX не містить аркушів.');
+  return book;
+}
+export async function importXLSX(buffer, target, current, engine = globalThis.ExcelJS) {
+  const book = await readXLSXWorkbook(buffer, engine);
   if (target !== 'bundle') {
     if (!DATASETS.includes(target)) fail('Оберіть таблицю для імпорту XLSX.');
     const sheet = findSheet(book, target) || (book.worksheets.length === 1 ? book.worksheets[0] : null);

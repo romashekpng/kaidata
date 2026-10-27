@@ -94,7 +94,7 @@ export function summarize(data, year) {
     patents: data.patents.filter(x => +x.date.slice(0, 4) === year), revenue: revenues.length ? revenues.reduce((s, x) => s + x.amountUAH, 0) : null };
 }
 // RFC 4180 quoted cells, UTF-8 BOM, comma/semicolon/tab separators.
-export function parseCSV(source) {
+export function parseCSV(source, allowEmpty = false) {
   source = source.replace(/^\uFEFF/, '');
   let first = '', q = false;
   for (let i = 0; i < source.length; i++) { const c = source[i]; if (c === '"') q = !q; if (!q && (c === '\n' || c === '\r')) break; first += c; }
@@ -113,7 +113,7 @@ export function parseCSV(source) {
   }
   if (inQuotes) fail('CSV: незакриті лапки.');
   if (cell || row.length || closed) pushRow();
-  if (rows.length < 2) fail('CSV має містити заголовки й щонайменше один запис. Для порожнього набору використайте JSON.');
+  if (rows.length < (allowEmpty ? 1 : 2)) fail('CSV має містити заголовки й щонайменше один запис. Для порожнього набору використайте JSON.');
   const headers = rows.shift().map(x => x.trim());
   if (new Set(headers).size !== headers.length || headers.some(x => !x)) fail('CSV: порожні або повторювані заголовки.');
   return { headers, records: rows.map((r, n) => { if (r.length !== headers.length) fail(`CSV, рядок ${n + 2}: ${r.length} полів замість ${headers.length}.`); return Object.fromEntries(headers.map((h, i) => [h, r[i].trim()])); }) };

@@ -2,6 +2,8 @@ import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, impo
 import { icon } from './icons.js';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
+import { createCMS } from './cms.js';
+import { cmsRoute } from './cms-data.js';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -16,6 +18,7 @@ try { const saved = localStorage.getItem(THEME_STORE); if (Object.hasOwn(THEMES,
 applyTheme(theme, false);
 const navIcons = { overview: 'grid', publications: 'book', projects: 'globe', patents: 'award', funding: 'wallet' };
 const pageTitles = { overview: 'Огляд', ...BLOCKS };
+let cms;
 let data, demo, year, route = 'overview', query = '', faculty = '', quartile = '', indexFilter = '', projectStatus = 'all', page = 1;
 let importTicket = 0;
 let exportTarget = 'bundle';
@@ -53,18 +56,19 @@ function renderShell() {
   document.documentElement.style.setProperty('--accent', i.accent);
   document.title = `${i.shortName} · Наукова діяльність`;
   $('#sidebar').innerHTML = `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button><a class="brand" href="#overview" aria-label="На головну"><span class="brand-mark">${icon('layers')}</span><span>${e(i.shortName)}<small>SCIENCE & INSIGHTS</small></span></a>
-  <div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${['overview', ...i.blocks].map(key => `<a class="nav-item ${route === key ? 'active' : ''}" href="#${key}" ${route === key ? 'aria-current="page"' : ''}>${icon(navIcons[key])}<span>${e(pageTitles[key])}</span>${route === key ? '<span class="active-dot"></span>' : ''}</a>`).join('')}</nav>
-  <div class="sidebar-bottom"><div class="sidebar-note"><span class="live-dot"></span>Відкриті дані. Нові можливості.<p>Знання, що формують<br>майбутнє університету.</p></div><button class="nav-item" data-action="import">${icon('upload')} Керування даними</button><button class="nav-item" data-action="settings">${icon('settings')} Налаштування</button><div class="sidebar-institution">${i.website ? `<a href="${e(i.website)}" target="_blank" rel="noopener noreferrer">${e(i.name)} ${icon('external')}</a>` : e(i.name)}<span>${e(i.subtitle || 'Платформа наукової аналітики')}</span></div></div>`;
-  $('#topbar').innerHTML = `<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(pageTitles[route])}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo ? 'demo' : ''}"><span></span>${data.demo ? 'Демонстраційні дані' : 'Імпортовані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0, 3))}</span></div>`;
+  <div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${cms.pages().map(p => `<a class="nav-item ${route === cmsRoute(p) ? 'active' : ''}" href="#${cmsRoute(p)}" ${route === cmsRoute(p) ? 'aria-current="page"' : ''}>${icon(navIcons[p.id] || 'file')}<span>${e(p.title)}</span>${route === cmsRoute(p) ? '<span class="active-dot"></span>' : ''}</a>`).join('')}</nav>
+  <div class="sidebar-bottom"><a class="nav-item ${route==='admin'?'active':''}" href="#admin">${icon('settings')}<span>Адмінка</span></a><div class="sidebar-note"><span class="live-dot"></span>Відкриті дані. Нові можливості.<p>Знання, що формують<br>майбутнє університету.</p></div><button class="nav-item" data-action="import">${icon('upload')} Керування даними</button><button class="nav-item" data-action="settings">${icon('settings')} Налаштування</button><div class="sidebar-institution">${i.website ? `<a href="${e(i.website)}" target="_blank" rel="noopener noreferrer">${e(i.name)} ${icon('external')}</a>` : e(i.name)}<span>${e(i.subtitle || 'Платформа наукової аналітики')}</span></div></div>`;
+  $('#topbar').innerHTML = `<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(route==='admin'?'Адмінка':cms.getPage(route)?.title || pageTitles[route] || 'Сторінки')}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo ? 'demo' : ''}"><span></span>${data.demo ? 'Демонстраційні дані' : 'Імпортовані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0, 3))}</span></div>`;
   $('#footer').innerHTML = `<span>© ${new Date().getFullYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}<span class="footer-dot">·</span><button data-action="format">Про дані та методологію ${icon('info')}</button></span>`;
 }
-function header() {
+function header(cmsPage = null) {
+  cmsPage ||= cms?.getPage(route);
   const titles = { overview: ['НАУКОВА ДІЯЛЬНІСТЬ', 'Наука у цифрах', 'Від досліджень до впливу. Результати, що рухають нас уперед.'], publications: ['РЕЗУЛЬТАТИ ДОСЛІДЖЕНЬ', 'Наукові публікації', 'Динаміка публікацій, індексація та внесок наукових підрозділів.'], projects: ['ДОСЛІДЖЕННЯ ТА ПАРТНЕРСТВА', 'Грантові проєкти', 'Міжнародна співпраця та інвестиції в нові знання.'], patents: ['ІНТЕЛЕКТУАЛЬНА ВЛАСНІСТЬ', 'Патенти та винаходи', 'Ідеї, що стають технологіями. Результати винахідницької діяльності.'], funding: ['РЕСУРСИ ДЛЯ РОЗВИТКУ', 'Фінансування науки', 'Надходження на наукову діяльність за джерелами та роками.'] };
-  const [eyebrow, title, sub] = titles[route];
+  const [eyebrow, title, sub] = cmsPage ? ['НАУКОВА ДІЯЛЬНІСТЬ',cmsPage.heading,cmsPage.description] : titles[route];
   const years = yearsIn(data);
   return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${title}<span class="title-dot">.</span></h1><p>${sub}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
-  <div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}${years.length > 8 ? `<select aria-label="Усі роки" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div></div>
-  ${data.demo ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
+  ${!cmsPage || cmsPage.showYear ? `<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}${years.length > 8 ? `<select aria-label="Усі роки" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div></div>` : ''}
+  ${data.demo && (!cmsPage || cmsPage.blocks.some(b=>b.visible && ['analytics','existing'].includes(b.type))) ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
 }
 function delta(now, prev, exists) {
   if (!exists || !prev) return '<span class="muted">немає бази порівняння</span>';
@@ -154,16 +158,33 @@ function fundingPage() {
   const max=Math.max(1,...grouped.values());
   return `${stats()}<div class="chart-grid"><article class="panel">${sectionHead('Надходження за роками','Фактичні надходження, млн ₴')}${barChart('funding')}</article><article class="panel">${sectionHead('Джерела фінансування',`${year} рік · млн ₴`)}<div class="program-bars">${grouped.size?[...grouped].map(([name,n])=>`<div class="rank-caption"><span>${e(name)}</span><strong>${money(n)}</strong></div><div class="rank-track"><span style="width:${n/max*100}%"></span></div>`).join(''):empty('Дані за цей рік не завантажено','Відсутність записів не означає нульове фінансування.')}</div></article></div><section class="panel">${sectionHead('Надходження за джерелами','Усі суми у гривнях. «—» означає відсутність даних.',`<button class="button secondary small" data-action="csv-export" data-dataset="revenues">${icon('download')}CSV / XLSX</button>`)}${sources.length?`<div class="table-scroll"><table class="funding-table"><thead><tr><th>Джерело надходжень</th>${years.map(y=>`<th class="${y===year?'year-highlight':''}">${y}</th>`).join('')}</tr></thead><tbody>${sources.map(source=>`<tr><td>${e(source)}</td>${years.map(y=>{const r=data.revenues.filter(x=>x.year===y&&x.source===source);return `<td class="${y===year?'year-highlight':''}">${r.length?fmt(r.reduce((s,x)=>s+x.amountUAH,0)):'—'}</td>`;}).join('')}</tr>`).join('')}<tr class="total-row"><td>Разом</td>${years.map(y=>`<td class="${y===year?'year-highlight':''}">${summarize(data,y).revenue==null?'—':fmt(summarize(data,y).revenue)}</td>`).join('')}</tr></tbody></table></div>`:empty()}</section><div class="notice">${icon('info')}<span>Грантові надходження показані в розділі «Грантові проєкти» окремо. Підсумки джерел можуть включати гранти — уникайте подвійного обліку.</span></div>`;
 }
+function existingPage(source) {
+  const previous = route;
+  try { route = source; return source==='overview'?overview():source==='publications'||source==='patents'?recordsPage(source):source==='projects'?projectsPage():fundingPage(); }
+  finally { route = previous; }
+}
+function analyticsBlock(source) {
+  const s=summarize(data,year);
+  if(source==='stats')return stats();
+  if(source==='publicationChart')return publicationChart();
+  if(source==='quartiles')return quartileChart();
+  if(source==='faculties')return facultyPanel(s.publications);
+  if(source==='projects')return `<div class="project-grid">${s.projects.length?s.projects.map(projectCard).join(''):empty()}</div>`;
+  if(source==='funding')return `<article class="panel">${sectionHead('Надходження за роками','Млн грн')}${barChart('funding')}</article>`;
+  const publications=source==='publications',rows=publications?s.publications:s.patents;
+  return `<div class="panel"><p class="cms-field-help">${rows.length} записів за ${year} рік. Показано перші 100; повні дані доступні через експорт аналітики.</p>${rows.length?`<div class="table-scroll"><table><thead><tr><th>${publications?'Публікація':'Патент'}</th><th>Автори</th><th>${publications?'Індексація':'Номер'}</th></tr></thead><tbody>${rows.slice(0,100).map(r=>`<tr><td>${linkTitle(r)}</td><td>${e(r.authors)}</td><td>${e(publications?r.indexes.join(' / '):r.number)}</td></tr>`).join('')}</tbody></table></div>`:empty()}</div>`;
+}
 function render() {
-  if(route!=='overview'&&!data.institution.blocks.includes(route)) route='overview';
+  if(route!=='admin'&&!cms.pages().some(p=>cmsRoute(p)===route))route=cms.pages()[0]?cmsRoute(cms.pages()[0]):'empty';
   renderShell();
-  $('#content').innerHTML=header()+(route==='overview'?overview():route==='publications'||route==='patents'?recordsPage(route):route==='projects'?projectsPage():fundingPage());
+  const pageInfo=cms.getPage(route);
+  $('#content').innerHTML=route==='admin'?cms.renderAdmin():pageInfo?header(pageInfo)+cms.renderBlocks(pageInfo):empty('Немає видимих сторінок','Відкрийте адмінку для налаштування вмісту.');
 }
 function download(name, content, type='application/json') {
   const url=URL.createObjectURL(new Blob([content],{type})); const a=document.createElement('a'); a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 function resetFilters() { query='';faculty='';quartile='';indexFilter='';page=1; }
-function setRoute() { const next=location.hash.slice(1)||'overview';route=Object.hasOwn(pageTitles,next)?next:'overview';resetFilters();projectStatus='all';render();$('#sidebar').classList.remove('open'); }
+function setRoute() { const next=location.hash.slice(1)||'overview';route=next==='admin'||cms?.getPage(next)?next:'overview';resetFilters();projectStatus='all';render();$('#sidebar').classList.remove('open'); }
 function datasetCounts(d) { return DATASETS.map(k=>`<div><strong>${fmt(d[k].length)}</strong><span>${e(({publications:'публікацій',projects:'проєктів',patents:'патентів',revenues:'надходжень'})[k])}</span></div>`).join(''); }
 const XLSX_MIME='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 function exportContent() {
@@ -259,7 +280,7 @@ async function handleAction(action,target) {
   if(action==='apply-import'&&pending){persist(pending);pending=null;afterDataChange();$('#manager').close();toast(storageAvailable?'Дані імпортовано та збережено в цьому браузері.':'Дані імпортовано. Експортуйте JSON для збереження.');}
   if(action==='reset'){$('.dialog-body').innerHTML=`<div class="reset-confirm">${icon('info')}<h3>Відновити початковий набір?</h3><p>Локальні дані й налаштування будуть замінені набором із сервера. Спочатку збережіть резервну копію.</p><div class="dialog-actions"><button class="button secondary" data-action="backup-export">Експортувати копію</button><button class="button secondary" data-action="import">Скасувати</button><button class="button primary" data-action="confirm-reset">Відновити</button></div></div>`;pending=null;}
   if(action==='confirm-reset'){persist(structuredClone(demo));afterDataChange();$('#manager').close();toast('Початковий набір відновлено.');}
-  if(action==='clear-filters'){resetFilters();$('#content').innerHTML=header()+recordsPage(route);}
+  if(action==='clear-filters'){resetFilters();render();}
   if(action==='prev-page'||action==='next-page'){page+=action==='prev-page'?-1:1;$('#records-body').innerHTML=tableBody(route);}
 }
 function closeMenu() { $('#sidebar').classList.remove('open');$('[data-action="menu"]')?.setAttribute('aria-expanded','false'); }
@@ -296,5 +317,16 @@ try {
   const response=await fetch('./data/demo.json');if(!response.ok)throw new Error('Не вдалося завантажити початковий набір даних.');demo=validateBundle(await response.json());
   let stored;try{stored=localStorage.getItem(STORE);}catch{storageAvailable=false;}
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
+  cms=createCMS({
+    getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
+    renderExisting:existingPage,renderAnalytics:analyticsBlock,
+    replaceData:(next,write=true)=>{if(write)persist(next);else data=next;const years=yearsIn(next);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();},
+    openDataManager:(mode,source)=>{
+      const key=({stats:'bundle',publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',projects:'projects',patents:'patents',funding:'revenues',overview:'bundle'})[source]||'bundle';
+      if(mode==='export'){exportTarget=key;openManager('export');}
+      else{openManager('import');if(key!=='bundle'){$('#import-format').value='csv';updateImportControls();$('#import-type').value=key;}}
+    }
+  });
+  const pagesResponse=await fetch('./data/pages.json');if(!pagesResponse.ok)throw new Error('Не вдалося завантажити сторінки сайта.');cms.init(await pagesResponse.json());
   const years=yearsIn(data);year=years.includes(new Date().getFullYear())?new Date().getFullYear():years.at(-1)||new Date().getFullYear();setRoute();
 }catch(err){$('#content').innerHTML=`<div class="empty"><h1>Не вдалося завантажити дані</h1><p>${e(err.message)}</p><p>Перевірте файл data/demo.json та його відповідність формату.</p></div>`;}
