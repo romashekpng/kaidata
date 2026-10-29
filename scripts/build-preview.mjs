@@ -23,5 +23,5 @@ const vendor=(await read('src/vendor/exceljs.min.js')).replace(/<\/script/gi,'<\
 let html=await read('index.html');
 html=html.replace(/<link rel="stylesheet" href="\.\/styles\.css(?:\?[^"<>]*)?">/,`<style>\n${await read('styles.css')}\n</style>`).replace('<script type="module" src="./src/app.js"></script>','');
 html=html.replace('</body>',`<script>\n${vendor}\n</script><script type="module">\n${script}\n</script>\n</body>`);
-const out=path.resolve(process.argv[2]||'/workspace/artifacts/kai-science.html');
+const out=path.resolve(process.argv[2]||'/workspace/artifacts/index.html');
 await mkdir(path.dirname(out),{recursive:true});await writeFile(out,html);console.log(`Standalone HTML with CSV/XLSX support: ${out}`);
