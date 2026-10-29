@@ -10,7 +10,7 @@ function module(source){
 let app=strip(await read('src/app.js'));
 const fetchLine="const response=await fetch('./data/demo.json');if(!response.ok)throw new Error('Не вдалося завантажити початковий набір даних.');demo=validateBundle(await response.json());";
 if(!app.includes(fetchLine))throw new Error('Preview builder: application bootstrap changed.');
-app=app.replace(fetchLine,`demo=validateBundle(${(await read('data/demo.json')).replaceAll('<','\\u003c')});`).replace("'kai-science.v1'","'kai-science.offline.v1'");
+app=app.replace(fetchLine,`demo=validateBundle(${(await read('data/demo.json')).replaceAll('<','\\u003c')});`).replace("'kai-science.v1'","'kai-science.offline.v1'").replace("'kai-science.theme.v1'","'kai-science.offline.theme.v1'");
 const pagesLine="const pagesResponse=await fetch('./data/pages.json');if(!pagesResponse.ok)throw new Error('Не вдалося завантажити сторінки сайта.');cms.init(await pagesResponse.json());";
 if(!app.includes(pagesLine))throw new Error('Preview builder: CMS bootstrap changed.');
 app=app.replace(pagesLine,`cms.init(${(await read('data/pages.json')).replaceAll('<','\\u003c')});`);

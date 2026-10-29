@@ -52,6 +52,7 @@ function empty(text = 'За цими умовами даних немає', sub 
 function sectionHead(title, subtitle='', action='') { return `<div class="section-head"><div><h2>${e(title)}</h2>${subtitle ? `<p>${e(subtitle)}</p>` : ''}</div>${action}</div>`; }
 function viewLink(key, label = 'Переглянути всі') { return `<a class="text-link" href="#${key}">${e(label)} ${icon('arrow')}</a>`; }
 function renderShell() {
+  applyTheme(theme, false);
   const i = data.institution;
   document.documentElement.style.setProperty('--accent', i.accent);
   document.title = `${i.shortName} · Наукова діяльність`;

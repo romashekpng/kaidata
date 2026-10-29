@@ -108,7 +108,7 @@ dialog{background:var(--surface)}
 
 /* Screenshot-inspired palette; neutral page and card backgrounds stay unchanged. */
 :root{--chart-q1:var(--theme-accent,var(--accent));--chart-q2:#60bba9;--chart-q3:#a2d6c9;--chart-q4:#d8eae4;--chart-qnone:#d9dfe6}
-:root[data-theme="blue"]{
+:root:is([data-theme="blue"],:not([data-theme])){
  --nav:#25395d;--nav-active:#2c66b2;--nav-hover:#304971;
  --theme-accent:#3479c6;--accent-ink:#2d67ad;--primary-bg:#2f6fbc;
  --ink:#272e37;--muted:#526071;--text-secondary:#48576a;--text-strong:#293a50;
@@ -117,17 +117,17 @@ dialog{background:var(--surface)}
  --chart-secondary:#d4e2f3;--chart-q2:#309b70;--chart-q3:#7d54a5;--chart-q4:#d86f2c;--chart-qnone:#a9b5c3;
  color-scheme:light;
 }
-:root[data-theme="blue"] .nav-item.active{color:#fff}
-:root[data-theme="blue"] .active-dot{background:#bedcff}
-:root[data-theme="blue"] .brand-mark{background:#304971;border-color:#7498c4;color:#d6e8ff}
-:root[data-theme="blue"] .brand small,:root[data-theme="blue"] .sidebar-label{color:#c7d9ef}
-:root[data-theme="blue"] .sidebar-institution a:hover{color:#fff}
-:root[data-theme="blue"] .delta.negative,:root[data-theme="blue"] .form-error{color:#b52e36}
-:root[data-theme="blue"] .institution-avatar{background:var(--tint-blue);color:var(--text-blue)}
-:root[data-theme="blue"] .insight-card{background:#25395d;border-color:#304971}
-:root[data-theme="blue"] .insight-card p,:root[data-theme="blue"] .insight-top{color:#d9e7f8}
-:root[data-theme="blue"] .insight-card a{color:#e2efff}
-:root[data-theme="blue"] .orbit{border-color:#4b6f99}
+:root:is([data-theme="blue"],:not([data-theme])) .nav-item.active{color:#fff}
+:root:is([data-theme="blue"],:not([data-theme])) .active-dot{background:#bedcff}
+:root:is([data-theme="blue"],:not([data-theme])) .brand-mark{background:#304971;border-color:#7498c4;color:#d6e8ff}
+:root:is([data-theme="blue"],:not([data-theme])) .brand small,:root:is([data-theme="blue"],:not([data-theme])) .sidebar-label{color:#c7d9ef}
+:root:is([data-theme="blue"],:not([data-theme])) .sidebar-institution a:hover{color:#fff}
+:root:is([data-theme="blue"],:not([data-theme])) .delta.negative,:root:is([data-theme="blue"],:not([data-theme])) .form-error{color:#b52e36}
+:root:is([data-theme="blue"],:not([data-theme])) .institution-avatar{background:var(--tint-blue);color:var(--text-blue)}
+:root:is([data-theme="blue"],:not([data-theme])) .insight-card{background:#25395d;border-color:#304971}
+:root:is([data-theme="blue"],:not([data-theme])) .insight-card p,:root:is([data-theme="blue"],:not([data-theme])) .insight-top{color:#d9e7f8}
+:root:is([data-theme="blue"],:not([data-theme])) .insight-card a{color:#e2efff}
+:root:is([data-theme="blue"],:not([data-theme])) .orbit{border-color:#4b6f99}
 .theme-swatch.blue{background:#f5f7f9}.theme-swatch.blue::before{background:#25395d}.theme-swatch.blue::after{background:linear-gradient(90deg,#3479c6 0 45%,#309b70 45% 75%,#df4246 75%)}
 @media(min-width:721px){.theme-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
 /* The draft is always visible while editing; its isolated frame shares all themes. */
