@@ -1,4 +1,4 @@
-import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=block-tools-20261029';
+import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=progress-horizontal-20261029';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -17,6 +17,32 @@ export function renderProjectTable(table, settings) {
  const get=(r,name,index)=>r[table.headers.indexOf(name)]??r[index]??'';
  return `<div class="cms-data-scroll ${settings.showAll?'show-all':''}"><div class="project-grid">${table.rows.map(r=>`<article class="project-card"><div class="project-card-top"><span class="pill blue">${esc(get(r,'Програма',1))}</span></div><h3>${esc(get(r,'Назва',0))}</h3><div class="project-meta"><span>${esc(get(r,'Початок',2))} — ${esc(get(r,'Завершення',3))}</span><span>${esc(get(r,'Роль',4))}</span></div><div class="project-money"><span>Надходження, грн</span><strong>${esc(get(r,'Надходження, грн',5))}</strong></div></article>`).join('')}</div></div>`;
 }
+function chartTooltip(table, row, active, total, settings) {
+ return `${row[0]}\n${active.map(i=>`${table.headers[i+1]}: ${row[i+1]===''?'немає даних':format(num(row[i+1]))}`).join('\n')}${settings.tooltipTotal?`\nРазом: ${format(total)}`:''}`;
+}
+function renderProgressChart(block, table, settings, colors, hidden, totals) {
+ const active=table.headers.slice(1).map((_,i)=>i).filter(i=>!hidden.has(i)),max=Math.max(1,...totals),digits=Math.max(2,String(table.rows.length).length);
+ return `<div class="cms-progress-list cms-data-scroll ${settings.showAll?'show-all':''}" style="--progress-height:${settings.height}px" role="group" aria-label="${esc(block.title)}">${table.rows.map((row,i)=>`<div class="cms-progress-row ${settings.numbering?'numbered':''}">${settings.numbering?`<span class="cms-progress-number">${String(i+1).padStart(digits,'0')}</span>`:''}<div class="cms-progress-main"><div class="cms-progress-caption"><span>${esc(row[0])}</span>${settings.totalLabels?`<strong>${row.slice(1).every(v=>v==='')?'—':format(totals[i])}</strong>`:''}</div><div class="cms-progress-track" role="progressbar" aria-label="${esc(row[0])}" aria-valuemin="0" aria-valuemax="${max}" aria-valuenow="${totals[i]}" title="${esc(chartTooltip(table,row,active,totals[i],settings))}"><div class="cms-progress-fill" style="width:${totals[i]/max*100}%">${active.map(j=>`<span style="flex:${num(row[j+1])||0};background:${colors[j%colors.length]}"></span>`).join('')}</div></div></div></div>`).join('')}</div>`;
+}
+function renderHorizontalChart(block, table, settings, colors, hidden, totals) {
+ const active=table.headers.slice(1).map((_,i)=>i).filter(i=>!hidden.has(i));
+ const positive=table.rows.map(row=>active.reduce((sum,j)=>sum+Math.max(0,num(row[j+1])||0),0)),negative=table.rows.map(row=>active.reduce((sum,j)=>sum+Math.min(0,num(row[j+1])||0),0));
+ const rawMax=Math.max(0,...positive),rawMin=Math.min(0,...negative),rough=(rawMax-rawMin)/6;
+ const base=rough>0?10**Math.floor(Math.log10(rough)):1,fraction=rough/base,step=([1,2,2.5,5,10].find(n=>n>=fraction)||10)*base;
+ const min=Math.floor(rawMin/step)*step,max=Math.ceil(rawMax/step)*step||step,position=value=>(value-min)/(max-min)*100;
+ const ticks=Array.from({length:Math.round((max-min)/step)+1},(_,i)=>min+i*step);
+ const grid=ticks.map(value=>`<i class="cms-horizontal-gridline" style="left:${position(value)}%"></i>`).join('');
+ const rows=table.rows.map((row,i)=>{
+  let plus=0,minus=0;
+  const bars=active.map(j=>{
+   const value=num(row[j+1]);if(value===null)return '';
+   const start=value>=0?plus:minus,end=start+value;if(value>=0)plus=end;else minus=end;
+   return `<span class="cms-horizontal-bar" style="left:${position(Math.min(start,end))}%;width:${Math.abs(value)/(max-min)*100}%;background:${colors[j%colors.length]}">${settings.segmentValues?`<span>${format(value)}</span>`:''}</span>`;
+  }).join('');
+  return `<div class="cms-horizontal-row"><span class="cms-horizontal-label" title="${esc(row[0])}">${esc(row[0])}</span><div class="cms-horizontal-value"><div class="cms-horizontal-plot" title="${esc(chartTooltip(table,row,active,totals[i],settings))}">${grid}${bars}${settings.totalLabels?`<strong class="cms-horizontal-total" style="left:calc(${position(positive[i])}% + 7px)">${row.slice(1).every(v=>v==='')?'—':format(totals[i])}</strong>`:''}</div></div></div>`;
+ }).join('');
+ return `<div class="cms-horizontal-chart ${settings.wrapLabels?'wrap-labels':''} ${settings.totalLabels?'totals-visible':''} ${settings.showAll?'show-all':''}" role="group" aria-label="${esc(block.title)}"><div class="cms-horizontal-rows ${settings.showAll?'show-all':''}" style="--horizontal-height:${settings.height}px">${rows}</div><div class="cms-horizontal-axis"><span></span><div class="cms-horizontal-axis-plot">${ticks.map(value=>`<span style="left:${position(value)}%">${format(value)}</span>`).join('')}</div></div></div>`;
+}
 export function renderChartTable(block, table, hidden = []) {
  const s={...defaultBlockSettings(block.source),...block.settings},colors=blockColors(block),pie=['donut','pie'].includes(s.chartType),hiddenSet=new Set(hidden);
  const names=pie?table.rows.map(r=>r[0]):table.headers.slice(1);
@@ -25,6 +51,8 @@ export function renderChartTable(block, table, hidden = []) {
  const legend=s.legend==='none'?'':`<div class="cms-chart-legend ${s.showAll?'show-all':''}" aria-label="Легенда графіка">${names.map((name,i)=>`<button type="button" data-cms-action="chart-legend" data-block-id="${block.id}" data-series="${i}" aria-pressed="${!hiddenSet.has(i)}" class="${hiddenSet.has(i)?'series-hidden':''}" title="${esc(name)}${pie?`: ${format(values[i])}`:''}"><i style="background:${colors[i%colors.length]}"></i><span>${esc(name)}</span>${pie?`<strong>${format(values[i])}</strong>`:''}</button>`).join('')}</div>`;
  let graphic='';
  if(!table.rows.length)graphic='<div class="empty"><p>Додайте дані для побудови графіка.</p></div>';
+ else if(s.chartType==='progress')graphic=renderProgressChart(block,table,s,colors,hiddenSet,totals);
+ else if(s.chartType==='horizontal')graphic=renderHorizontalChart(block,table,s,colors,hiddenSet,totals);
  else if(pie){
   const total=values.reduce((sum,v,i)=>sum+(hiddenSet.has(i)?0:v),0);let angle=-Math.PI/2;
   const point=a=>[100+83*Math.cos(a),100+83*Math.sin(a)];

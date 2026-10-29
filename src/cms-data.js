@@ -2,7 +2,7 @@ export const CORE_PAGES = { overview: 'Огляд', publications: 'Публік�
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
-export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
+export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
 export const BLOCK_PALETTES = {
  blue: { name: 'Синя та сталева', colors: ['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'] },
  ocean: { name: 'Океан', colors: ['#203c91','#0089c9','#31b9ed','#93a4ba','#cad5e2'] },
@@ -15,13 +15,13 @@ export const BLOCK_PALETTES = {
  pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
 };
 export function defaultBlockSettings(source = '') {
- return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, palette:'blue', customColors:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:'top', chartType:source==='quartiles'?'donut':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, numbering:true, wrapLabels:false, allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function validateBlockSettings(input = {}, source = '') {
  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
  const out = { ...defaultBlockSettings(source), ...input };
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
- for(const key of ['showAll','totalLabels','tooltipTotal','segmentValues','allYears']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ for(const key of ['showAll','totalLabels','tooltipTotal','segmentValues','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
  if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
  if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');
  return Object.fromEntries(Object.keys(defaultBlockSettings(source)).map(key=>[key,out[key]]));
@@ -88,15 +88,23 @@ export function validateCMSBlock(input) {
   if (input.type === 'existing') { if (!Object.hasOwn(CORE_PAGES, input.source)) fail('Невідома вбудована сторінка.'); out.source = input.source; }
   if(input.subtitle!==undefined)out.subtitle=str(input.subtitle,'Підзаголовок',2000);
   if(input.settings!==undefined)out.settings=validateBlockSettings(input.settings,input.source);
+  if(input.type==='analytics'&&input.source==='faculties'){
+    const negativeLegacy=Array.isArray(input.dataTable?.rows)&&input.dataTable.rows.some(row=>Array.isArray(row)&&row.slice(1).some(c=>Number(String(c).replace(',','.'))<0));
+    if(input.settings?.chartType==='stacked'&&!Object.hasOwn(input.settings,'numbering')&&!negativeLegacy){
+      out.settings.chartType='progress';out.settings.legend='none';
+      if(input.settings.palette==='blue'){out.settings.palette='custom';out.settings.customColors=['#4fa99d'];}
+    }
+    if(input.subtitle===undefined)out.subtitle='За кількістю записів у вибраному році';
+  }
   if(input.type==='analytics'){
     if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
     if(input.dataMode!==undefined)out.dataMode=input.dataMode;
     if(input.dataTable!==undefined)out.dataTable=validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
-  if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){
+  if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut','progress'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){
     const rows=input.type==='chart'?out.rows:out.dataTable?.rows;
-    if(rows?.some(r=>r.slice(1).some(c=>Number(c.replace(',','.'))<0)))fail('Кругова діаграма не підтримує від’ємні значення.');
+    if(rows?.some(r=>r.slice(1).some(c=>Number(c.replace(',','.'))<0)))fail('Кругова діаграма та смуги прогресу не підтримують від’ємні значення.');
   }
   return out;
 }
@@ -147,7 +155,7 @@ export function expandSiteBlocks(input) {
   if(block.type!=='existing'||page.blocks.length-1+layouts[block.source].length>50)return [block];
   return layouts[block.source].map(([source,width])=>{
    let id=`${block.id.slice(0,45)}-${source}`,n=1;while(used.has(id))id=`${block.id.slice(0,42)}-${source}-${n++}`;used.add(id);
-   return {id,type:'analytics',title:ANALYTICS[source],visible:block.visible,source,dataMode:'live',settings:{...defaultBlockSettings(source),width,legend:source==='quartiles'?'bottom':'top'}};
+   return {id,type:'analytics',title:ANALYTICS[source],visible:block.visible,source,dataMode:'live',settings:{...defaultBlockSettings(source),width,legend:source==='quartiles'?'bottom':defaultBlockSettings(source).legend}};
   });
  });
  return validateSite(site);
