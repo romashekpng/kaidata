@@ -13,7 +13,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const STORE = 'kai-science.v1';
 const THEME_STORE = 'kai-science.theme.v1';
 const THEMES = { standard: 'Стандартна', dark: 'Темна', warm: 'Тепла', blue: 'Синя' };
-let theme = 'standard';
+let theme = 'blue';
 try { const saved = localStorage.getItem(THEME_STORE); if (Object.hasOwn(THEMES, saved)) theme = saved; } catch {}
 applyTheme(theme, false);
 const navIcons = { overview: 'grid', publications: 'book', projects: 'globe', patents: 'award', funding: 'wallet' };
