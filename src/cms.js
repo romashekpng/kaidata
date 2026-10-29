@@ -1,9 +1,9 @@
-import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=chart-details-period-20261029';
-import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=chart-details-period-20261029';
-import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=chart-details-period-20261029';
+import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=admin-block-export-20261030';
+import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=admin-block-export-20261030';
+import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=admin-block-export-20261030';
 import { validateBundle } from './data.js';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=chart-details-period-20261029';
+import { icon } from './icons.js?v=admin-block-export-20261030';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -158,7 +158,7 @@ export function createCMS(options) {
       const gap=24*(100-s.width)/100;
       const period=options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
-      return `<section class="cms-widget ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - ${gap}px);--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div>${inPreview?'':`<div class="cms-public-block-tools">${button('block-export','Експорт',`data-block-id="${b.id}"`,'secondary small')}</div>`}</section>`;
+      return `<section class="cms-widget ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - ${gap}px);--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
   }

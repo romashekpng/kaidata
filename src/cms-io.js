@@ -1,6 +1,6 @@
 import { parseCSV, validateBundle } from './data.js';
 import { readXLSXWorkbook } from './spreadsheet.js';
-import { validateCMSBlock, validateCMSPage, validateSite } from './cms-data.js?v=chart-details-period-20261029';
+import { validateCMSBlock, validateCMSPage, validateSite } from './cms-data.js?v=admin-block-export-20261030';
 const fail = message => { throw new Error(message); };
 export function blockTable(block) {
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };

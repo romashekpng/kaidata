@@ -1,4 +1,4 @@
-import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=chart-details-period-20261029';
+import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=admin-block-export-20261030';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
