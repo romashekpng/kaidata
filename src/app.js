@@ -1,9 +1,9 @@
 import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js';
-import { icon } from './icons.js?v=text-background-20261030';
+import { icon } from './icons.js?v=headings-20261030';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js?v=text-background-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=text-background-20261030';
+import { createCMS } from './cms.js?v=headings-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=headings-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -67,7 +67,7 @@ function header(cmsPage = null) {
   const titles = { overview: ['НАУКОВА ДІЯЛЬНІСТЬ', 'Наука у цифрах', 'Від досліджень до впливу. Результати, що рухають нас уперед.'], publications: ['РЕЗУЛЬТАТИ ДОСЛІДЖЕНЬ', 'Наукові публікації', 'Динаміка публікацій, індексація та внесок наукових підрозділів.'], projects: ['ДОСЛІДЖЕННЯ ТА ПАРТНЕРСТВА', 'Грантові проєкти', 'Міжнародна співпраця та інвестиції в нові знання.'], patents: ['ІНТЕЛЕКТУАЛЬНА ВЛАСНІСТЬ', 'Патенти та винаходи', 'Ідеї, що стають технологіями. Результати винахідницької діяльності.'], funding: ['РЕСУРСИ ДЛЯ РОЗВИТКУ', 'Фінансування науки', 'Надходження на наукову діяльність за джерелами та роками.'] };
   const [eyebrow, title, sub] = cmsPage ? ['НАУКОВА ДІЯЛЬНІСТЬ',cmsPage.heading,cmsPage.description] : titles[route];
   const years = yearsIn(data);
-  return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${e(title)}<span class="title-dot">.</span></h1><p>${e(sub)}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
+  return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${e(title)}</h1><p>${e(sub)}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
   ${!cmsPage || cmsPage.showYear ? `<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}${years.length > 8 ? `<select aria-label="Усі роки" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div></div>` : ''}
   ${route==='admin' && data.demo && (!cmsPage || cmsPage.blocks.some(b=>b.visible && ['analytics','existing'].includes(b.type))) ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
 }
