@@ -1,9 +1,9 @@
 import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js';
-import { icon } from './icons.js';
+import { icon } from './icons.js?v=block-tools-20261029';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js?v=fullwidth-20261029';
-import { cmsRoute } from './cms-data.js';
+import { createCMS } from './cms.js?v=block-tools-20261029';
+import { cmsRoute } from './cms-data.js?v=block-tools-20261029';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -137,10 +137,10 @@ function toolbar(kind) {
 function filteredRows(kind) {
   return data[kind].filter(x=>(kind==='publications'?x.year===year:+x.date.slice(0,4)===year) && (!faculty||x.faculty===faculty) && (!query||`${x.title} ${x.authors} ${x.number||''}`.toLocaleLowerCase('uk').includes(query.toLocaleLowerCase('uk'))) && (kind!=='publications'||((!quartile || (quartile==='none'?!x.quartile:x.quartile===quartile))&&(!indexFilter||(indexFilter==='none'?!x.indexes.length:x.indexes.includes(indexFilter)))))).sort((a,b)=>kind==='patents'?b.date.localeCompare(a.date):a.title.localeCompare(b.title,'uk'));
 }
-function tableBody(kind) {
+function tableBody(kind, showAll = cms?.getPage(route)?.blocks.find(b=>b.type==='analytics'&&b.source===kind)?.settings?.showAll || false) {
   const rows = filteredRows(kind), pages = Math.max(1,Math.ceil(rows.length/10)); page = Math.min(page,pages);
   const pub = kind==='publications';
-  return `<div class="results-meta"><span>Знайдено <strong>${fmt(rows.length)}</strong> ${pub ? 'публікацій' : 'патентів'}</span>${query||faculty||quartile||indexFilter ? '<button class="text-link" data-action="clear-filters">Скинути фільтри</button>' : `<span>${year} рік</span>`}</div>${rows.length ? `<div class="table-scroll"><table><thead><tr><th>${pub?'Публікація та автори':'Патент та винахідники'}</th>${pub?'<th>Факультет</th><th>Індексація</th><th>Квартиль</th>':'<th>Номер</th><th>Дата реєстрації</th>'}</tr></thead><tbody>${rows.slice((page-1)*10,page*10).map(r=>`<tr><td class="title-cell"><strong>${linkTitle(r)}</strong><span>${e(r.authors)}</span>${pub?`<small>${e(r.type)}</small>`:''}</td>${pub?`<td class="faculty-cell">${e(r.faculty)}</td><td>${r.indexes.length?r.indexes.map(i=>pill(i==='WoS'?'Web of Science':i,'blue')).join(' '):'<span class="muted">Без індексації</span>'}</td><td>${r.quartile?pill(r.quartile,['Q1','Q2'].includes(r.quartile)?'green':'neutral'):'—'}</td>`:`<td><span class="patent-number">${e(r.number)}</span></td><td class="nowrap">${date(r.date)}</td>`}</tr>`).join('')}</tbody></table></div><div class="pagination"><span>${(page-1)*10+1}–${Math.min(page*10,rows.length)} із ${fmt(rows.length)}</span><div><button class="button secondary small" data-action="prev-page" ${page<=1?'disabled':''}>Назад</button><span>${page} / ${pages}</span><button class="button secondary small" data-action="next-page" ${page>=pages?'disabled':''}>Далі</button></div></div>`:empty()}`;
+  return `<div class="results-meta"><span>Знайдено <strong>${fmt(rows.length)}</strong> ${pub ? 'публікацій' : 'патентів'}</span>${query||faculty||quartile||indexFilter ? '<button class="text-link" data-action="clear-filters">Скинути фільтри</button>' : `<span>${year} рік</span>`}</div>${rows.length ? `<div class="table-scroll"><table><thead><tr><th>${pub?'Публікація та автори':'Патент та винахідники'}</th>${pub?'<th>Факультет</th><th>Індексація</th><th>Квартиль</th>':'<th>Номер</th><th>Дата реєстрації</th>'}</tr></thead><tbody>${(showAll?rows:rows.slice((page-1)*10,page*10)).map(r=>`<tr><td class="title-cell"><strong>${linkTitle(r)}</strong><span>${e(r.authors)}</span>${pub?`<small>${e(r.type)}</small>`:''}</td>${pub?`<td class="faculty-cell">${e(r.faculty)}</td><td>${r.indexes.length?r.indexes.map(i=>pill(i==='WoS'?'Web of Science':i,'blue')).join(' '):'<span class="muted">Без індексації</span>'}</td><td>${r.quartile?pill(r.quartile,['Q1','Q2'].includes(r.quartile)?'green':'neutral'):'—'}</td>`:`<td><span class="patent-number">${e(r.number)}</span></td><td class="nowrap">${date(r.date)}</td>`}</tr>`).join('')}</tbody></table></div>${showAll?'':`<div class="pagination"><span>${(page-1)*10+1}–${Math.min(page*10,rows.length)} із ${fmt(rows.length)}</span><div><button class="button secondary small" data-action="prev-page" ${page<=1?'disabled':''}>Назад</button><span>${page} / ${pages}</span><button class="button secondary small" data-action="next-page" ${page>=pages?'disabled':''}>Далі</button></div></div>`}`:empty()}`;
 }
 function recordsPage(kind) {
   const pub=kind==='publications', s=summarize(data,year);
@@ -164,13 +164,41 @@ function existingPage(source) {
   try { route = source; return source==='overview'?overview():source==='publications'||source==='patents'?recordsPage(source):source==='projects'?projectsPage():fundingPage(); }
   finally { route = previous; }
 }
-function analyticsBlock(source) {
+function analyticsTable(source, allYears = false) {
+  const selected=allYears?null:year, s=summarize(data,year), table=(headers,rows)=>({headers,rows:rows.map(r=>r.map(v=>String(v??'')))});
+  if(['stats','fundingStats','patentStats'].includes(source)){
+    const cards=source==='fundingStats'?[['Надходження на науку',s.revenue==null?'—':money(s.revenue),'млн ₴',`${year} рік`],['Джерел фінансування',new Set(data.revenues.filter(r=>r.year===year).map(r=>r.source)).size,'','За вибраний рік']]:source==='patentStats'?[['Патентів отримано',s.patents.length,'',`${year} рік`]]:[['Наукових публікацій',s.publications.length,'',`${year} рік`],['Scopus / Web of Science',s.indexed.length,'','Індексовані публікації'],['Публікацій Q1–Q2',s.q12,'','Серед індексованих'],['Грантових проєктів',s.projects.length,'',`Виконуються у ${year} році`],['Надходження грантів',money(s.grants),'млн ₴','За вибраний рік'],['Патентів отримано',s.patents.length,'',`${year} рік`]];
+    return table(['label','value','unit','note'],cards);
+  }
+  if(source==='publicationChart')return table(['Рік','Scopus / Web of Science','Інші публікації'],[...new Set(data.publications.map(p=>p.year))].sort().filter(y=>selected===null||y===selected).map(y=>{const x=summarize(data,y);return[y,x.indexed.length,x.publications.length-x.indexed.length];}));
+  if(source==='quartiles'){const rows=(allYears?data.publications:s.publications).filter(p=>p.indexes.length);return table(['Квартиль','Публікацій'],['Q1','Q2','Q3','Q4',null].map(q=>[q||'Без квартиля',rows.filter(p=>p.quartile===q).length]));}
+  if(source==='projectChart')return table(['Рік','Проєктів'],yearsIn(data).filter(y=>selected===null||y===selected).map(y=>[y,summarize(data,y).projects.length]));
+  if(source==='funding')return table(['Рік','Надходження, млн ₴'],yearsIn(data).filter(y=>selected===null||y===selected).map(y=>[y,summarize(data,y).revenue==null?'':summarize(data,y).revenue/1e6]));
+  if(['faculties','patentFaculties'].includes(source)){const rows=source==='faculties'?(allYears?data.publications:s.publications):(allYears?data.patents:s.patents);return table(['Факультет','Кількість'],groupCount(rows,'faculty'));}
+  if(['programs','fundingSources'].includes(source)){
+    const groups=new Map();
+    if(source==='programs'){for(const p of allYears?data.projects:s.projects)for(const f of p.funding)if(selected===null||f.year===selected)groups.set(p.program,(groups.get(p.program)||0)+f.amountUAH/1e6);}
+    else {for(const r of data.revenues)if(selected===null||r.year===selected)groups.set(r.source,(groups.get(r.source)||0)+r.amountUAH/1e6);}
+    return table([source==='programs'?'Програма':'Джерело','Надходження, млн ₴'],[...groups]);
+  }
+  if(source==='fundingTable'){const ys=yearsIn(data).filter(y=>selected===null||y===selected).slice(-11),sources=[...new Set(data.revenues.map(r=>r.source))];return table(['Джерело',...ys.map(String)],sources.map(source=>[source,...ys.map(y=>{const rows=data.revenues.filter(r=>r.source===source&&r.year===y);return rows.length?rows.reduce((sum,r)=>sum+r.amountUAH,0):'';})]));}
+  if(source==='publications')return table(['Назва','Автори','Рік','Факультет','Індексація','Квартиль','Тип','Посилання'],(allYears?data.publications:s.publications).map(p=>[p.title,p.authors,p.year,p.faculty,p.indexes.join(' / '),p.quartile,p.type,p.url]));
+  if(source==='patents')return table(['Назва','Номер','Дата','Автори','Факультет','Посилання'],(allYears?data.patents:s.patents).map(p=>[p.title,p.number,p.date,p.authors,p.faculty,p.url]));
+  if(source==='projects')return table(['Назва','Програма','Початок','Завершення','Роль','Надходження, грн','Посилання'],(allYears?data.projects:s.projects).map(p=>[p.title,p.program,p.startDate,p.endDate,p.role,p.funding.filter(f=>selected===null||f.year===selected).reduce((sum,f)=>sum+f.amountUAH,0),p.url]));
+  return table(['Текст'],[[source==='insight'?'Знання мають бути доступними.':data.institution.sourceNote]]);
+}
+function analyticsBlock(source, settings = {}) {
   const s=summarize(data,year);
   if(source==='stats')return stats();
+  if(source==='fundingStats'){const previous=route;try{route='funding';return stats();}finally{route=previous;}}
+  if(source==='patentStats')return `<div class="stats-grid">${stat('Отримано патентів',fmt(s.patents.length),'','award','<span class="muted">За датою реєстрації у вибраному році</span>')}</div>`;
+  if(source==='insight')return `<article class="insight-card"><div class="insight-top">${icon('globe')}<span>ВІДКРИТА НАУКА</span></div><h2>Знання мають бути доступними.</h2><p>Публікації, дослідження та винаходи університету — в одному просторі даних.</p><a href="#publications">Дослідити публікації ${icon('arrow')}</a></article>`;
+  if(source==='revenueNotice')return `<div class="notice source-notice">${icon('info')}<span><strong>Надходження на науку у ${year} році:</strong> ${s.revenue==null?'дані не завантажено':money(s.revenue)+' млн ₴'}. Грантові кошти обліковуються окремо; ці суми не додаються автоматично.</span></div>`;
+  if(['publications','patents'].includes(source))return `<section class="panel records-panel">${toolbar(source)}<div id="records-body">${tableBody(source,settings.showAll)}</div></section>`;
   if(source==='publicationChart')return publicationChart();
   if(source==='quartiles')return quartileChart();
   if(source==='faculties')return facultyPanel(s.publications);
-  if(source==='projects')return `<div class="project-grid">${s.projects.length?s.projects.map(projectCard).join(''):empty()}</div>`;
+  if(source==='projects')return `<div class="project-grid">${(settings.allYears?data.projects:s.projects).length?(settings.allYears?data.projects:s.projects).map(projectCard).join(''):empty()}</div>`;
   if(source==='funding')return `<article class="panel">${sectionHead('Надходження за роками','Млн грн')}${barChart('funding')}</article>`;
   const publications=source==='publications',rows=publications?s.publications:s.patents;
   return `<div class="panel"><p class="cms-field-help">${rows.length} записів за ${year} рік. Показано перші 100; повні дані доступні через експорт аналітики.</p>${rows.length?`<div class="table-scroll"><table><thead><tr><th>${publications?'Публікація':'Патент'}</th><th>Автори</th><th>${publications?'Індексація':'Номер'}</th></tr></thead><tbody>${rows.slice(0,100).map(r=>`<tr><td>${linkTitle(r)}</td><td>${e(r.authors)}</td><td>${e(publications?r.indexes.join(' / '):r.number)}</td></tr>`).join('')}</tbody></table></div>`:empty()}</div>`;
@@ -319,8 +347,8 @@ try {
   let stored;try{stored=localStorage.getItem(STORE);}catch{storageAvailable=false;}
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
   cms=createCMS({
-    getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
-    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,
+    getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,selectPreviewYear:value=>{if(yearsIn(data).includes(value)){year=value;resetFilters();}},isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
+    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,getBlockTable:analyticsTable,
     replaceData:(next,write=true)=>{if(write)persist(next);else data=next;const years=yearsIn(next);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();},
     openDataManager:(mode,source)=>{
       const key=({stats:'bundle',publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',projects:'projects',patents:'patents',funding:'revenues',overview:'bundle'})[source]||'bundle';

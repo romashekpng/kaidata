@@ -1,9 +1,10 @@
 import { parseCSV, validateBundle } from './data.js';
 import { readXLSXWorkbook } from './spreadsheet.js';
-import { validateCMSBlock, validateCMSPage, validateSite } from './cms-data.js';
+import { validateCMSBlock, validateCMSPage, validateSite } from './cms-data.js?v=block-tools-20261029';
 const fail = message => { throw new Error(message); };
 export function blockTable(block) {
-  if (block.type === 'table') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
+  if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
+  if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);
   if (block.type === 'list') return { headers: ['item'], rows: block.items.map(x => [x]) };
   if (block.type === 'metrics') return { headers: ['label', 'value', 'unit', 'note'], rows: block.items.map(x => [x.label, x.value, x.unit, x.note]) };
   if (block.type === 'text') return { headers: ['title', 'text'], rows: [[block.title, block.text]] };
@@ -15,7 +16,8 @@ export function tableToCMSBlock(table, current) {
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');
   if (!Array.isArray(rows) || rows.length > 1000) fail('Не більше 1000 рядків у блоці.');
   const out = structuredClone(current);
-  if (out.type === 'table') { out.columns = headers; out.rows = rows; }
+  if (out.type === 'table' || out.type === 'chart') { out.columns = headers; out.rows = rows; }
+  else if(out.type==='analytics'){out.dataTable={headers,rows};out.dataMode='manual';}
   else {
     const expected = blockTable(out).headers;
     if (expected.length !== headers.length || expected.some(h => !headers.includes(h))) fail(`Очікуються колонки: ${expected.join(', ')}.`);
@@ -29,7 +31,7 @@ export function tableToCMSBlock(table, current) {
 export function cmsBlockCSV(block) {
   const table = blockTable(validateCMSBlock(block));
   const cell = value => {
-    const s = String(value); return '"' + (/^[=+@\-\t\r]/.test(s) ? "'" + s : s).replaceAll('"', '""') + '"';
+    const s = String(value), numeric=/^[+-]?\d+(?:[.,]\d+)?(?:e[+-]?\d+)?$/i.test(s); return '"' + (/^[=+@\-\t\r]/.test(s)&&!numeric ? "'" + s : s).replaceAll('"', '""') + '"';
   };
   return '\uFEFF' + [table.headers, ...table.rows].map(row => row.map(cell).join(';')).join('\r\n');
 }

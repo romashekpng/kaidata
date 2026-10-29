@@ -1,6 +1,45 @@
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
-export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
-export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Розподіл за квартилями', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Таблиця публікацій', patents: 'Таблиця патентів', funding: 'Надходження на науку' };
+export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
+export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
+export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
+export const BLOCK_PALETTES = {
+ blue: { name: 'Синя та сталева', colors: ['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'] },
+ ocean: { name: 'Океан', colors: ['#203c91','#0089c9','#31b9ed','#93a4ba','#cad5e2'] },
+ emerald: { name: 'Смарагдова', colors: ['#005f4b','#009c73','#10b98d','#31cfa1','#a2efd4'] },
+ warm: { name: 'Бордо та бурштин', colors: ['#881337','#e11d48','#fb4563','#ff9233','#ffd5a7'] },
+ purple: { name: 'Королівський ультрамарин', colors: ['#312e81','#4f46e5','#7c3aed','#a855f7','#e9d5ff'] },
+ spectrum: { name: 'Контрастний спектр', colors: ['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'] },
+ graphite: { name: 'Графіт і золото', colors: ['#0f172a','#334155','#d97706','#f59e0b','#fde68a'] },
+ sea: { name: 'Морська хвиля', colors: ['#155e75','#0891b2','#06b6d4','#14b8a6','#99f6e4'] },
+ pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
+};
+export function defaultBlockSettings(source = '') {
+ return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, palette:'blue', customColors:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:'top', chartType:source==='quartiles'?'donut':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+}
+export function validateBlockSettings(input = {}, source = '') {
+ if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
+ const out = { ...defaultBlockSettings(source), ...input };
+ for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
+ for(const key of ['showAll','totalLabels','tooltipTotal','segmentValues','allYears']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
+ if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');
+ return Object.fromEntries(Object.keys(defaultBlockSettings(source)).map(key=>[key,out[key]]));
+}
+export function validateBlockTable(input, numeric = false) {
+ if(!input || !Array.isArray(input.headers) || !input.headers.length || input.headers.length>12 || input.headers.some(h=>typeof h!=='string'||!h.trim()||h.length>160) || new Set(input.headers.map(h=>h.trim())).size!==input.headers.length)throw new Error('Таблиця: від 1 до 12 непорожніх унікальних колонок.');
+ if(!Array.isArray(input.rows)||input.rows.length>1000)throw new Error('Таблиця: не більше 1000 рядків.');
+ const headers=input.headers.map(h=>h.trim()),rows=input.rows.map((r,i)=>{if(!Array.isArray(r)||r.length!==headers.length||r.some(c=>typeof c!=='string'||c.length>4000))throw new Error(`Некоректний рядок ${i+1}.`);return r.map(c=>c.trim());});
+ if(numeric){if(headers.length<2)throw new Error('Для графіка потрібні підписи та хоча б одна числова серія.');for(const [i,row]of rows.entries())if(!row[0]||row.slice(1).some(c=>c!==''&&!Number.isFinite(Number(c.replace(',','.')))))throw new Error(`Рядок ${i+1}: після першої колонки потрібні числа або порожні значення.`);}
+ return {headers,rows};
+}
+export function moveTableItem(table, axis, from, to) {
+ const out=structuredClone(table),items=axis==='column'?out.headers:out.rows;
+ if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||to<0||from>=items.length||to>=items.length)return out;
+ const move=a=>a.splice(to,0,a.splice(from,1)[0]);move(items);
+ if(axis==='column')out.rows.forEach(move);
+ return out;
+}
 const obj = v => v && typeof v === 'object' && !Array.isArray(v);
 const fail = message => { throw new Error(message); };
 function str(v, label, max = 2000, required = false) {
@@ -37,6 +76,7 @@ export function validateCMSBlock(input) {
     out.rows = input.rows.map((row, n) => { if (!Array.isArray(row) || row.length !== out.columns.length) fail(`Рядок ${n + 1}: кількість клітинок не відповідає колонкам.`); return row.map(x => str(x, `Клітинка рядка ${n + 1}`, 4000)); });
     out.caption = str(input.caption, 'Примітка таблиці', 2000);
   }
+  if (input.type === 'chart') { const table=validateBlockTable({headers:input.columns,rows:input.rows},true); Object.assign(out,{columns:table.headers,rows:table.rows}); }
   if (input.type === 'metrics') {
     if (!Array.isArray(input.items) || input.items.length > 12) fail('Показники: не більше 12 карток.');
     out.items = input.items.map(x => {
@@ -46,6 +86,18 @@ export function validateCMSBlock(input) {
   }
   if (input.type === 'analytics') { if (!Object.hasOwn(ANALYTICS, input.source)) fail('Невідоме джерело аналітики.'); out.source = input.source; }
   if (input.type === 'existing') { if (!Object.hasOwn(CORE_PAGES, input.source)) fail('Невідома вбудована сторінка.'); out.source = input.source; }
+  if(input.subtitle!==undefined)out.subtitle=str(input.subtitle,'Підзаголовок',2000);
+  if(input.settings!==undefined)out.settings=validateBlockSettings(input.settings,input.source);
+  if(input.type==='analytics'){
+    if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
+    if(input.dataMode!==undefined)out.dataMode=input.dataMode;
+    if(input.dataTable!==undefined)out.dataTable=validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
+    if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
+  }
+  if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){
+    const rows=input.type==='chart'?out.rows:out.dataTable?.rows;
+    if(rows?.some(r=>r.slice(1).some(c=>Number(c.replace(',','.'))<0)))fail('Кругова діаграма не підтримує від’ємні значення.');
+  }
   return out;
 }
 export function validateCMSPage(input) {
@@ -81,9 +133,22 @@ export function defaultCMSBlock(type) {
   if (type === 'banner') Object.assign(block, { text: 'Важливе повідомлення або запрошення до співпраці.', tone: 'green', linkLabel: '', linkUrl: '' });
   if (type === 'list') Object.assign(block, { items: ['Перший пункт', 'Другий пункт'], ordered: false });
   if (type === 'table') Object.assign(block, { columns: ['Назва', 'Значення'], rows: [['Приклад', '0']], caption: '' });
+  if (type === 'chart') Object.assign(block, { columns:['Рік','Серія 1','Серія 2'], rows:[['2024','80','40'],['2025','100','55'],['2026','120','65']], settings:{...defaultBlockSettings(),allYears:true} });
   if (type === 'metrics') block.items = [{ label: 'Показник', value: '0', unit: '', note: '' }];
   if (type === 'analytics') block.source = 'stats';
   if (type === 'existing') block.source = 'overview';
   return block;
 }
 export function cmsRoute(page) { return page.kind === 'builtin' ? page.id : `page/${page.slug}`; }
+export function expandSiteBlocks(input) {
+ const site=structuredClone(validateSite(input)),used=new Set(site.pages.flatMap(p=>p.blocks.map(b=>b.id)));
+ const layouts={overview:[['stats',100],['publicationChart',66],['quartiles',34],['projects',100],['faculties',50],['insight',50],['revenueNotice',100]],publications:[['publicationChart',66],['quartiles',34],['publications',100],['faculties',100]],projects:[['projectChart',50],['programs',50],['projects',100]],patents:[['patentStats',33],['patentFaculties',67],['patents',100]],funding:[['fundingStats',100],['funding',50],['fundingSources',50],['fundingTable',100],['revenueNotice',100]]};
+ for(const page of site.pages)page.blocks=page.blocks.flatMap(block=>{
+  if(block.type!=='existing'||page.blocks.length-1+layouts[block.source].length>50)return [block];
+  return layouts[block.source].map(([source,width])=>{
+   let id=`${block.id.slice(0,45)}-${source}`,n=1;while(used.has(id))id=`${block.id.slice(0,42)}-${source}-${n++}`;used.add(id);
+   return {id,type:'analytics',title:ANALYTICS[source],visible:block.visible,source,dataMode:'live',settings:{...defaultBlockSettings(source),width,legend:source==='quartiles'?'bottom':'top'}};
+  });
+ });
+ return validateSite(site);
+}
