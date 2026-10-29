@@ -183,3 +183,9 @@ dialog{background:var(--surface)}
 @container(max-width:400px){.cms-horizontal-chart{--horizontal-label-width:43%}.cms-horizontal-chart.totals-visible{--horizontal-value-space:42px}.cms-horizontal-label{font-size:12px}.cms-horizontal-total{font-size:12px}.cms-progress-caption,.cms-progress-caption strong{font-size:13px}}
 
 .cms-horizontal-axis{overflow-y:auto;scrollbar-gutter:stable}.cms-horizontal-chart.show-all .cms-horizontal-axis{overflow:visible;scrollbar-gutter:auto}
+
+/* Each block labels its own report period alongside the heading. */
+.cms-widget-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;min-width:0}
+.cms-widget-heading h2{font-size:21px;line-height:1.4;margin:0;min-width:0;overflow-wrap:anywhere}
+.cms-widget-period{flex-shrink:0;margin-left:auto;display:inline-flex;align-items:center;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:var(--surface-soft);color:var(--text-secondary);font-size:12px;line-height:1.5;white-space:nowrap;font-variant-numeric:tabular-nums}
+@container(max-width:400px){.cms-widget-heading{gap:9px}.cms-widget-heading h2{font-size:19px}.cms-widget-period{font-size:11px;padding:3px 6px}}

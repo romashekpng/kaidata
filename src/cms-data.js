@@ -15,13 +15,37 @@ export const BLOCK_PALETTES = {
  pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
 };
 export function defaultBlockSettings(source = '') {
- return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, numbering:true, wrapLabels:false, allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+}
+export function normalizeBlockPeriod(value) {
+ if(typeof value!=='string')throw new Error('Період: вкажіть рік або діапазон, наприклад 2026 чи 2021-2026.');
+ const text=value.trim();if(!text)return '';
+ const match=text.match(/^(\d{4})(?:\s*[-–—]\s*(\d{4}))?$/);
+ if(!match||+match[1]<1000||(match[2]&&+match[2]<+match[1]))throw new Error('Період: вкажіть рік або діапазон, наприклад 2026 чи 2021-2026.');
+ return match[2]&&match[2]!==match[1]?`${match[1]}-${match[2]}`:match[1];
+}
+export function formatBlockPeriod(years) {
+ const valid=years.map(Number).filter(y=>Number.isInteger(y)&&y>=1000&&y<=9999);
+ if(!valid.length)return '';
+ const first=Math.min(...valid),last=Math.max(...valid);return first===last?String(first):`${first}-${last}`;
+}
+export function inferTablePeriod(table) {
+ if(!table?.headers||!table.rows?.length)return '';
+ const years=[],present=value=>value!==''&&value!=='—'&&value!=='-';
+ for(const [i,header]of table.headers.entries()){
+  if(/^\d{4}$/.test(header)&&table.rows.some(r=>present(r[i])))years.push(+header);
+  if(/^(рік|year|дата|початок|завершення|date|start|end)$/i.test(header.trim()))for(const row of table.rows){const match=String(row[i]).match(/^(\d{4})(?:[-/.]|$)/);if(match&&row.some((v,j)=>j!==i&&present(v)))years.push(+match[1]);}
+  if(/^(note|примітка)$/i.test(header.trim()))for(const row of table.rows)for(const match of String(row[i]).matchAll(/\b((?:19|20|21)\d{2})\b/g))years.push(+match[1]);
+ }
+ if(!years.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))for(const row of table.rows)if(row.slice(1).some(present))years.push(+row[0]);
+ return formatBlockPeriod(years);
 }
 export function validateBlockSettings(input = {}, source = '') {
  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
  const out = { ...defaultBlockSettings(source), ...input };
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
- for(const key of ['showAll','totalLabels','tooltipTotal','segmentValues','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ for(const key of ['showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ out.period=normalizeBlockPeriod(out.period);
  if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
  if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');
  return Object.fromEntries(Object.keys(defaultBlockSettings(source)).map(key=>[key,out[key]]));
@@ -87,6 +111,7 @@ export function validateCMSBlock(input) {
   if (input.type === 'analytics') { if (!Object.hasOwn(ANALYTICS, input.source)) fail('Невідоме джерело аналітики.'); out.source = input.source; }
   if (input.type === 'existing') { if (!Object.hasOwn(CORE_PAGES, input.source)) fail('Невідома вбудована сторінка.'); out.source = input.source; }
   if(input.subtitle!==undefined)out.subtitle=str(input.subtitle,'Підзаголовок',2000);
+  if(input.dataPeriod!==undefined)out.dataPeriod=normalizeBlockPeriod(input.dataPeriod);
   if(input.settings!==undefined)out.settings=validateBlockSettings(input.settings,input.source);
   if(input.type==='analytics'&&input.source==='faculties'){
     const negativeLegacy=Array.isArray(input.dataTable?.rows)&&input.dataTable.rows.some(row=>Array.isArray(row)&&row.slice(1).some(c=>Number(String(c).replace(',','.'))<0));

@@ -1,9 +1,9 @@
 import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js';
-import { icon } from './icons.js?v=progress-horizontal-20261029';
+import { icon } from './icons.js?v=chart-details-period-20261029';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js?v=progress-horizontal-20261029';
-import { cmsRoute } from './cms-data.js?v=progress-horizontal-20261029';
+import { createCMS } from './cms.js?v=chart-details-period-20261029';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=chart-details-period-20261029';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -187,6 +187,26 @@ function analyticsTable(source, allYears = false) {
   if(source==='projects')return table(['Назва','Програма','Початок','Завершення','Роль','Надходження, грн','Посилання'],(allYears?data.projects:s.projects).map(p=>[p.title,p.program,p.startDate,p.endDate,p.role,p.funding.filter(f=>selected===null||f.year===selected).reduce((sum,f)=>sum+f.amountUAH,0),p.url]));
   return table(['Текст'],[[source==='insight'?'Знання мають бути доступними.':data.institution.sourceNote]]);
 }
+function displayedBlockPeriod(block, table = null) {
+  const settings={...defaultBlockSettings(block.source),...block.settings};
+  if(block.type==='analytics'&&block.dataMode!=='manual'){
+    const source=block.source;
+    if(source==='insight')return '';
+    if(!settings.allYears||['stats','fundingStats','patentStats','publications','patents','revenueNotice'].includes(source))return String(year);
+    const inferred=inferTablePeriod(table);if(inferred)return inferred;
+    if(['publicationChart','quartiles','faculties'].includes(source))return formatBlockPeriod(data.publications.map(r=>r.year));
+    if(source==='patentFaculties')return formatBlockPeriod(data.patents.map(r=>+r.date.slice(0,4)));
+    if(source==='programs')return formatBlockPeriod(data.projects.flatMap(r=>r.funding.map(f=>f.year)));
+    if(['funding','fundingSources','fundingTable'].includes(source))return inferTablePeriod(analyticsTable(source,true))||formatBlockPeriod(data.revenues.map(r=>r.year));
+    if(['projects','projectChart'].includes(source))return formatBlockPeriod(data.projects.flatMap(r=>[+r.startDate.slice(0,4),+r.endDate.slice(0,4)]));
+    return '';
+  }
+  const original=block.type==='chart'?{headers:block.columns,rows:block.rows}:block.dataTable;
+  if((block.type==='chart'||block.type==='analytics')&&!settings.allYears&&original?.rows.length&&original.rows.every(r=>/^\d{4}$/.test(r[0])))return String(year);
+  const periodTable=table||original,inferred=inferTablePeriod(periodTable);
+  const temporal=periodTable?.headers.some(h=>/^(рік|year|дата|date)$/i.test(h.trim())||/^\d{4}$/.test(h))||periodTable?.rows.length&&periodTable.rows.every(r=>/^\d{4}$/.test(r[0]));
+  return settings.period||(temporal?inferred:block.dataPeriod||inferred)||'';
+}
 function analyticsBlock(source, settings = {}) {
   const s=summarize(data,year);
   if(source==='stats')return stats();
@@ -348,7 +368,7 @@ try {
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
   cms=createCMS({
     getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,selectPreviewYear:value=>{if(yearsIn(data).includes(value)){year=value;resetFilters();}},isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
-    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,getBlockTable:analyticsTable,
+    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,getBlockTable:analyticsTable,getBlockPeriod:displayedBlockPeriod,
     replaceData:(next,write=true)=>{if(write)persist(next);else data=next;const years=yearsIn(next);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();},
     openDataManager:(mode,source)=>{
       const key=({stats:'bundle',publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',projects:'projects',patents:'patents',funding:'revenues',overview:'bundle'})[source]||'bundle';

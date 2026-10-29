@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import ExcelJS from 'exceljs';
-import {defaultCMSBlock, defaultBlockSettings, validateCMSBlock, validateBlockSettings, validateBlockTable, expandSiteBlocks, moveTableItem} from '../src/cms-data.js';
+import {defaultCMSBlock, defaultBlockSettings, validateCMSBlock, validateBlockSettings, validateBlockTable, expandSiteBlocks, moveTableItem, normalizeBlockPeriod, formatBlockPeriod, inferTablePeriod} from '../src/cms-data.js';
 import {cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, tableToCMSBlock, readCMSJSON} from '../src/cms-io.js';
 import {renderChartTable} from '../src/block-view.js';
 const site=JSON.parse(await readFile(new URL('../data/pages.json',import.meta.url),'utf8'));
@@ -97,4 +97,38 @@ test('нові типи, нумерація й перенесення назв �
   assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS),validateCMSBlock(b));
  }
  for(const change of [{numbering:'false'},{wrapLabels:'true'}])assert.throws(()=>validateBlockSettings(change));
+});
+test('Дані графіка початково приховані та додаються лише після явного ввімкнення',()=>{
+ const b=defaultCMSBlock('chart'),table={headers:b.columns,rows:b.rows};
+ assert.equal(defaultBlockSettings().showChartData,false);assert(!renderChartTable(b,table).includes('cms-chart-data'));
+ const enabled={...b,settings:{...b.settings,showChartData:true}};assert(renderChartTable(enabled,table).includes('<summary>Дані графіка</summary>'));
+});
+test('відсотки кругових діаграм незалежні від числових підписів і перераховуються за видимими сегментами',()=>{
+ const table={headers:['Категорія','Кількість'],rows:[['Q1','12'],['Q2','12'],['Q3','12'],['Q4','9'],['Інші','9']]};
+ for(const chartType of ['donut','pie']){
+  const b={...defaultCMSBlock('chart'),settings:{...defaultBlockSettings(),chartType,segmentPercentages:true}};
+  const html=renderChartTable(b,table);assert.match(html,/class="cms-segment-label"[^>]*>22,2%<\/text>/);assert.match(html,/>16,7%<\/text>/);
+  const hidden=renderChartTable(b,table,[0]);assert.match(hidden,/>28,6%<\/text>/);assert(!hidden.includes('22,2%'));
+  const combined=renderChartTable({...b,settings:{...b.settings,segmentValues:true}},table);assert.match(combined,/<tspan[^>]*>12<\/tspan><tspan[^>]*>22,2%<\/tspan>/);
+  const zero=renderChartTable(b,{headers:table.headers,rows:[['A','0']]});assert(!zero.includes('NaN'));assert(!zero.includes('Infinity'));assert(!zero.includes('cms-segment-label'));
+ }
+});
+test('прапорці деталей, відсотків та період зберігаються через JSON, CSV і XLSX',async()=>{
+ const b=validateCMSBlock({...defaultCMSBlock('chart'),dataPeriod:'2026',settings:{...defaultBlockSettings(),chartType:'donut',showChartData:true,segmentPercentages:true,period:'2021 — 2026'}});
+ assert.equal(b.settings.period,'2021-2026');assert.equal(b.dataPeriod,'2026');
+ assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),b);
+ assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),b);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS),b);
+ for(const change of [{showChartData:'true'},{segmentPercentages:'false'},{period:'2026-2021'}])assert.throws(()=>validateBlockSettings(change));
+});
+test('періоди нормалізуються без довільного HTML або обернених діапазонів',()=>{
+ assert.equal(normalizeBlockPeriod(' 2021 – 2026 '),'2021-2026');assert.equal(normalizeBlockPeriod('2026-2026'),'2026');assert.equal(normalizeBlockPeriod(''),'');
+ assert.equal(formatBlockPeriod([2026,2021,2026]),'2021-2026');assert.equal(formatBlockPeriod([2026,NaN]),'2026');assert.equal(formatBlockPeriod([]),'');
+ for(const value of ['2026-2021','<img src=x>','2021/2026',2026])assert.throws(()=>normalizeBlockPeriod(value));
+});
+test('визначення періоду враховує роки, дати та примітки, а пропущені фінансові дані не розширюють діапазон',()=>{
+ assert.equal(inferTablePeriod({headers:['Рік','Сума'],rows:[['2021','10'],['2026','0'],['2028','']]}),'2021-2026');
+ assert.equal(inferTablePeriod({headers:['Джерело','2021','2026','2028'],rows:[['Бюджет','','0','']]}),'2026');
+ assert.equal(inferTablePeriod({headers:['Назва','Початок','Завершення'],rows:[['Проєкт','2024-01-01','2028-12-31']]}),'2024-2028');
+ assert.equal(inferTablePeriod({headers:['label','value','note'],rows:[['Статей','88','2026 рік']]}),'2026');
+ assert.equal(inferTablePeriod({headers:['Квартиль','Кількість'],rows:[['Q1','12']]}),'');assert.equal(inferTablePeriod({headers:['Рік','Сума'],rows:[]}),'');
 });

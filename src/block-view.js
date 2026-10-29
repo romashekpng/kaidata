@@ -1,4 +1,4 @@
-import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=progress-horizontal-20261029';
+import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=chart-details-period-20261029';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -61,7 +61,9 @@ export function renderChartTable(block, table, hidden = []) {
    const share=value/total,from=point(angle),next=angle+share*Math.PI*2,to=point(next),mid=angle+share*Math.PI,tip=`${table.rows[i][0]}: ${format(value)}${s.tooltipTotal?`\nРазом: ${format(total)}`:''}`;
    const shape=share>=.999999?`<circle cx="100" cy="100" r="83" fill="${colors[i%colors.length]}"><title>${esc(tip)}</title></circle>`:`<path d="M100 100 L${from.join(' ')} A83 83 0 ${share>.5?1:0} 1 ${to.join(' ')} Z" fill="${colors[i%colors.length]}"><title>${esc(tip)}</title></path>`;
    angle=next;
-   return shape+(s.segmentValues&&share>.035?`<text class="cms-segment-label" x="${100+63*Math.cos(mid)}" y="${104+63*Math.sin(mid)}">${format(value)}</text>`:'');
+   const labelX=100+63*Math.cos(mid),labelY=104+63*Math.sin(mid),percent=new Intl.NumberFormat('uk-UA',{maximumFractionDigits:1}).format(share*100)+'%';
+   const label=s.segmentValues&&s.segmentPercentages?`<tspan x="${labelX}" dy="-5">${format(value)}</tspan><tspan x="${labelX}" dy="13">${percent}</tspan>`:s.segmentPercentages?percent:format(value);
+   return shape+((s.segmentValues||s.segmentPercentages)&&share>.035?`<text class="cms-segment-label" x="${labelX}" y="${labelY}">${label}</text>`:'');
   }).join('');
   graphic=`<svg class="cms-chart-svg cms-pie-svg" viewBox="0 0 200 200" role="img" aria-label="${esc(block.title)}">${slices}${s.chartType==='donut'?`<circle cx="100" cy="100" r="48" fill="var(--surface)"/>${s.totalLabels?`<text x="100" y="104" text-anchor="middle" class="cms-donut-total">${format(total)}</text>`:''}`:''}${!total?'<text x="100" y="105" text-anchor="middle">Немає даних</text>':''}</svg>`;
  } else {
@@ -93,5 +95,5 @@ export function renderChartTable(block, table, hidden = []) {
   const totalLabels=s.totalLabels?table.rows.map((r,i)=>{const high=s.chartType==='stacked'?active.reduce((sum,j)=>sum+Math.max(0,num(r[j+1])||0),0):Math.max(0,...active.map(j=>num(r[j+1])||0));return `<text x="${x(i)}" y="${y(high)-10}" text-anchor="middle" class="cms-chart-total">${r.slice(1).every(v=>v==='')?'—':format(totals[i])}</text>`;}).join(''):'';
   graphic=`<div class="cms-chart-scroll"><svg class="cms-chart-svg" viewBox="0 0 ${width} ${height}" style="min-width:${Math.min(width,Math.max(300,table.rows.length*32))}px" role="img" aria-label="${esc(block.title)}">${axes}<line x1="${left}" y1="${baseline}" x2="${width-right}" y2="${baseline}" class="cms-chart-gridline"/>${marks}${totalLabels}${labels}</svg></div>`;
  }
- return `<div class="cms-chart-body legend-${s.legend}" style="--chart-height:${s.height}px">${s.legend==='top'||s.legend==='right'?legend:''}<div class="cms-chart-graphic">${graphic}</div>${s.legend==='bottom'?legend:''}</div><details class="cms-chart-data"><summary>Дані графіка</summary>${renderBlockTable(table,s.showAll)}</details>`;
+ return `<div class="cms-chart-body legend-${s.legend}" style="--chart-height:${s.height}px">${s.legend==='top'||s.legend==='right'?legend:''}<div class="cms-chart-graphic">${graphic}</div>${s.legend==='bottom'?legend:''}</div>${s.showChartData?`<details class="cms-chart-data"><summary>Дані графіка</summary>${renderBlockTable(table,s.showAll)}</details>`:''}`;
 }
