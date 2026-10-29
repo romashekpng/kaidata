@@ -3,6 +3,7 @@ export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
 export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
+export const TEXT_BACKGROUNDS = { menu:'Колір меню', accent:'Основний акцент', blue:'Блакитний відтінок', green:'Зелений відтінок', amber:'Теплий відтінок', violet:'Фіолетовий відтінок', default:'Стандартний фон', custom:'Власний колір' };
 export const BLOCK_PALETTES = {
  blue: { name: 'Синя та сталева', colors: ['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'] },
  ocean: { name: 'Океан', colors: ['#203c91','#0089c9','#31b9ed','#93a4ba','#cad5e2'] },
@@ -15,7 +16,7 @@ export const BLOCK_PALETTES = {
  pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
 };
 export function defaultBlockSettings(source = '') {
- return { width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function normalizeBlockPeriod(value) {
  if(typeof value!=='string')throw new Error('Період: вкажіть рік або діапазон, наприклад 2026 чи 2021-2026.');
@@ -43,6 +44,7 @@ export function inferTablePeriod(table) {
 export function validateBlockSettings(input = {}, source = '') {
  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
  const out = { ...defaultBlockSettings(source), ...input };
+ if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||typeof out.backgroundColor!=='string'||!/^#[0-9a-f]{6}$/i.test(out.backgroundColor))throw new Error('Фон блоку: виберіть колір теми або колір у форматі #RRGGBB.');
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
  for(const key of ['showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
  out.period=normalizeBlockPeriod(out.period);

@@ -1,9 +1,9 @@
-import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=admin-block-export-20261030';
-import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=admin-block-export-20261030';
-import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=admin-block-export-20261030';
+import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=text-background-20261030';
+import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=text-background-20261030';
+import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=text-background-20261030';
 import { validateBundle } from './data.js';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=admin-block-export-20261030';
+import { icon } from './icons.js?v=text-background-20261030';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -155,10 +155,16 @@ export function createCMS(options) {
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
+      let backgroundStyle='';
+      if(b.type==='text'&&s.background==='custom'){
+        const channels=s.backgroundColor.slice(1).match(/../g).map(c=>{const v=parseInt(c,16)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});
+        const luminance=channels.reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+        backgroundStyle=`;--text-block-bg:${s.backgroundColor};--text-block-ink:${luminance>.179?'#000000':'#ffffff'}`;
+      }
       const gap=24*(100-s.width)/100;
       const period=options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
-      return `<section class="cms-widget ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - ${gap}px);--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
+      return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - ${gap}px);--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
   }
@@ -187,6 +193,7 @@ export function createCMS(options) {
       if(chart){
         body+=`<label>Тип графіка<select data-widget-setting="chartType">${Object.entries(CHART_TYPES).map(([value,label])=>`<option value="${value}" ${s.chartType===value?'selected':''}>${label}</option>`).join('')}</select></label><fieldset><legend>Кольорова схема стовпчиків / серій</legend><div class="cms-palette-grid">${Object.entries(BLOCK_PALETTES).map(([key,p])=>`<label class="cms-palette-option"><input type="radio" name="widgetPalette" data-widget-setting="palette" value="${key}" ${s.palette===key?'checked':''}><strong>${p.name}</strong><span class="cms-color-strip">${p.colors.map(c=>`<i style="background:${c}"></i>`).join('')}</span></label>`).join('')}<label class="cms-palette-option"><input type="radio" name="widgetPalette" data-widget-setting="palette" value="custom" ${s.palette==='custom'?'checked':''}><strong>Власна тема</strong><span class="cms-color-strip">${s.customColors.map(c=>`<i style="background:${c}"></i>`).join('')}</span></label></div><div class="cms-custom-colors">${s.customColors.map((color,i)=>`<label>Колір ${i+1}<input type="color" data-widget-color="${i}" value="${color}"></label>`).join('')}${button('widget-add-color','+ Колір','','secondary small')}${button('widget-remove-color','− Колір',s.customColors.length<=1?'disabled':'','secondary small')}</div></fieldset><fieldset><legend>Розташування легенди</legend><div class="cms-legend-options">${[['top','Вгорі'],['bottom','Внизу'],['right','Праворуч'],['none','Приховати']].map(([value,label])=>`<label><input type="radio" name="widgetLegend" data-widget-setting="legend" value="${value}" ${s.legend===value?'checked':''}>${label}</label>`).join('')}</div></fieldset><fieldset><legend>Відображення значень і підсумків</legend>${s.chartType==='progress'?check('numbering','Нумерація','Показувати порядковий номер на початку кожного рядка.'):''}${s.chartType==='horizontal'?check('wrapLabels','Переносити довгі назви','Назва, яка не вміщується по ширині, переноситься на наступні рядки; їхня висота збільшується автоматично.'):''}${check('totalLabels',totalLabel,'Підсумок ураховує лише активні серії легенди; у кільцевій діаграмі показується в центрі.')}${check('tooltipTotal','Показувати підсумок «Разом» у спливаючій підказці')}${s.chartType==='progress'?'':check('segmentValues','Відображати числові значення всередині сегментів')}${['donut','pie'].includes(s.chartType)?check('segmentPercentages','Відображати числові значення всередині сегментів у відсотках','Частка розраховується від суми видимих сегментів. Можна одночасно показувати числа й відсотки.'):''}${check('allYears','Відображати загальний звіт за весь період','Якщо вимкнено, аналітика та рядки з роками використовують вибраний звітний рік.')}${field('Висота графіка, px','height','number','min="180" max="800"')}${check('showChartData','Відображати Дані графіка','Показувати під діаграмою розділ із таблицею її даних. За замовчуванням вимкнено.')}</fieldset>`;
       }
+      if(block.type==='text')body+=`<fieldset><legend>Фон текстового блоку</legend><p class="cms-field-help">Кольори теми змінюються разом із темою сайта. Власний колір залишається вибраним; колір тексту підбирається автоматично.</p><div class="cms-text-background-options">${Object.entries(TEXT_BACKGROUNDS).map(([key,label])=>`<label class="cms-text-background-option"><input type="radio" name="textBackground" data-widget-setting="background" value="${key}" ${s.background===key?'checked':''}><i class="cms-text-bg-${key}" ${key==='custom'?`style="--text-block-bg:${s.backgroundColor}"`:''} aria-hidden="true"></i><span>${label}</span></label>`).join('')}</div><div class="cms-custom-colors"><label>Вибрати колір із палітри<input type="color" data-widget-setting="backgroundColor" value="${s.backgroundColor}"></label></div></fieldset>`;
       if(block.type==='list')body+=`<label class="checkbox-label cms-setting-check"><input type="checkbox" data-widget-text="ordered" ${block.ordered?'checked':''}><span>Нумерований список</span></label>`;
       if(block.type==='table')body+=`<label>Примітка таблиці<input data-widget-text="caption" value="${e(block.caption)}" maxlength="2000"></label>`;
       if(block.type==='banner')body+=`<div class="form-grid"><label>Оформлення<select data-widget-text="tone">${[['green','Зелене'],['blue','Синє'],['amber','Тепле'],['dark','Темне']].map(([v,t])=>`<option value="${v}" ${block.tone===v?'selected':''}>${t}</option>`).join('')}</select></label><label>Текст кнопки<input data-widget-text="linkLabel" value="${e(block.linkLabel)}"></label><label>Посилання<input data-widget-text="linkUrl" value="${e(block.linkUrl)}"></label></div>`;
@@ -219,6 +226,11 @@ export function createCMS(options) {
     if(!widgetState)return;
     const state=widgetState;
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;state.block.settings[key]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;}
+    if(el.dataset.widgetSetting==='backgroundColor'){
+      state.block.settings.background='custom';
+      $('#cms-widget-dialog input[name="textBackground"][value="custom"]').checked=true;
+      $('#cms-widget-dialog .cms-text-bg-custom').style.setProperty('--text-block-bg',el.value);
+    }
     if(el.dataset.widgetText)state.block[el.dataset.widgetText]=el.type==='checkbox'?el.checked:el.value;
     if(el.dataset.widgetColor!==undefined){state.block.settings.customColors[+el.dataset.widgetColor]=el.value;state.block.settings.palette='custom';$('#cms-widget-dialog input[value="custom"]').checked=true;}
     if(el.dataset.widgetHeader!==undefined)state.table.headers[+el.dataset.widgetHeader]=el.value;

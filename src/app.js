@@ -1,9 +1,9 @@
 import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js';
-import { icon } from './icons.js?v=admin-block-export-20261030';
+import { icon } from './icons.js?v=text-background-20261030';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js?v=admin-block-export-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=admin-block-export-20261030';
+import { createCMS } from './cms.js?v=text-background-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=text-background-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);

@@ -189,3 +189,21 @@ dialog{background:var(--surface)}
 .cms-widget-heading h2{font-size:21px;line-height:1.4;margin:0;min-width:0;overflow-wrap:anywhere}
 .cms-widget-period{flex-shrink:0;margin-left:auto;display:inline-flex;align-items:center;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-radius:5px;background:var(--surface-soft);color:var(--text-secondary);font-size:12px;line-height:1.5;white-space:nowrap;font-variant-numeric:tabular-nums}
 @container(max-width:400px){.cms-widget-heading{gap:9px}.cms-widget-heading h2{font-size:19px}.cms-widget-period{font-size:11px;padding:3px 6px}}
+
+/* Text block backgrounds follow theme tokens; custom colors retain their own contrast. */
+.cms-text-bg-menu{--text-block-bg:var(--nav);--text-block-ink:#fff}
+.cms-text-bg-accent{--text-block-bg:var(--primary-bg);--text-block-ink:#fff}
+.cms-text-bg-blue{--text-block-bg:var(--tint-blue);--text-block-ink:var(--text-blue)}
+.cms-text-bg-green{--text-block-bg:var(--tint-green);--text-block-ink:var(--text-green)}
+.cms-text-bg-amber{--text-block-bg:var(--tint-amber);--text-block-ink:var(--text-amber)}
+.cms-text-bg-violet{--text-block-bg:var(--tint-violet);--text-block-ink:var(--text-purple)}
+.cms-text-bg-default{--text-block-bg:var(--surface);--text-block-ink:var(--ink)}
+.cms-text-background{background:var(--text-block-bg);color:var(--text-block-ink)}
+.cms-text-background:not(.cms-text-bg-default){border-color:color-mix(in srgb,var(--text-block-ink) 18%,var(--text-block-bg))}
+.cms-text-background:not(.cms-text-bg-default) .cms-widget-subtitle{color:inherit}
+.cms-text-background:not(.cms-text-bg-default) .cms-widget-period{color:inherit;background:transparent;border-color:currentColor}
+.cms-text-background-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:16px}
+#cms-widget-dialog .cms-text-background-option{display:flex;flex-direction:row;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+#cms-widget-dialog .cms-text-background-option:has(input:checked){outline:2px solid var(--primary-bg);outline-offset:-2px}
+.cms-text-background-option input{width:18px;height:18px;min-height:18px;margin:0;flex-shrink:0}
+.cms-text-background-option i{display:block;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:var(--text-block-bg);flex-shrink:0}
