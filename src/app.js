@@ -2,7 +2,7 @@ import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, impo
 import { icon } from './icons.js';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js';
+import { createCMS } from './cms.js?v=fullwidth-20261029';
 import { cmsRoute } from './cms-data.js';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -67,7 +67,7 @@ function header(cmsPage = null) {
   const titles = { overview: ['НАУКОВА ДІЯЛЬНІСТЬ', 'Наука у цифрах', 'Від досліджень до впливу. Результати, що рухають нас уперед.'], publications: ['РЕЗУЛЬТАТИ ДОСЛІДЖЕНЬ', 'Наукові публікації', 'Динаміка публікацій, індексація та внесок наукових підрозділів.'], projects: ['ДОСЛІДЖЕННЯ ТА ПАРТНЕРСТВА', 'Грантові проєкти', 'Міжнародна співпраця та інвестиції в нові знання.'], patents: ['ІНТЕЛЕКТУАЛЬНА ВЛАСНІСТЬ', 'Патенти та винаходи', 'Ідеї, що стають технологіями. Результати винахідницької діяльності.'], funding: ['РЕСУРСИ ДЛЯ РОЗВИТКУ', 'Фінансування науки', 'Надходження на наукову діяльність за джерелами та роками.'] };
   const [eyebrow, title, sub] = cmsPage ? ['НАУКОВА ДІЯЛЬНІСТЬ',cmsPage.heading,cmsPage.description] : titles[route];
   const years = yearsIn(data);
-  return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${title}<span class="title-dot">.</span></h1><p>${sub}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
+  return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${e(title)}<span class="title-dot">.</span></h1><p>${e(sub)}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
   ${!cmsPage || cmsPage.showYear ? `<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}${years.length > 8 ? `<select aria-label="Усі роки" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div></div>` : ''}
   ${data.demo && (!cmsPage || cmsPage.blocks.some(b=>b.visible && ['analytics','existing'].includes(b.type))) ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
 }
@@ -320,7 +320,7 @@ try {
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
   cms=createCMS({
     getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
-    renderExisting:existingPage,renderAnalytics:analyticsBlock,
+    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,
     replaceData:(next,write=true)=>{if(write)persist(next);else data=next;const years=yearsIn(next);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();},
     openDataManager:(mode,source)=>{
       const key=({stats:'bundle',publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',projects:'projects',patents:'patents',funding:'revenues',overview:'bundle'})[source]||'bundle';

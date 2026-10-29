@@ -135,12 +135,10 @@ dialog{background:var(--surface)}
 .cms-page-list{position:static;display:flex;flex-wrap:wrap;gap:10px}
 .cms-page-list .section-head{width:100%;margin-bottom:4px}
 .cms-page-row{flex:1;min-width:145px;margin:0}
-.cms-workbench{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(420px,1.25fr);gap:22px;align-items:start;min-width:0}
-.cms-editor{grid-column:1;grid-row:1}.cms-live-pane{grid-column:2;grid-row:1;position:sticky;top:16px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cms-workbench{display:grid;grid-template-columns:minmax(0,1fr);gap:24px;align-items:start;min-width:0}
+.cms-editor{grid-column:1;grid-row:2}.cms-live-pane{grid-column:1;grid-row:1;position:static;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .cms-live-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:17px;border-bottom:1px solid var(--line)}
 .cms-live-heading h2{font-size:18px}.cms-live-heading p{font-size:13px;color:var(--muted);margin-top:5px}
-#cms-live-frame{display:block;width:100%;height:calc(100vh - 125px);min-height:450px;max-height:1000px;border:0;background:var(--bg);color-scheme:normal}
-.cms-workbench .cms-editor .form-grid{grid-template-columns:1fr}.cms-workbench .cms-editor .span-2{grid-column:1}
-.cms-workbench .cms-block-palette>div{grid-template-columns:1fr}.cms-workbench .cms-save-bar{bottom:12px}
-@media(max-width:1200px){.cms-workbench{grid-template-columns:1fr}.cms-live-pane{grid-column:1;grid-row:1;position:static}.cms-editor{grid-column:1;grid-row:2}#cms-live-frame{height:450px;min-height:300px}}
-@media(max-width:720px){.cms-live-pane{position:sticky;top:130px;z-index:6}.cms-live-heading{padding:10px 12px}.cms-live-heading h2{font-size:16px}.cms-live-heading p{font-size:12px}.cms-live-heading .pill{display:none}#cms-live-frame{height:30vh;min-height:180px;max-height:300px}.cms-save-bar{z-index:7}.cms-workbench{gap:18px}}
+#cms-live-frame{display:block;width:100%;height:450px;min-height:300px;border:0;background:var(--bg);color-scheme:normal}
+.cms-workbench .cms-save-bar{bottom:12px}
+@media(max-width:720px){.cms-live-heading{padding:12px}.cms-live-heading h2{font-size:16px}.cms-live-heading p{font-size:12px}.cms-live-heading .pill{display:none}.cms-save-bar{z-index:7}.cms-workbench{gap:18px}}

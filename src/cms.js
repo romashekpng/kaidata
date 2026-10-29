@@ -90,17 +90,24 @@ export function createCMS(options) {
   function updateLivePreview() {
     const frame = $('#cms-live-frame');
     if (!frame || !draft || !options.isAdmin()) return;
-    const scroll = frame.contentWindow?.scrollY || 0;
+    // Match the visitor's viewport breakpoints, rather than the narrower iframe.
+    const previewCSS = rules => [...rules].map(rule => {
+      if (rule.type === CSSRule.MEDIA_RULE) return window.matchMedia(rule.conditionText).matches ? previewCSS(rule.cssRules) : '';
+      return rule.cssText;
+    }).join('\n');
     const css = [...document.styleSheets].map(sheet => {
-      try { return [...sheet.cssRules].map(rule => rule.cssText).join('\n'); } catch { return ''; }
+      try { return previewCSS(sheet.cssRules); } catch { return ''; }
     }).join('\n').replaceAll('</style', '<\\/style');
     const root = document.documentElement;
-    const period = draft.showYear ? `<div class="notice">Звітний період: ${e(options.getYear())}</div>` : '';
-    const content = `<div class="cms-frame-page"><header class="page-heading"><div><h1>${e(draft.heading)}</h1><p>${e(draft.description)}</p></div></header>${period}<div inert>${renderBlocks(draft,true)}</div></div>`;
-    frame.onload = () => { try { frame.contentWindow.scrollTo(0,scroll); } catch {} };
-    frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'standard')}" style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{padding:20px}.cms-frame-page .cms-public-block-tools,.cms-frame-page [data-cms-action],.cms-frame-page .cms-save-bar{display:none}.cms-frame-page .section-head{flex-wrap:wrap}</style></head><body>${content}</body></html>`;
+    const content = `<div class="cms-frame-page" inert>${options.renderHeader(draft)}${renderBlocks(draft,true)}</div>`;
+    frame.onload = () => {
+      const page = frame.contentDocument?.querySelector('.cms-frame-page');
+      if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
+    };
+    frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'blue')}" style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{display:flow-root;padding:0}</style></head><body>${content}</body></html>`;
   }
   new MutationObserver(() => schedulePreview()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','style']});
+  window.addEventListener('resize', () => schedulePreview(100));
   function renderAdmin() {
     if (!draft) selectPage(site.pages[0].id, false);
     schedulePreview();
