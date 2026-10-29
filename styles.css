@@ -207,3 +207,53 @@ dialog{background:var(--surface)}
 #cms-widget-dialog .cms-text-background-option:has(input:checked){outline:2px solid var(--primary-bg);outline-offset:-2px}
 .cms-text-background-option input{width:18px;height:18px;min-height:18px;margin:0;flex-shrink:0}
 .cms-text-background-option i{display:block;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:var(--text-block-bg);flex-shrink:0}
+
+/* Optional site typography presets. Existing sites retain their original sizes until saved. */
+:root[data-site-style]{font-size:var(--site-body-size);--radius:var(--site-radius)}
+:root[data-site-style] body{font-size:var(--site-body-size);line-height:var(--site-line-height)}
+:root[data-site-style] h1{font-size:var(--site-heading-size);line-height:1.2}
+:root[data-site-style] h2,:root[data-site-style] .cms-widget-heading h2,:root[data-site-style] .cms-widget-content>h2{font-size:var(--site-section-size)}
+:root[data-site-style] h3,:root[data-site-style] .project-card h3{font-size:calc(var(--site-section-size) - 2px)}
+:root[data-site-style] .page-heading p,:root[data-site-style] .cms-prose p,:root[data-site-style] .project-card p,:root[data-site-style] .insight-card p,:root[data-site-style] .cms-banner p{font-size:var(--site-body-size)}
+:root[data-site-style] p,:root[data-site-style] .cms-list,:root[data-site-style] td,:root[data-site-style] th,:root[data-site-style] .project-meta,:root[data-site-style] .stat-detail{line-height:var(--site-line-height)}
+:root[data-site-style] .cms-prose p{margin-bottom:var(--site-paragraph-gap)}
+:root[data-site-style] .cms-prose p:last-child{margin-bottom:0}
+:root[data-site-style] .nav-item{font-size:var(--site-menu-size);line-height:var(--site-line-height)}
+:root[data-site-style] .stat-value,:root[data-site-style] .cms-widget .stat-value{font-size:var(--site-value-size)}
+:root[data-site-style] .stat-top,:root[data-site-style] .title-cell>strong{font-size:var(--site-body-size)}
+:root[data-site-style] .cms-data-scroll table,:root[data-site-style] td,:root[data-site-style] th,:root[data-site-style] .funding-table th,:root[data-site-style] .funding-table td,:root[data-site-style] .cms-list{font-size:var(--site-table-size)}
+:root[data-site-style] td,:root[data-site-style] th{padding-top:var(--site-row-padding);padding-bottom:var(--site-row-padding)}
+:root[data-site-style] .title-cell>span,:root[data-site-style] .faculty-cell{font-size:var(--site-table-size)}
+:root[data-site-style] .muted,:root[data-site-style] .cms-widget-subtitle,:root[data-site-style] .stat-detail .muted,:root[data-site-style] .stat-detail .pill,:root[data-site-style] .delta,:root[data-site-style] .title-cell>small,:root[data-site-style] .cms-widget-period,:root[data-site-style] .chart-footnote{font-size:var(--site-small-size)}
+:root[data-site-style] .cms-chart-axis,:root[data-site-style] .cms-chart-total,:root[data-site-style] .cms-segment-label,:root[data-site-style] .cms-chart-legend button,:root[data-site-style] .chart-legend,:root[data-site-style] .bar-year,:root[data-site-style] .chart-y{font-size:var(--site-chart-size)}
+:root[data-site-style] .cms-donut-total{font-size:calc(var(--site-value-size) * .72)}
+:root[data-site-style] .cms-block-grid,:root[data-site-style] .chart-grid,:root[data-site-style] .project-grid{gap:var(--site-block-gap)}
+:root[data-site-style] .cms-widget,:root[data-site-style] .panel,:root[data-site-style] .project-card,:root[data-site-style] .stat-card{border-radius:var(--site-radius);padding:var(--site-block-padding)}
+:root[data-site-style] .cms-widget .panel{padding:0}
+:root[data-site-style] .cms-widget .stat-card{padding:var(--site-block-padding)}
+:root[data-site-style] .panel,:root[data-site-style] .page-heading{margin-bottom:var(--site-block-gap)}
+@media(max-width:720px){:root[data-site-style] h1{font-size:min(var(--site-heading-size),8vw)}:root[data-site-style] .cms-widget,:root[data-site-style] .stat-card{padding:min(var(--site-block-padding),18px)}}
+.style-help{font-size:14px;line-height:1.6;color:var(--muted);margin:12px 0}
+.style-preset-actions{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+#site-styles-form select{width:100%;max-width:100%;min-width:0;background:var(--surface-field);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px}
+.style-fields{row-gap:16px}.style-fields small{font-size:12px;color:var(--muted)}
+.style-preview{margin:24px 0;padding:var(--site-block-padding,22px);border:1px solid var(--line);border-radius:var(--site-radius,14px);background:var(--surface-soft);overflow-wrap:anywhere}
+.style-preview-caption{display:block;font-size:12px;color:var(--muted);margin-bottom:12px}
+.style-preview h2{font-size:var(--site-section-size,21px);margin-bottom:var(--site-paragraph-gap,16px)}
+.style-preview p{font-size:var(--site-body-size,16px);line-height:var(--site-line-height,1.55);margin-bottom:var(--site-paragraph-gap,16px)}
+.style-preview-value{font-size:var(--site-value-size,36px);font-weight:650;margin:12px 0}.style-preview table{width:100%;table-layout:fixed}
+.dialog-tabs{overflow-x:auto;gap:18px}.dialog-tabs button{flex-shrink:0}
+
+:root[data-site-style] .button,:root[data-site-style] input,:root[data-site-style] select,:root[data-site-style] textarea,:root[data-site-style] .form-grid input,:root[data-site-style] .form-grid textarea,:root[data-site-style] .import-type select{font-size:var(--site-controls-size)}
+:root[data-site-style] .cms-progress-caption,:root[data-site-style] .cms-progress-caption strong,:root[data-site-style] .cms-progress-number,:root[data-site-style] .cms-horizontal-label,:root[data-site-style] .cms-horizontal-total,:root[data-site-style] .cms-horizontal-axis-plot>span,:root[data-site-style] .cms-horizontal-bar>span{font-size:var(--site-chart-size);line-height:var(--site-line-height)}
+:root[data-site-style] .breadcrumbs,:root[data-site-style] .period-label,:root[data-site-style] .year-tabs button{font-size:var(--site-body-size)}
+:root[data-site-style] .period-label>span,:root[data-site-style] .dataset-state,:root[data-site-style] footer{font-size:var(--site-small-size)}
+:root[data-site-style] .year-tabs{max-width:100%;flex-wrap:wrap}
+:root[data-site-style] .period-label{min-width:0;flex-wrap:wrap}
+:root[data-site-style] .heading-actions{max-width:100%;flex-wrap:wrap}
+:root[data-site-style] .heading-actions .button{white-space:normal;max-width:100%}
+:root[data-site-style] .nav-item{overflow-wrap:anywhere}
+:root[data-site-style] .topbar-right{min-width:0;max-width:100%}
+:root[data-site-style] .dataset-state{min-width:0;overflow-wrap:anywhere}
+:root[data-site-style] .stat-detail>span{min-width:0;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+@media(max-width:720px){:root[data-site-style] .cms-widget-heading{flex-wrap:wrap}:root[data-site-style] .cms-widget-heading h2{flex:1 1 150px}}

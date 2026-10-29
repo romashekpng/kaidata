@@ -1,9 +1,10 @@
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js';
-import { icon } from './icons.js?v=headings-20261030';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=site-styles-20261030';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=site-styles-20261030';
+import { icon } from './icons.js?v=site-styles-20261030';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js';
-import { createCMS } from './cms.js?v=headings-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=headings-20261030';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=site-styles-20261030';
+import { createCMS } from './cms.js?v=site-styles-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=site-styles-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -24,6 +25,7 @@ let importTicket = 0;
 let exportTarget = 'bundle';
 let pending = null, managerTab = 'import', storageAvailable = true;
 let toastTimer;
+let styleDraft=null,editingStyleId='';
 function toast(message) { $('#toast').textContent = message; $('#toast').classList.add('visible'); clearTimeout(toastTimer); toastTimer = setTimeout(() => $('#toast').classList.remove('visible'), 5000); }
 function applyTheme(value, save = true) {
   if (!Object.hasOwn(THEMES, value)) return;
@@ -41,6 +43,45 @@ function themeSettings() {
   const descriptions = {standard:'Світлий фон і прохолодні кольори',dark:'Темний фон і світлий контрастний текст',warm:'Кремовий фон і м’які теплі кольори',blue:'Темно-синє меню, сині акценти та зелено-червоні індикатори'};
   return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається для цього браузера.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
 }
+function applySiteStyles(settings) {
+  const root=document.documentElement;
+  for(const key of Object.keys(STYLE_FIELDS))root.style.removeProperty('--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()));
+  root.toggleAttribute('data-site-style',!!settings);
+  if(settings)for(const [key,value]of Object.entries(siteStyleVariables(settings)))root.style.setProperty(key,value);
+}
+function previewStyleDraft(){
+  try{
+    const validated=validateSiteStyles(styleDraft);
+    applySiteStyles({...validated,defaultPreset:editingStyleId});
+    const error=$('#style-error');if(error)error.textContent='';
+    return validated;
+  }catch(err){const error=$('#style-error');if(error)error.textContent=err.message;return null;}
+}
+function stylesContent(){
+  const preset=styleDraft.presets.find(p=>p.id===editingStyleId);
+  const options=selected=>styleDraft.presets.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${e(p.name)}</option>`).join('');
+  const fields=keys=>keys.map(key=>{const f=STYLE_FIELDS[key];return `<label>${f.label}${f.unit?' · '+f.unit:''}<input type="number" data-style-value="${key}" value="${preset.values[key]}" min="${f.min}" max="${f.max}" step="${f.step}" required><small>${f.min}–${f.max}${f.unit?' '+f.unit:''}</small></label>`;}).join('');
+  return `<form id="site-styles-form"><p class="style-help">Налаштуйте розміри тексту та компактність. Перегляд змінюється одразу; закриття без збереження скасовує зміни. На телефоні великі заголовки адаптуються до ширини екрана.</p><div class="form-grid settings-details"><label>Пресет для редагування<select id="style-preset">${options(editingStyleId)}</select></label><label>Пресет за замовчуванням<select id="style-default">${options(styleDraft.defaultPreset)}</select></label><label class="span-2">Назва пресета<input id="style-preset-name" value="${e(preset.name)}" required maxlength="80"></label></div><div class="style-preset-actions"><button type="button" class="button secondary small" data-action="style-new" ${styleDraft.presets.length>=20?'disabled':''}>+ Новий пресет із поточного</button><button type="button" class="button secondary small" data-action="style-reset">Початкові значення</button><button type="button" class="button secondary small danger" data-action="style-delete" ${styleDraft.presets.length===1?'disabled':''}>Видалити пресет</button></div><fieldset><legend>Розміри шрифтів</legend><div class="form-grid style-fields">${fields(['bodySize','headingSize','sectionSize','valueSize','menuSize','controlsSize','tableSize','chartSize','smallSize'])}</div></fieldset><fieldset><legend>Інтервали та вигляд блоків</legend><div class="form-grid style-fields">${fields(['lineHeight','paragraphGap','blockGap','blockPadding','rowPadding','radius'])}</div></fieldset><div class="style-preview" aria-label="Зразок оформлення"><span class="style-preview-caption">Зразок поточного пресета</span><h2>Наукова діяльність</h2><p>Знання, дослідження та результати університету.</p><p>Другий абзац допомагає оцінити міжрядковий інтервал і відступи.</p><div class="style-preview-value">128</div><table><thead><tr><th>Показник</th><th>Значення</th></tr></thead><tbody><tr><td>Публікації</td><td>128</td></tr><tr><td>Проєкти</td><td>12</td></tr></tbody></table></div><div id="style-error" class="form-error" role="alert"></div><p class="style-help">Для відвідувачів застосовується пресет за замовчуванням. Збереження діє в цьому браузері. Для перенесення використайте резервну копію сайта; для публікації — «Сайт для публікації» в адмінці.</p><div class="dialog-actions"><button type="button" class="button secondary" data-action="close-dialog">Скасувати</button><button type="submit" class="button primary">Зберегти стилі</button></div></form>`;
+}
+function refreshStyleEditor(){
+  $('#manager .dialog-body').innerHTML=stylesContent();previewStyleDraft();
+}
+function styleAction(action){
+  if(!styleDraft)return;
+  if(!previewStyleDraft())return;
+  const current=styleDraft.presets.find(p=>p.id===editingStyleId);
+  if(action==='style-new'&&styleDraft.presets.length<20){
+    const preset={id:'style-'+crypto.randomUUID(),name:`Мій пресет ${styleDraft.presets.length+1}`,values:{...current.values}};
+    styleDraft.presets.push(preset);editingStyleId=preset.id;
+  }
+  if(action==='style-reset')current.values={...(defaultSiteStyles().presets.find(p=>p.id===current.id)||defaultSiteStyles().presets[0]).values};
+  if(action==='style-delete'&&styleDraft.presets.length>1){
+    styleDraft.presets=styleDraft.presets.filter(p=>p.id!==editingStyleId);
+    if(styleDraft.defaultPreset===editingStyleId)styleDraft.defaultPreset=styleDraft.presets[0].id;
+    editingStyleId=styleDraft.presets[0].id;
+  }
+  refreshStyleEditor();
+}
 function persist(next) {
   try { localStorage.setItem(STORE, JSON.stringify(next)); storageAvailable = true; }
   catch { storageAvailable = false; toast('Зміни діють до закриття сторінки. Сховище браузера недоступне — експортуйте JSON.'); }
@@ -52,6 +93,7 @@ function empty(text = 'За цими умовами даних немає', sub 
 function sectionHead(title, subtitle='', action='') { return `<div class="section-head"><div><h2>${e(title)}</h2>${subtitle ? `<p>${e(subtitle)}</p>` : ''}</div>${action}</div>`; }
 function viewLink(key, label = 'Переглянути всі') { return `<a class="text-link" href="#${key}">${e(label)} ${icon('arrow')}</a>`; }
 function renderShell() {
+  applySiteStyles(data.institution.styles);
   applyTheme(theme, false);
   const i = data.institution;
   document.documentElement.style.setProperty('--accent', i.accent);
@@ -280,18 +322,22 @@ async function performExport(form) {
 function managerContent() {
   const i=data.institution;
   if(managerTab==='export') return exportContent();
+  if(managerTab==='styles') return stylesContent();
   if(managerTab==='settings') return `<form id="settings-form">${themeSettings()}<div class="form-grid settings-details"><label>Скорочена назва<input name="shortName" value="${e(i.shortName)}" required maxlength="24"></label><label>Колір акценту<input type="color" name="accent" value="${e(i.accent)}"></label><label class="span-2">Повна назва закладу<input name="name" value="${e(i.name)}" required maxlength="180"></label><label class="span-2">Підзаголовок<input name="subtitle" value="${e(i.subtitle)}"></label><label class="span-2">Сайт університету<input name="website" type="url" value="${e(i.website)}" placeholder="https://…"></label><label class="span-2">Джерела й примітки<textarea name="sourceNote" rows="3">${e(i.sourceNote)}</textarea></label></div><fieldset><legend>Блоки аналітики</legend><p class="muted">Вимкнені блоки приховуються; їхні дані залишаються в наборі.</p><div class="checkbox-grid">${Object.entries(BLOCKS).map(([id,label])=>`<label class="checkbox-label"><input type="checkbox" name="blocks" value="${id}" ${i.blocks.includes(id)?'checked':''}>${e(label)}</label>`).join('')}</div></fieldset><div id="form-error" class="form-error" role="alert"></div><div class="dialog-actions"><span>Зберігається в цьому браузері</span><button class="button primary" type="submit">${icon('check')}Зберегти налаштування</button></div></form>`;
   if(managerTab==='format') return `<div class="format-doc"><div class="notice">${icon('info')}<span>Імпорт і налаштування зберігаються локально у вашому браузері. Для публікації спільних даних замініть файл <code>data/demo.json</code> на сервері й установіть <code>demo: false</code>. Відвідувачі без локального імпорту отримають цей набір.</span></div><h3>Один університет — один JSON</h3><p>Файл містить <code>schemaVersion: 1</code>, <code>demo</code>, <code>updatedAt</code>, налаштування <code>institution</code> та чотири масиви даних. Блоки можна вмикати й вимикати в налаштуваннях.</p><div class="format-example"><pre>${e(JSON.stringify({schemaVersion:1,demo:false,updatedAt:today(),institution:{shortName:'КАІ',name:'Назва університету',subtitle:'Наукова аналітика',accent:'#138b7b',website:'https://kai.edu.ua',sourceNote:'Власні перевірені дані',blocks:['publications','projects','patents','funding']},publications:[],projects:[],patents:[],revenues:[]},null,2))}</pre></div><h3>CSV та XLSX для окремих блоків</h3><p>UTF-8, заголовки обов’язкові. Роздільник: крапка з комою, кома або табуляція. Файл замінює весь обраний набір за всі роки. XLSX підтримує одну таблицю або повну книгу з 5 аркушами: Університет, Публікації, Проєкти, Патенти, Надходження. Для повного перенесення налаштувань використайте XLSX або JSON. Для CSV оберіть одну таблицю. Формули Excel не імпортуються — вставляйте значення.</p>${DATASETS.map(k=>`<div class="format-dataset"><strong>${e(({revenues:'Надходження',...BLOCKS})[k])}</strong><code>${CSV_HEADERS[k].join(', ')}</code><button class="text-link" data-action="template" data-dataset="${k}">${icon('download')}Приклад CSV</button><button class="text-link" data-action="xlsx-template" data-dataset="${k}">${icon('download')}Приклад XLSX</button></div>`).join('')}<h3>Правила розрахунку</h3><ul><li>Публікації відбираються за роком видання; індексація Scopus / WoS рахується без дублювання.</li><li>Q1–Q2 — кількість індексованих публікацій із цими квартилями. Квартиль має відповідати року публікації.</li><li>Проєкт враховується в кожному році виконання. Кошти — фактичні надходження університету у гривнях за роком, не загальний бюджет проєкту. Міжнародна частка рахується від коштів.</li><li>Патенти рахуються за датою реєстрації. Один запис — один патент із одним основним факультетом.</li><li>Кожна публікація має один основний факультет і кафедру. Це не дубльований облік співавторів із різних факультетів.</li><li>Відсутні надходження позначені «—», явний нуль — «0». Гранти й надходження не підсумовуються між собою.</li><li>Порівняння — із попереднім календарним роком; за нульової бази відсоток не визначається. Поточний рік може бути неповним.</li></ul><h3>Особливі поля CSV</h3><p><code>indexes</code>: <code>Scopus|WoS</code> або порожнє поле. <code>quartile</code>: Q1–Q4 або порожнє. Дати: <code>YYYY-MM-DD</code>. <code>international</code>: <code>true</code> чи <code>false</code>. <code>funding</code>: JSON-масив, наприклад <code>[{"year":2026,"amountUAH":120000}]</code>. Експортований приклад правильно екранує лапки. Поле <code>id</code> унікальне в межах набору. Суми невід’ємні, у гривнях.</p><h3>Джерело поточного набору</h3><p>${e(i.sourceNote||'Не вказано')}</p><p>Оновлено: ${date(data.updatedAt)}. ${data.demo?'Набір демонстраційний.':'Набір позначено як власні дані.'} Усі суми подаються у гривневому еквіваленті, конвертація валют виконується до імпорту.</p></div>`;
   return `<div class="current-data"><div class="section-head"><div><h3>Поточний набір даних</h3><p>${e(i.shortName)} · оновлено ${date(data.updatedAt)}</p></div>${pill(data.demo?'Демонстрація':'Власні дані',data.demo?'amber':'green')}</div><div class="dataset-counts">${datasetCounts(data)}</div></div><div class="import-description"><h3>Оновіть свою аналітику</h3><p>Оберіть CSV, XLSX або JSON. XLSX підтримує повну книгу з налаштуваннями або окрему таблицю. Спочатку перевіримо формат, потім покажемо зміни для застосування.</p></div><div class="transfer-selectors"><label class="import-type">Формат<select id="import-format"><option value="json">JSON</option><option value="csv">CSV</option><option value="xlsx">XLSX · Excel</option></select></label><label class="import-type">Обсяг імпорту<select id="import-type" disabled><option value="bundle">Повний набір і налаштування</option>${DATASETS.map(k=>`<option value="${k}">${e(({revenues:'Надходження',...BLOCKS})[k])}</option>`).join('')}</select></label></div><label class="dropzone" id="dropzone"><input id="file-input" type="file" accept=".json"><span class="upload-symbol">${icon('upload')}</span><strong>Оберіть файл або перетягніть сюди</strong><span>JSON, CSV або XLSX · до 5 МБ</span><span class="button secondary small">Обрати файл</span></label><div id="import-result" aria-live="polite"></div><div class="import-help"><span>${icon('info')}Потрібен приклад структури?</span><button class="text-link" data-action="example">Завантажити JSON ${icon('download')}</button><button class="text-link" data-action="format">Опис формату ${icon('arrow')}</button></div><div class="local-storage-note">${icon('info')}<span>Дані обробляються у браузері та не надсилаються на сервер. CSV замінює одну таблицю; XLSX — одну таблицю або весь набір; JSON — увесь набір і налаштування. Експортуйте резервну копію перед заміною.</span></div><div class="dialog-actions"><button class="text-link" data-action="export">${icon('download')}Експорт поточного набору</button><button class="text-link danger" data-action="reset">Відновити початковий набір</button></div>`;
 }
 function openManager(tab='import') {
   closeMenu();
+  if(managerTab==='styles')applySiteStyles(data.institution.styles);
+  if(tab==='styles'){styleDraft=structuredClone(data.institution.styles||defaultSiteStyles());editingStyleId=styleDraft.defaultPreset;}else styleDraft=null;
   importTicket++;pending=null;managerTab=tab;
-  const titles={import:'Керування даними',settings:'Налаштування університету',format:'Формат даних і методологія',export:'Експорт даних'};
-  $('#manager').innerHTML=`<div class="dialog-heading"><div><div class="eyebrow">ВАША ПЛАТФОРМА АНАЛІТИКИ</div><h2 id="dialog-title">${titles[tab]}</h2></div><button class="icon-button" data-action="close-dialog" aria-label="Закрити">${icon('close')}</button></div><div class="dialog-tabs">${[['import','Імпорт'],['export','Експорт'],['settings','Університет'],['format','Формат і правила']].map(([t,label])=>`<button data-tab="${t}" class="${tab===t?'selected':''}">${label}</button>`).join('')}</div><div class="dialog-body">${managerContent()}</div>`;
+  const titles={styles:'Стилі сайта',import:'Керування даними',settings:'Налаштування університету',format:'Формат даних і методологія',export:'Експорт даних'};
+  $('#manager').innerHTML=`<div class="dialog-heading"><div><div class="eyebrow">ВАША ПЛАТФОРМА АНАЛІТИКИ</div><h2 id="dialog-title">${titles[tab]}</h2></div><button class="icon-button" data-action="close-dialog" aria-label="Закрити">${icon('close')}</button></div><div class="dialog-tabs">${[['import','Імпорт'],['export','Експорт'],['settings','Університет'],['styles','Стилі'],['format','Формат і правила']].map(([t,label])=>`<button data-tab="${t}" class="${tab===t?'selected':''}">${label}</button>`).join('')}</div><div class="dialog-body">${managerContent()}</div>`;
   if(!$('#manager').open) $('#manager').showModal();
   $('#manager').scrollTop=0;
   if(tab==='export')updateExportControls();
+  if(tab==='styles')previewStyleDraft();
 }
 async function readImport(file) {
   if(!file)return;
@@ -317,7 +363,8 @@ async function readImport(file) {
 function afterDataChange() { const years=yearsIn(data);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();render(); }
 async function handleAction(action,target) {
   if(action==='import'||action==='settings'||action==='format')openManager(action);
-  if(action==='close-dialog')$('#manager').close();
+  if(action==='close-dialog'){$('#manager').close();applySiteStyles(data.institution.styles);}
+  if(action.startsWith('style-'))styleAction(action);
   if(action==='menu'){const open=$('#sidebar').classList.toggle('open');$('[data-action="menu"]').setAttribute('aria-expanded',String(open));}
   if(action==='close-menu')closeMenu();
   if(action==='export'){exportTarget='bundle';openManager('export');}
@@ -344,6 +391,8 @@ document.addEventListener('click',ev=>{
 });
 document.addEventListener('change',ev=>{
   const el=ev.target;
+  if(el.id==='style-preset'&&styleDraft){editingStyleId=el.value;refreshStyleEditor();}
+  if(el.id==='style-default'&&styleDraft){styleDraft.defaultPreset=el.value;editingStyleId=el.value;refreshStyleEditor();}
   if(el.id==='theme-select'||el.name==='displayTheme')applyTheme(el.value);
   if(el.id==='all-years'){year=+el.value;resetFilters();render();}
   if(el.id==='faculty-filter'||el.id==='quartile-filter'||el.id==='index-filter'){if(el.id==='faculty-filter')faculty=el.value;if(el.id==='quartile-filter')quartile=el.value;if(el.id==='index-filter')indexFilter=el.value;page=1;$('#records-body').innerHTML=tableBody(route);}
@@ -352,7 +401,25 @@ document.addEventListener('change',ev=>{
   if(el.id==='export-format'||el.id==='export-type')updateExportControls();
 });
 document.addEventListener('input',ev=>{if(ev.target.id==='search'){query=ev.target.value;page=1;$('#records-body').innerHTML=tableBody(route);}});
+document.addEventListener('input',ev=>{
+  const el=ev.target;if(!styleDraft||!el.closest('#site-styles-form'))return;
+  const preset=styleDraft.presets.find(p=>p.id===editingStyleId);
+  if(el.dataset.styleValue)preset.values[el.dataset.styleValue]=el.value===''?NaN:Number(el.value);
+  if(el.id==='style-preset-name'){
+    preset.name=el.value;
+    for(const select of [$('#style-preset'),$('#style-default')])for(const option of select.options)if(option.value===preset.id)option.textContent=preset.name;
+  }
+  previewStyleDraft();
+});
+$('#manager').addEventListener('close',()=>{applySiteStyles(data.institution.styles);styleDraft=null;});
+$('#manager').addEventListener('cancel',()=>applySiteStyles(data.institution.styles));
 document.addEventListener('submit',ev=>{
+  if(ev.target.id==='site-styles-form'){
+    ev.preventDefault();
+    try{const styles=validateSiteStyles(styleDraft);persist(validateBundle({...data,institution:{...data.institution,styles}}));styleDraft=null;render();$('#manager').close();toast(storageAvailable?'Стилі та пресет за замовчуванням збережено.':'Стилі застосовано. Експортуйте JSON для збереження.');}
+    catch(err){$('#style-error').textContent=err.message;}
+    return;
+  }
   if(ev.target.id==='export-form'){ev.preventDefault();performExport(ev.target);return;}
   if(ev.target.id!=='settings-form')return;ev.preventDefault();
   try{const form=new FormData(ev.target);const next=validateBundle({...data,institution:{...data.institution,...Object.fromEntries(['shortName','name','subtitle','accent','website','sourceNote'].map(k=>[k,form.get(k)])),blocks:form.getAll('blocks')}});persist(next);render();$('#manager').close();toast(storageAvailable?'Налаштування збережено.':'Налаштування застосовано. Експортуйте JSON для збереження.');}

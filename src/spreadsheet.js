@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js';
+import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=site-styles-20261030';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const MAX_UNPACKED = 50 * 1024 * 1024;
@@ -54,16 +54,18 @@ function findSheet(book, key) {
   return matches[0];
 }
 function readSettings(sheet) {
-  if (sheet.rowCount !== SETTINGS.length + 1 || sheet.columnCount !== 2 || cellText(sheet.getCell('A1'), sheet.name) !== 'key' || cellText(sheet.getCell('B1'), sheet.name) !== 'value') fail('Аркуш «Університет» має містити колонки key, value та всі рядки налаштувань із прикладу.');
+  if (![SETTINGS.length+1,SETTINGS.length+2].includes(sheet.rowCount) || sheet.columnCount !== 2 || cellText(sheet.getCell('A1'), sheet.name) !== 'key' || cellText(sheet.getCell('B1'), sheet.name) !== 'value') fail('Аркуш «Університет» має містити колонки key, value та всі рядки налаштувань із прикладу.');
   const entries = new Map();
   for (let n = 2; n <= sheet.rowCount; n++) {
     const key = cellText(sheet.getCell(n, 1), `${sheet.name}, рядок ${n}`);
-    if (!SETTINGS.includes(key) || entries.has(key)) fail(`${sheet.name}: невідомий або повторюваний ключ ${key}.`);
+    if ((!SETTINGS.includes(key)&&key!=='institution.styles') || entries.has(key)) fail(`${sheet.name}: невідомий або повторюваний ключ ${key}.`);
     entries.set(key, cellText(sheet.getCell(n, 2), `${sheet.name}, ${key}`));
   }
+  if(SETTINGS.some(key=>!entries.has(key)))fail('XLSX: відсутні обов’язкові налаштування університету.');
   if (!['true', 'false'].includes(entries.get('demo')) || entries.get('schemaVersion') !== '1') fail('XLSX: schemaVersion має бути 1, demo — true або false.');
   const institution = Object.fromEntries(SETTINGS.filter(k => k.startsWith('institution.')).map(k => [k.slice(12), entries.get(k)]));
   institution.blocks = institution.blocks ? institution.blocks.split('|') : [];
+  if(entries.has('institution.styles')){try{institution.styles=JSON.parse(entries.get('institution.styles'));}catch{fail('XLSX: некоректний JSON стилів сайта.');}}
   return { schemaVersion: 1, demo: entries.get('demo') === 'true', updatedAt: entries.get('updatedAt'), institution };
 }
 export async function readXLSXWorkbook(buffer, engine = globalThis.ExcelJS) {
@@ -116,6 +118,7 @@ export async function toXLSX(data, target = 'bundle', engine = globalThis.ExcelJ
       if (Array.isArray(value)) value = value.join('|');
       sheet.addRow([key, value]);
     });
+    if(clean.institution.styles)sheet.addRow(['institution.styles',JSON.stringify(clean.institution.styles)]);
     styleSheet(sheet, ['key', 'value']);
   }
   for (const key of target === 'bundle' ? DATASETS : [target]) {

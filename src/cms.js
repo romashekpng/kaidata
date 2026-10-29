@@ -1,9 +1,9 @@
-import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=headings-20261030';
-import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=headings-20261030';
-import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=headings-20261030';
-import { validateBundle } from './data.js';
+import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=site-styles-20261030';
+import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=site-styles-20261030';
+import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=site-styles-20261030';
+import { validateBundle } from './data.js?v=site-styles-20261030';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=headings-20261030';
+import { icon } from './icons.js?v=site-styles-20261030';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -114,9 +114,9 @@ export function createCMS(options) {
       });
       frame.contentDocument?.addEventListener('toggle',()=>{if(page)frame.style.height=`${Math.ceil(page.getBoundingClientRect().height)}px`;},true);
     };
-    frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'blue')}" style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{display:flow-root;padding:0}</style></head><body>${content}</body></html>`;
+    frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'blue')}" ${root.hasAttribute('data-site-style')?'data-site-style':''} style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{display:flow-root;padding:0}</style></head><body>${content}</body></html>`;
   }
-  new MutationObserver(() => schedulePreview()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','style']});
+  new MutationObserver(() => schedulePreview()).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-site-style','style']});
   window.addEventListener('resize', () => schedulePreview(100));
   function renderAdmin() {
     if (!draft) selectPage(site.pages[0].id, false);
@@ -161,10 +161,9 @@ export function createCMS(options) {
         const luminance=channels.reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
         backgroundStyle=`;--text-block-bg:${s.backgroundColor};--text-block-ink:${luminance>.179?'#000000':'#ffffff'}`;
       }
-      const gap=24*(100-s.width)/100;
       const period=options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
-      return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - ${gap}px);--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
+      return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
   }
@@ -292,7 +291,7 @@ export function createCMS(options) {
   async function publishZip(target) {
     if(dirty)throw new Error('Спочатку збережіть сторінку.');target.disabled=true;
     try{
-      const names=['index.html','styles.css','src/app.js','src/data.js','src/icons.js','src/spreadsheet.js','src/cms-data.js','src/block-view.js','src/cms-io.js','src/cms.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt'];
+      const names=['index.html','styles.css','src/app.js','src/style-data.js','src/data.js','src/icons.js','src/spreadsheet.js','src/cms-data.js','src/block-view.js','src/cms-io.js','src/cms.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt'];
       const files=await Promise.all(names.map(async name=>{if(globalThis.KAI_PUBLIC_ASSETS&&Object.hasOwn(globalThis.KAI_PUBLIC_ASSETS,name))return {name,data:globalThis.KAI_PUBLIC_ASSETS[name]};const response=await fetch(new URL(name,document.baseURI));if(!response.ok)throw new Error(`Не вдалося завантажити ${name}.`);return {name,data:await response.arrayBuffer()};}));
       files.push({name:'data/demo.json',data:JSON.stringify(validateBundle(options.getData()),null,2)},{name:'data/pages.json',data:JSON.stringify(validateSite(site),null,2)},{name:'.nojekyll',data:''},{name:'PUBLICATION.txt',data:'Розпакуйте архів. Замініть однойменні файли в GitHub-репозиторії та створіть коміт. GitHub Pages: main, / (root). Дані й сторінки стануть публічними. Локальні копії браузерів не оновлюються примусово: в адмінці імпортуйте site-backup.json або очистьте локальні налаштування сайта після резервної копії.'});
       options.download('kai-site-publication.zip',createSiteZip(files),'application/zip');options.notify('ZIP готовий. Розпакуйте його й замініть файли в GitHub для публікації.');

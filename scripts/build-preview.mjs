@@ -14,10 +14,10 @@ app=app.replace(fetchLine,`demo=validateBundle(${(await read('data/demo.json')).
 const pagesLine="const pagesResponse=await fetch('./data/pages.json');if(!pagesResponse.ok)throw new Error('Не вдалося завантажити сторінки сайта.');cms.init(await pagesResponse.json());";
 if(!app.includes(pagesLine))throw new Error('Preview builder: CMS bootstrap changed.');
 app=app.replace(pagesLine,`cms.init(${(await read('data/pages.json')).replaceAll('<','\\u003c')});`);
-const names=['index.html','styles.css','src/app.js','src/data.js','src/icons.js','src/spreadsheet.js','src/cms-data.js','src/block-view.js','src/cms-io.js','src/cms.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt'];
+const names=['index.html','styles.css','src/app.js','src/style-data.js','src/data.js','src/icons.js','src/spreadsheet.js','src/cms-data.js','src/block-view.js','src/cms-io.js','src/cms.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt'];
 const assets=Object.fromEntries(await Promise.all(names.map(async name=>[name,await read(name)])));
 const embedded=`globalThis.KAI_PUBLIC_ASSETS=${JSON.stringify(assets).replaceAll('<','\\u003c')};\n`;
-const script=embedded+module(await read('src/data.js'))+module(await read('src/icons.js'))+module(await read('src/spreadsheet.js'))+module(await read('src/cms-data.js'))+module(await read('src/block-view.js'))+module(await read('src/cms-io.js'))+module(await read('src/zip.js'))+module(await read('src/cms.js'))+app;
+const script=embedded+module(await read('src/style-data.js'))+module(await read('src/data.js'))+module(await read('src/icons.js'))+module(await read('src/spreadsheet.js'))+module(await read('src/cms-data.js'))+module(await read('src/block-view.js'))+module(await read('src/cms-io.js'))+module(await read('src/zip.js'))+module(await read('src/cms.js'))+app;
 if(/<\/script/i.test(script))throw new Error('Unexpected script closing tag.');
 const vendor=(await read('src/vendor/exceljs.min.js')).replace(/<\/script/gi,'<\\/script');
 let html=await read('index.html');

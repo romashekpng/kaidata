@@ -1,3 +1,4 @@
+import { validateSiteStyles } from './style-data.js?v=site-styles-20261030';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {
@@ -36,6 +37,7 @@ export function validateBundle(input) {
     subtitle: optional(i.subtitle, 'institution.subtitle'), accent: i.accent, website: url(i.website, 'institution.website'),
     sourceNote: optional(i.sourceNote, 'institution.sourceNote'), blocks: [...i.blocks],
   }};
+  if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
   for (const key of DATASETS) {
     if (!Array.isArray(input[key]) || input[key].length > 25000) fail(`${key}: потрібен масив, не більше 25 000 записів.`);
     const ids = new Set();
