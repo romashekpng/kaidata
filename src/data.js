@@ -1,4 +1,4 @@
-import { validateSiteStyles } from './style-data.js?v=metric-details-fix-20261030';
+import { validateSiteStyles } from './style-data.js?v=legend-center-20261030';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {

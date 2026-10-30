@@ -1,5 +1,5 @@
-import { icon } from './icons.js?v=metric-details-fix-20261030';
-import { BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=metric-details-fix-20261030';
+import { icon } from './icons.js?v=legend-center-20261030';
+import { BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=legend-center-20261030';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -90,7 +90,7 @@ export function renderChartTable(block, table, hidden = []) {
  const names=pie?table.rows.map(r=>r[0]):table.headers.slice(1);
  const values=pie?table.rows.map(r=>r.slice(1).reduce((sum,v)=>sum+(num(v)||0),0)):[];
  const totals=table.rows.map(r=>r.slice(1).reduce((sum,v,i)=>sum+(hiddenSet.has(i)?0:num(v)||0),0));
- const legend=s.legend==='none'?'':`<div class="cms-chart-legend ${s.showAll?'show-all':''}" aria-label="Легенда графіка">${names.map((name,i)=>`<button type="button" data-cms-action="chart-legend" data-block-id="${block.id}" data-series="${i}" aria-pressed="${!hiddenSet.has(i)}" class="${hiddenSet.has(i)?'series-hidden':''}" title="${esc(name)}${pie?`: ${format(values[i])}`:''}"><i style="background:${colors[i%colors.length]}"></i><span>${esc(name)}</span>${pie?`<strong>${format(values[i])}</strong>`:''}</button>`).join('')}</div>`;
+ const legend=s.legend==='none'?'':`<div class="cms-chart-legend ${s.legendCentered&&['top','bottom'].includes(s.legend)?'legend-centered':''} ${s.showAll?'show-all':''}" aria-label="Легенда графіка">${names.map((name,i)=>`<button type="button" data-cms-action="chart-legend" data-block-id="${block.id}" data-series="${i}" aria-pressed="${!hiddenSet.has(i)}" class="${hiddenSet.has(i)?'series-hidden':''}" title="${esc(name)}${pie?`: ${format(values[i])}`:''}"><i style="background:${colors[i%colors.length]}"></i><span>${esc(name)}</span>${pie?`<strong>${format(values[i])}</strong>`:''}</button>`).join('')}</div>`;
  let graphic='';
  if(!table.rows.length)graphic='<div class="empty"><p>Додайте дані для побудови графіка.</p></div>';
  else if(s.chartType==='progress')graphic=renderProgressChart(block,table,s,colors,hiddenSet,totals);
