@@ -1,11 +1,11 @@
-import { createAnalytics } from './analytics.js?v=publication-modes-20261030';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=publication-modes-20261030';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV } from './data.js?v=publication-modes-20261030';
-import { icon } from './icons.js?v=publication-modes-20261030';
+import { createAnalytics } from './analytics.js?v=chart-libraries-20261030';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=chart-libraries-20261030';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV } from './data.js?v=chart-libraries-20261030';
+import { icon } from './icons.js?v=chart-libraries-20261030';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=publication-modes-20261030';
-import { createCMS } from './cms.js?v=publication-modes-20261030';
-import { cmsRoute } from './cms-data.js?v=publication-modes-20261030';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=chart-libraries-20261030';
+import { createCMS } from './cms.js?v=chart-libraries-20261030';
+import { cmsRoute } from './cms-data.js?v=chart-libraries-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);

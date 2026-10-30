@@ -68,8 +68,24 @@ export const BLOCK_PALETTES = {
  sea: { name: 'Морська хвиля', colors: ['#155e75','#0891b2','#06b6d4','#14b8a6','#99f6e4'] },
  pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
 };
+export const CHART_LIBRARIES = { echarts:'Apache ECharts', chartjs:'Chart.js', plotly:'Plotly.js' };
+export const LIBRARY_SETTING_KEYS = ['chartType','palette','customColors','legend','legendCentered','totalLabels','tooltipTotal','segmentValues','segmentPercentages','numbering','wrapLabels','allYears','height','showChartData'];
+export function chartSettingsForLibrary(settings = {}, library = settings.chartLibrary || 'echarts', source = '') {
+ if(!Object.hasOwn(CHART_LIBRARIES,library))throw new Error('Невідома бібліотека для діаграм.');
+ return structuredClone({...defaultBlockSettings(source),...settings,...settings.librarySettings?.[library],chartLibrary:library});
+}
+export function rememberChartSettings(settings, library = settings.chartLibrary || 'echarts') {
+ const out=structuredClone(settings);out.librarySettings ||= {};
+ out.librarySettings[library]=Object.fromEntries(LIBRARY_SETTING_KEYS.map(key=>[key,structuredClone(out[key])]));
+ return out;
+}
+export function selectChartLibrary(settings, library, source = '') {
+ const saved=rememberChartSettings(settings),next=chartSettingsForLibrary(saved,library,source);
+ // A library's first profile starts from the currently visible settings.
+ return {...next,librarySettings:saved.librarySettings};
+}
 export function defaultBlockSettings(source = '') {
- return { showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, legendCentered:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { chartLibrary:'echarts', showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, legendCentered:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function normalizeBlockPeriod(value) {
  if(typeof value!=='string')throw new Error('Період: вкажіть рік або діапазон, наприклад 2026 чи 2021-2026.');
@@ -94,9 +110,10 @@ export function inferTablePeriod(table) {
  if(!years.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))for(const row of table.rows)if(row.slice(1).some(present))years.push(+row[0]);
  return formatBlockPeriod(years);
 }
-export function validateBlockSettings(input = {}, source = '') {
+function validateFlatBlockSettings(input = {}, source = '') {
  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
  const out = { ...defaultBlockSettings(source), ...input };
+ if(!Object.hasOwn(CHART_LIBRARIES,out.chartLibrary))throw new Error('Невідома бібліотека для діаграм.');
  if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||typeof out.backgroundColor!=='string'||!/^#[0-9a-f]{6}$/i.test(out.backgroundColor))throw new Error('Фон блоку: виберіть колір теми або колір у форматі #RRGGBB.');
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
  for(const key of ['legendCentered','showProjectGlobe','showProjectFlag','showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
@@ -104,6 +121,21 @@ export function validateBlockSettings(input = {}, source = '') {
  if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
  if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');
  return Object.fromEntries(Object.keys(defaultBlockSettings(source)).map(key=>[key,out[key]]));
+}
+export function validateBlockSettings(input = {}, source = '') {
+ const out=validateFlatBlockSettings(input,source);
+ if(input.librarySettings!==undefined){
+  if(!input.librarySettings||typeof input.librarySettings!=='object'||Array.isArray(input.librarySettings)||Object.keys(input.librarySettings).some(key=>!Object.hasOwn(CHART_LIBRARIES,key)))throw new Error('Некоректні налаштування бібліотек діаграм.');
+  out.librarySettings={};
+  for(const [library,profile] of Object.entries(input.librarySettings)){
+   if(!profile||typeof profile!=='object'||Array.isArray(profile)||Object.keys(profile).some(key=>!LIBRARY_SETTING_KEYS.includes(key)))throw new Error('Некоректний профіль бібліотеки діаграм.');
+   const valid=validateFlatBlockSettings({...out,...profile},source);
+   out.librarySettings[library]=Object.fromEntries(LIBRARY_SETTING_KEYS.map(key=>[key,valid[key]]));
+  }
+  // Flat fields remain the active profile for older renderers and data exports.
+  if(out.librarySettings[out.chartLibrary])Object.assign(out,out.librarySettings[out.chartLibrary]);
+ }
+ return out;
 }
 export function validateBlockTable(input, numeric = false, maxColumns = 12) {
  if(!input || !Array.isArray(input.headers) || !input.headers.length || input.headers.length>maxColumns || input.headers.some(h=>typeof h!=='string'||!h.trim()||h.length>160) || new Set(input.headers.map(h=>h.trim())).size!==input.headers.length)throw new Error(`Таблиця: від 1 до ${maxColumns} непорожніх унікальних колонок.`);
@@ -191,7 +223,7 @@ export function validateCMSBlock(input) {
     if(input.dataTable!==undefined)out.dataTable=isMetricBlock(input)?validateMetricDataTable(input.dataTable):validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
-  if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut','progress'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){
+  if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&[out.settings||defaultBlockSettings(input.source),...Object.values(out.settings?.librarySettings||{})].some(s=>['pie','donut','progress'].includes(s.chartType))){
     const rows=input.type==='chart'?out.rows:out.dataTable?.rows;
     if(rows?.some(r=>r.slice(1).some(c=>Number(c.replace(',','.'))<0)))fail('Кругова діаграма та смуги прогресу не підтримують від’ємні значення.');
   }

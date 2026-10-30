@@ -1,11 +1,13 @@
-import { defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-modes-20261030';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=publication-modes-20261030';
-import { icon } from './icons.js?v=publication-modes-20261030';
+import { createChartRenderer } from './chart-runtime.js?v=chart-libraries-20261030';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-libraries-20261030';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=chart-libraries-20261030';
+import { icon } from './icons.js?v=chart-libraries-20261030';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
+ const charts=createChartRenderer();
  const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map();
  const currentBlock=id=>options.getBlock(id);
-  function resolvedSettings(block) { return structuredClone({...defaultBlockSettings(block.source),...block.settings}); }
+  function resolvedSettings(block) { return chartSettingsForLibrary(block.settings,block.settings?.chartLibrary||'echarts',block.source); }
   function editableTable(block) {
     if(block.type==='analytics'){
       if(block.dataMode==='manual')return structuredClone(block.dataTable);
@@ -56,7 +58,7 @@ export function createSiteView(options){
       const s=resolvedSettings(b),isChart=b.type==='chart'||(b.type==='analytics'&&CHART_SOURCES.includes(b.source));
       const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=b.subtitle?`<p class="cms-widget-subtitle">${e(b.subtitle)}</p>`:'';
       let body='',displayedTable=null;
-      if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;body=renderChartTable(b,table,[...(hiddenSeries.get(b.id)||[])]);}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
+      if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
         else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id);
@@ -101,6 +103,7 @@ export function createSiteView(options){
   return false;
  }
  function bindInputs(root){
+  charts.observe(root);
   root.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{if(event.target.matches('[data-project-role]'))updateProjectFilter(event.target.closest('.project-catalog'),'role',event.target.value);});
  }

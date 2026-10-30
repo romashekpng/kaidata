@@ -10,7 +10,7 @@ const server = http.createServer(async (req, res) => {
     const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
     const filename = path.resolve(root, relative);
     // Serve only public application assets, never Git metadata or arbitrary files.
-    if (!['index.html', 'styles.css', 'src/vendor/exceljs.LICENSE.txt'].includes(relative) && !/^(src|data)\/[\w./-]+\.(js|json|csv|svg)$/.test(relative)) throw new Error('Not found');
+    if (!['index.html', 'styles.css'].includes(relative) && !/^src\/vendor\/[\w.-]+\.txt$/.test(relative) && !/^(src|data)\/[\w./-]+\.(js|json|csv|svg)$/.test(relative)) throw new Error('Not found');
     if (!filename.startsWith(root) || relative.split('/').includes('..')) throw new Error('Not found');
     const body = await readFile(filename);
     res.writeHead(200, { 'Content-Type': types[path.extname(filename)] || 'application/octet-stream', 'X-Content-Type-Options': 'nosniff', 'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'" });
