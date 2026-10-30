@@ -278,3 +278,14 @@ dialog{background:var(--surface)}
 :root[data-site-style] .project-programs button,:root[data-site-style] .project-count,:root[data-site-style] .project-role,:root[data-site-style] .project-timeline-caption{font-size:var(--site-small-size)}
 @container(max-width:600px){.project-catalog .project-grid{grid-template-columns:1fr}.project-programs{flex-basis:100%}.project-search{flex-basis:100%}}
 @media(max-width:720px){.project-programs{flex-basis:100%}.project-search{flex-basis:100%}}
+
+/* Backgrounds belong to individual metric rows and follow the selected theme. */
+.cms-card-background{background:var(--text-block-bg);color:var(--text-block-ink);border-color:color-mix(in srgb,var(--text-block-ink) 18%,var(--text-block-bg))}
+.cms-card-background .stat-top,.cms-card-background .stat-value small,.cms-card-background .muted{color:inherit}
+.cms-metric-background-heading{min-width:200px}
+.cms-metric-background-editor{min-width:180px;display:grid;gap:8px}
+#cms-widget-dialog .cms-metric-background-editor label{font-size:12px;gap:4px}
+#cms-widget-dialog .cms-metric-background-editor select{margin:0;font-size:13px;min-height:36px;padding:6px 8px}
+.cms-metric-background-colors{display:flex;gap:10px;align-items:end}
+.cms-metric-background-swatch{display:block;width:40px;height:32px;border-radius:6px;border:1px solid var(--line);background:var(--text-block-bg);flex-shrink:0}
+#cms-widget-dialog .cms-metric-background-editor input[type=color]{width:60px;height:32px;min-height:32px;padding:2px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}

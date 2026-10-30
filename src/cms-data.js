@@ -4,6 +4,25 @@ export const ANALYTICS = { stats: 'Картки основних показни�
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
 export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
 export const TEXT_BACKGROUNDS = { menu:'Колір меню', accent:'Основний акцент', blue:'Блакитний відтінок', green:'Зелений відтінок', amber:'Теплий відтінок', violet:'Фіолетовий відтінок', default:'Стандартний фон', custom:'Власний колір' };
+export const METRIC_SOURCES = ['stats','fundingStats','patentStats'];
+export function isMetricBlock(block){return block.type==='metrics'||(block.type==='analytics'&&METRIC_SOURCES.includes(block.source));}
+export function validateMetricBackground(background='default',backgroundColor='#25395d'){
+ if(typeof background!=='string'||typeof backgroundColor!=='string')throw new Error('Некоректний колір фону картки.');
+ const selected=background||'default',color=backgroundColor||'#25395d';
+ if(!Object.hasOwn(TEXT_BACKGROUNDS,selected)||typeof color!=='string'||!/^#[0-9a-f]{6}$/i.test(color))throw new Error('Фон картки: виберіть колір теми або власний колір у форматі #RRGGBB.');
+ return {background:selected,backgroundColor:color};
+}
+export function metricColorTable(input){
+ const table=structuredClone(input);
+ for(const [key,value]of [['background','default'],['backgroundColor','#25395d']])if(!table.headers.includes(key)){table.headers.push(key);table.rows.forEach(row=>row.push(value));}
+ return table;
+}
+export function customBackgroundStyle(color){
+ if(typeof color!=='string'||!/^#[0-9a-f]{6}$/i.test(color))throw new Error('Некоректний колір фону.');
+ const channels=color.slice(1).match(/../g).map(c=>{const v=parseInt(c,16)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});
+ const luminance=channels.reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
+ return `--text-block-bg:${color};--text-block-ink:${luminance>.179?'#000000':'#ffffff'}`;
+}
 export const BLOCK_PALETTES = {
  blue: { name: 'Синя та сталева', colors: ['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'] },
  ocean: { name: 'Океан', colors: ['#203c91','#0089c9','#31b9ed','#93a4ba','#cad5e2'] },
@@ -52,8 +71,8 @@ export function validateBlockSettings(input = {}, source = '') {
  if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');
  return Object.fromEntries(Object.keys(defaultBlockSettings(source)).map(key=>[key,out[key]]));
 }
-export function validateBlockTable(input, numeric = false) {
- if(!input || !Array.isArray(input.headers) || !input.headers.length || input.headers.length>12 || input.headers.some(h=>typeof h!=='string'||!h.trim()||h.length>160) || new Set(input.headers.map(h=>h.trim())).size!==input.headers.length)throw new Error('Таблиця: від 1 до 12 непорожніх унікальних колонок.');
+export function validateBlockTable(input, numeric = false, maxColumns = 12) {
+ if(!input || !Array.isArray(input.headers) || !input.headers.length || input.headers.length>maxColumns || input.headers.some(h=>typeof h!=='string'||!h.trim()||h.length>160) || new Set(input.headers.map(h=>h.trim())).size!==input.headers.length)throw new Error(`Таблиця: від 1 до ${maxColumns} непорожніх унікальних колонок.`);
  if(!Array.isArray(input.rows)||input.rows.length>1000)throw new Error('Таблиця: не більше 1000 рядків.');
  const headers=input.headers.map(h=>h.trim()),rows=input.rows.map((r,i)=>{if(!Array.isArray(r)||r.length!==headers.length||r.some(c=>typeof c!=='string'||c.length>4000))throw new Error(`Некоректний рядок ${i+1}.`);return r.map(c=>c.trim());});
  if(numeric){if(headers.length<2)throw new Error('Для графіка потрібні підписи та хоча б одна числова серія.');for(const [i,row]of rows.entries())if(!row[0]||row.slice(1).some(c=>c!==''&&!Number.isFinite(Number(c.replace(',','.')))))throw new Error(`Рядок ${i+1}: після першої колонки потрібні числа або порожні значення.`);}
@@ -107,7 +126,8 @@ export function validateCMSBlock(input) {
     if (!Array.isArray(input.items) || input.items.length > 12) fail('Показники: не більше 12 карток.');
     out.items = input.items.map(x => {
       if (!obj(x)) fail('Некоректна картка показника.');
-      return { label: str(x.label, 'Назва показника', 160, true), value: str(x.value, 'Значення', 100, true), unit: str(x.unit, 'Одиниця', 40), note: str(x.note, 'Примітка', 500) };
+      const colors=x.background!==undefined||x.backgroundColor!==undefined?validateMetricBackground(x.background,x.backgroundColor):{};
+      return { label: str(x.label, 'Назва показника', 160, true), value: str(x.value, 'Значення', 100, true), unit: str(x.unit, 'Одиниця', 40), note: str(x.note, 'Примітка', 500),...colors };
     });
   }
   if (input.type === 'analytics') { if (!Object.hasOwn(ANALYTICS, input.source)) fail('Невідоме джерело аналітики.'); out.source = input.source; }
@@ -126,7 +146,8 @@ export function validateCMSBlock(input) {
   if(input.type==='analytics'){
     if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
     if(input.dataMode!==undefined)out.dataMode=input.dataMode;
-    if(input.dataTable!==undefined)out.dataTable=validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
+    if(input.dataTable!==undefined){const extra=METRIC_SOURCES.includes(input.source)&&Array.isArray(input.dataTable?.headers)?['background','backgroundColor'].filter(h=>input.dataTable.headers.includes(h)).length:0;out.dataTable=validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source),12+extra);}
+    if(METRIC_SOURCES.includes(input.source)&&out.dataTable){const b=out.dataTable.headers.indexOf('background'),c=out.dataTable.headers.indexOf('backgroundColor');for(const row of out.dataTable.rows)validateMetricBackground(b<0?undefined:row[b],c<0?undefined:row[c]);}
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
   if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut','progress'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){

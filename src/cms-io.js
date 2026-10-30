@@ -1,12 +1,16 @@
-import { parseCSV, validateBundle } from './data.js?v=project-catalog-20261030';
-import { readXLSXWorkbook } from './spreadsheet.js?v=project-catalog-20261030';
-import { validateCMSBlock, validateCMSPage, validateSite } from './cms-data.js?v=project-catalog-20261030';
+import { parseCSV, validateBundle } from './data.js?v=metric-colors-20261030';
+import { readXLSXWorkbook } from './spreadsheet.js?v=metric-colors-20261030';
+import { validateCMSBlock, validateCMSPage, validateSite, metricColorTable, isMetricBlock } from './cms-data.js?v=metric-colors-20261030';
 const fail = message => { throw new Error(message); };
 export function blockTable(block) {
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
   if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);
   if (block.type === 'list') return { headers: ['item'], rows: block.items.map(x => [x]) };
-  if (block.type === 'metrics') return { headers: ['label', 'value', 'unit', 'note'], rows: block.items.map(x => [x.label, x.value, x.unit, x.note]) };
+  if (block.type === 'metrics') {
+    const table={headers:['label','value','unit','note'],rows:block.items.map(x=>[x.label,x.value,x.unit,x.note])};
+    if(!block.items.some(x=>x.background!==undefined||x.backgroundColor!==undefined))return table;
+    const colored=metricColorTable(table);colored.rows.forEach((row,i)=>{row[4]=block.items[i].background||'default';row[5]=block.items[i].backgroundColor||'#25395d';});return colored;
+  }
   if (block.type === 'text') return { headers: ['title', 'text'], rows: [[block.title, block.text]] };
   if (block.type === 'banner') return { headers: ['title', 'text', 'tone', 'linkLabel', 'linkUrl'], rows: [[block.title, block.text, block.tone, block.linkLabel, block.linkUrl]] };
   fail('Для аналітики використайте імпорт/експорт даних сайта або JSON конфігурації блоку.');
@@ -19,8 +23,8 @@ export function tableToCMSBlock(table, current) {
   if (out.type === 'table' || out.type === 'chart') { out.columns = headers; out.rows = rows; }
   else if(out.type==='analytics'){out.dataTable={headers,rows};out.dataMode='manual';}
   else {
-    const expected = blockTable(out).headers;
-    if (expected.length !== headers.length || expected.some(h => !headers.includes(h))) fail(`Очікуються колонки: ${expected.join(', ')}.`);
+    const expected = out.type==='metrics'?['label','value','unit','note']:blockTable(out).headers;
+    if ((out.type==='metrics'?headers.some(h=>![...expected,'background','backgroundColor'].includes(h)):expected.length!==headers.length) || expected.some(h => !headers.includes(h))) fail(`Очікуються колонки: ${expected.join(', ')}.`);
     const records = rows.map(row => { if (row.length !== headers.length) fail('Кількість клітинок не відповідає заголовкам.'); return Object.fromEntries(headers.map((h, i) => [h, row[i]])); });
     if (out.type === 'list') out.items = records.map(x => x.item);
     if (out.type === 'metrics') out.items = records;
@@ -54,7 +58,8 @@ export async function importCMSBlockXLSX(bytes, block, engine = globalThis.Excel
   const book = await readXLSXWorkbook(bytes, engine);
   if (book.worksheets.length !== 1) fail('Для даних блоку потрібна книга з одним аркушем.');
   const sheet = book.worksheets[0];
-  if (sheet.columnCount > 12 || sheet.rowCount > 1001) fail('Не більше 12 колонок і 1000 рядків.');
+  const colorColumns=isMetricBlock(block)?['background','backgroundColor'].filter(key=>Array.from({length:sheet.columnCount},(_,i)=>sheet.getCell(1,i+1).value).includes(key)).length:0;
+  if (sheet.columnCount > 12+colorColumns || sheet.rowCount > 1001) fail('Не більше 12 колонок даних і 1000 рядків.');
   const text = cell => {
     const v = cell.value;
     if (v == null) return '';

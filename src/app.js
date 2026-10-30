@@ -1,11 +1,11 @@
-import { renderProjectCard } from './block-view.js?v=project-catalog-20261030';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=project-catalog-20261030';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=project-catalog-20261030';
-import { icon } from './icons.js?v=project-catalog-20261030';
+import { renderProjectCard } from './block-view.js?v=metric-colors-20261030';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=metric-colors-20261030';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=metric-colors-20261030';
+import { icon } from './icons.js?v=metric-colors-20261030';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=project-catalog-20261030';
-import { createCMS } from './cms.js?v=project-catalog-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=project-catalog-20261030';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=metric-colors-20261030';
+import { createCMS } from './cms.js?v=metric-colors-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=metric-colors-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);

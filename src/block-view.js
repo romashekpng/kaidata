@@ -1,5 +1,5 @@
-import { icon } from './icons.js?v=project-catalog-20261030';
-import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=project-catalog-20261030';
+import { icon } from './icons.js?v=metric-colors-20261030';
+import { BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=metric-colors-20261030';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -12,7 +12,10 @@ export function renderBlockTable(table, showAll = false) {
 }
 export function renderMetricTable(table, settings) {
  const get=(r,name,i)=>r[table.headers.indexOf(name)]??r[i]??'';
- return `<div class="cms-data-scroll cms-card-scroll ${settings.showAll?'show-all':''}"><div class="stats-grid cms-metric-grid" style="--metric-columns:${settings.columns}">${table.rows.map(r=>`<article class="stat-card"><div class="stat-top">${esc(get(r,'label',0))}</div><div class="stat-value">${esc(get(r,'value',1))}<small>${esc(get(r,'unit',2))}</small></div><div class="muted">${esc(get(r,'note',3))}</div></article>`).join('')}</div></div>`;
+ return `<div class="cms-data-scroll cms-card-scroll ${settings.showAll?'show-all':''}"><div class="stats-grid cms-metric-grid" style="--metric-columns:${settings.columns}">${table.rows.map(r=>{
+  const colors=validateMetricBackground(get(r,'background'),get(r,'backgroundColor')),colored=colors.background!=='default';
+  return `<article class="stat-card ${colored?`cms-card-background cms-text-bg-${colors.background}`:''}" ${colors.background==='custom'?`style="${customBackgroundStyle(colors.backgroundColor)}"`:''}><div class="stat-top">${esc(get(r,'label',0))}</div><div class="stat-value">${esc(get(r,'value',1))}<small>${esc(get(r,'unit',2))}</small></div><div class="muted">${esc(get(r,'note',3))}</div></article>`;
+ }).join('')}</div></div>`;
 }
 function projectISODate(value){
  const raw=String(value||'').trim(),m=raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/),iso=m?`${m[3]}-${m[2]}-${m[1]}`:raw;

@@ -1,9 +1,9 @@
-import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=project-catalog-20261030';
-import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=project-catalog-20261030';
-import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=project-catalog-20261030';
-import { validateBundle } from './data.js?v=project-catalog-20261030';
+import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, customBackgroundStyle, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=metric-colors-20261030';
+import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=metric-colors-20261030';
+import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=metric-colors-20261030';
+import { validateBundle } from './data.js?v=metric-colors-20261030';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=project-catalog-20261030';
+import { icon } from './icons.js?v=metric-colors-20261030';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -157,12 +157,7 @@ export function createCMS(options) {
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
-      let backgroundStyle='';
-      if(b.type==='text'&&s.background==='custom'){
-        const channels=s.backgroundColor.slice(1).match(/../g).map(c=>{const v=parseInt(c,16)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});
-        const luminance=channels.reduce((sum,v,i)=>sum+v*[.2126,.7152,.0722][i],0);
-        backgroundStyle=`;--text-block-bg:${s.backgroundColor};--text-block-ink:${luminance>.179?'#000000':'#ffffff'}`;
-      }
+      const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
       const period=options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
@@ -188,13 +183,17 @@ export function createCMS(options) {
     if(block.type==='existing'&&kind==='edit'){options.openDataManager('import',block.source);return;}
     widgetState={kind,block:structuredClone(kind==='edit'?transferBlock(block):block),page:0};
     widgetState.block.settings=resolvedSettings(block);
-    if(kind==='edit')widgetState.table=editableTable(block);
+    if(kind==='edit')widgetState.table=isMetricBlock(block)?metricColorTable(editableTable(block)):editableTable(block);
     renderWidgetDialog();
+  }
+  function metricBackgroundEditor(table,row,index){
+    const background=row[table.headers.indexOf('background')]||'default',color=row[table.headers.indexOf('backgroundColor')]||'#25395d';
+    return `<div class="cms-metric-background-editor"><label>Фон картки ${index+1}<select data-metric-background-row="${index}" aria-label="Фон картки ${index+1}">${Object.entries(TEXT_BACKGROUNDS).map(([key,label])=>`<option value="${key}" ${background===key?'selected':''}>${label}</option>`).join('')}</select></label><div class="cms-metric-background-colors"><i class="cms-metric-background-swatch cms-text-bg-${background}" ${background==='custom'?`style="--text-block-bg:${color}"`:''} aria-hidden="true"></i><label>Власний колір<input type="color" data-metric-color-row="${index}" value="${color}" aria-label="Власний колір картки ${index+1}"></label></div></div>`;
   }
   function renderWidgetDialog() {
     if(!widgetState)return;
     let dialog=$('#cms-widget-dialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='cms-widget-dialog';document.body.append(dialog);}
-    const {kind,block}=widgetState,s=block.settings;
+    const {kind,block}=widgetState,s=block.settings,metric=isMetricBlock(block);
     const totalLabel=s.chartType==='horizontal'?'Виводити загальну суму справа від стовпчиків':s.chartType==='progress'?'Показувати значення справа від смуг':'Виводити загальну суму над стовпчиками';
     const field=(label,key,type='text',extra='')=>`<label>${label}<input type="${type}" data-widget-setting="${key}" value="${e(s[key])}" ${extra}></label>`;
     const check=(key,label,detail='')=>`<label class="checkbox-label cms-setting-check"><input type="checkbox" data-widget-setting="${key}" ${s[key]?'checked':''}><span><strong>${label}</strong>${detail?`<small>${detail}</small>`:''}</span></label>`;
@@ -203,7 +202,7 @@ export function createCMS(options) {
     if(kind==='width')body=width;
     else if(kind==='settings'){
       const chart=block.type==='chart'||(block.type==='analytics'&&CHART_SOURCES.includes(block.source));
-      const cards=block.type==='metrics'||['stats','fundingStats','patentStats'].includes(block.source);
+      const cards=metric;
       body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle||'')}" maxlength="2000"></label></div>`;
       if(block.type==='analytics')body+=`<label class="cms-field-help">Джерело даних<select data-widget-text="dataMode"><option value="live" ${block.dataMode!=='manual'?'selected':''}>Аналітика сайта — автоматичний розрахунок</option><option value="manual" ${block.dataMode==='manual'?'selected':''}>Власні дані цього блоку</option></select></label><p class="cms-field-help">Редагування та імпорт CSV/XLSX створюють власні дані лише для цього блоку. Для зміни вихідних записів усіх пов’язаних блоків використайте «Керування даними».</p>`;
       if(chart){
@@ -220,7 +219,8 @@ export function createCMS(options) {
       body+=width;
     } else {
       const table=widgetState.table,offset=widgetState.page*20,free=['table','chart','analytics'].includes(block.type);
-      body=`${block.type==='chart'||CHART_SOURCES.includes(block.source)?`<label>Тип графіка<select data-widget-setting="chartType">${Object.entries(CHART_TYPES).map(([v,t])=>`<option value="${v}" ${s.chartType===v?'selected':''}>${t}</option>`).join('')}</select></label>`:''}<p class="cms-field-help">${block.type==='analytics'?'Застосування створить власні дані лише для цього блоку. Вихідні записи сайта залишаться окремими. ':''}Перетягуйте рядки й колонки за значок ⋮⋮ або використовуйте стрілки. ${block.type==='chart'||CHART_SOURCES.includes(block.source)?'Перша колонка — підписи, решта — числові серії. Порожнє значення означає відсутність даних.':''}</p><div class="cms-data-editor"><table><thead><tr><th></th>${table.headers.map((h,c)=>`<th data-drop-axis="column" data-drop-index="${c}"><input aria-label="Назва колонки ${c+1}" data-widget-header="${c}" value="${e(h)}"><div class="cms-cell-actions"><button type="button" class="button secondary small" draggable="true" data-drag-axis="column" data-drag-index="${c}" aria-label="Перетягнути колонку ${c+1}">⋮⋮</button>${button('widget-move-column','←',`data-from="${c}" data-to="${c-1}" ${c===0?'disabled':''}`,'secondary small')}${button('widget-move-column','→',`data-from="${c}" data-to="${c+1}" ${c===table.headers.length-1?'disabled':''}`,'secondary small')}${free?button('widget-delete-column','×',`data-col="${c}"`,'secondary small'):''}</div></th>`).join('')}<th></th></tr></thead><tbody>${table.rows.slice(offset,offset+20).map((row,i)=>{const r=i+offset;return `<tr data-drop-axis="row" data-drop-index="${r}"><td><div class="cms-row-actions"><button type="button" class="button secondary small" draggable="true" data-drag-axis="row" data-drag-index="${r}" aria-label="Перетягнути рядок ${r+1}">⋮⋮</button>${button('widget-move-row','↑',`data-from="${r}" data-to="${r-1}" ${r===0?'disabled':''}`,'secondary small')}${button('widget-move-row','↓',`data-from="${r}" data-to="${r+1}" ${r===table.rows.length-1?'disabled':''}`,'secondary small')}</div></td>${row.map((v,c)=>`<td><input aria-label="Рядок ${r+1}, колонка ${c+1}" data-widget-row="${r}" data-widget-cell="${c}" value="${e(v)}"></td>`).join('')}<td>${button('widget-delete-row','×',`data-row="${r}" aria-label="Видалити рядок ${r+1}"`,'secondary small')}</td></tr>`;}).join('')}</tbody></table></div><div class="cms-table-tools">${button('widget-add-row','+ Рядок')}${free?button('widget-add-column','+ Колонка'):''}<span>${table.rows.length} рядків · ${table.headers.length} колонок</span>${button('widget-data-prev','Назад',widgetState.page===0?'disabled':'','secondary small')}${button('widget-data-next','Далі',offset+20>=table.rows.length?'disabled':'','secondary small')}</div>`;
+      const visibleColumns=table.headers.map((h,c)=>({h,c})).filter(({h})=>!metric||!['background','backgroundColor'].includes(h));
+      body=`${block.type==='chart'||CHART_SOURCES.includes(block.source)?`<label>Тип графіка<select data-widget-setting="chartType">${Object.entries(CHART_TYPES).map(([v,t])=>`<option value="${v}" ${s.chartType===v?'selected':''}>${t}</option>`).join('')}</select></label>`:''}<p class="cms-field-help">${block.type==='analytics'?'Застосування створить власні дані лише для цього блоку. Вихідні записи сайта залишаться окремими. ':''}Перетягуйте рядки й колонки за значок ⋮⋮ або використовуйте стрілки. ${block.type==='chart'||CHART_SOURCES.includes(block.source)?'Перша колонка — підписи, решта — числові серії. Порожнє значення означає відсутність даних.':''}</p><div class="cms-data-editor"><table><thead><tr><th></th>${visibleColumns.map(({h,c})=>`<th data-drop-axis="column" data-drop-index="${c}"><input aria-label="Назва колонки ${c+1}" data-widget-header="${c}" value="${e(h)}"><div class="cms-cell-actions"><button type="button" class="button secondary small" draggable="true" data-drag-axis="column" data-drag-index="${c}" aria-label="Перетягнути колонку ${c+1}">⋮⋮</button>${button('widget-move-column','←',`data-from="${c}" data-to="${c-1}" ${c===0?'disabled':''}`,'secondary small')}${button('widget-move-column','→',`data-from="${c}" data-to="${c+1}" ${c===table.headers.length-1?'disabled':''}`,'secondary small')}${free?button('widget-delete-column','×',`data-col="${c}"`,'secondary small'):''}</div></th>`).join('')}${metric?'<th class="cms-metric-background-heading">Фон картки</th>':''}<th></th></tr></thead><tbody>${table.rows.slice(offset,offset+20).map((row,i)=>{const r=i+offset;return `<tr data-drop-axis="row" data-drop-index="${r}"><td><div class="cms-row-actions"><button type="button" class="button secondary small" draggable="true" data-drag-axis="row" data-drag-index="${r}" aria-label="Перетягнути рядок ${r+1}">⋮⋮</button>${button('widget-move-row','↑',`data-from="${r}" data-to="${r-1}" ${r===0?'disabled':''}`,'secondary small')}${button('widget-move-row','↓',`data-from="${r}" data-to="${r+1}" ${r===table.rows.length-1?'disabled':''}`,'secondary small')}</div></td>${visibleColumns.map(({c})=>`<td><input aria-label="Рядок ${r+1}, колонка ${c+1}" data-widget-row="${r}" data-widget-cell="${c}" value="${e(row[c])}"></td>`).join('')}${metric?`<td>${metricBackgroundEditor(table,row,r)}</td>`:''}<td>${button('widget-delete-row','×',`data-row="${r}" aria-label="Видалити рядок ${r+1}"`,'secondary small')}</td></tr>`;}).join('')}</tbody></table></div><div class="cms-table-tools">${button('widget-add-row','+ Рядок')}${free?button('widget-add-column','+ Колонка'):''}<span>${table.rows.length} рядків · ${visibleColumns.length} колонок</span>${button('widget-data-prev','Назад',widgetState.page===0?'disabled':'','secondary small')}${button('widget-data-next','Далі',offset+20>=table.rows.length?'disabled':'','secondary small')}</div>`;
       if(!free)body+='<p class="cms-field-help">Назви колонок для цього типу визначають поля блоку: зберігайте їхній набір. Порядок колонок і рядків можна змінювати.</p>';
     }
     const title=kind==='edit'?'Редагування даних':kind==='width'?'Ширина блоку':'Налаштування блоку';
@@ -242,6 +242,13 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
+    if(el.dataset.metricBackgroundRow!==undefined||el.dataset.metricColorRow!==undefined){
+      const table=state.table,row=table.rows[+(el.dataset.metricBackgroundRow??el.dataset.metricColorRow)],b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
+      if(el.dataset.metricColorRow!==undefined){row[c]=el.value;row[b]='custom';}else{row[b]=el.value;if(!row[c])row[c]='#25395d';}
+      const editor=el.closest('.cms-metric-background-editor'),swatch=editor.querySelector('.cms-metric-background-swatch');
+      editor.querySelector('select').value=row[b];swatch.className=`cms-metric-background-swatch cms-text-bg-${row[b]}`;
+      swatch.style.cssText=row[b]==='custom'?`--text-block-bg:${row[c]}`:'';
+    }
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;state.block.settings[key]=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;}
     if(el.dataset.widgetSetting==='backgroundColor'){
       state.block.settings.background='custom';
@@ -339,7 +346,7 @@ export function createCMS(options) {
       if(name==='widget-remove-color'&&state.block.settings.customColors.length>1){state.block.settings.customColors.pop();state.block.settings.palette='custom';}
       if(name==='widget-add-row'){if(table.rows.length>=1000)throw new Error('До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}
       if(name==='widget-delete-row'){table.rows.splice(+el.dataset.row,1);state.page=Math.min(state.page,Math.max(0,Math.ceil(table.rows.length/20)-1));}
-      if(name==='widget-add-column'){if(table.headers.length>=12)throw new Error('До 12 колонок.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
+      if(name==='widget-add-column'){if(table.headers.length>=(isMetricBlock(state.block)?14:12))throw new Error('До 12 колонок даних.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
       if(name==='widget-delete-column'){
         const minimum=state.block.type==='chart'||CHART_SOURCES.includes(state.block.source)?2:1;if(table.headers.length<=minimum)throw new Error(`Залиште хоча б ${minimum} колонки.`);
         table.headers.splice(+el.dataset.col,1);table.rows.forEach(r=>r.splice(+el.dataset.col,1));
