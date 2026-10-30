@@ -1,20 +1,8 @@
-import { parseCSV, validateBundle } from './data.js?v=legend-center-20261030';
-import { readXLSXWorkbook } from './spreadsheet.js?v=legend-center-20261030';
-import { validateCMSBlock, validateCMSPage, validateSite, metricColorTable, isMetricBlock, metricDataEqual, metricAppearanceFromTable } from './cms-data.js?v=legend-center-20261030';
+import { parseCSV, validateBundle } from './data.js?v=publication-modes-20261030';
+import { readXLSXWorkbook } from './spreadsheet.js?v=publication-modes-20261030';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-modes-20261030';
 const fail = message => { throw new Error(message); };
-export function blockTable(block) {
-  if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
-  if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);
-  if (block.type === 'list') return { headers: ['item'], rows: block.items.map(x => [x]) };
-  if (block.type === 'metrics') {
-    const table={headers:['label','value','unit','note'],rows:block.items.map(x=>[x.label,x.value,x.unit,x.note])};
-    if(!block.items.some(x=>x.background!==undefined||x.backgroundColor!==undefined))return table;
-    const colored=metricColorTable(table);colored.rows.forEach((row,i)=>{row[4]=block.items[i].background||'default';row[5]=block.items[i].backgroundColor||'#25395d';});return colored;
-  }
-  if (block.type === 'text') return { headers: ['title', 'text'], rows: [[block.title, block.text]] };
-  if (block.type === 'banner') return { headers: ['title', 'text', 'tone', 'linkLabel', 'linkUrl'], rows: [[block.title, block.text, block.tone, block.linkLabel, block.linkUrl]] };
-  fail('Для аналітики використайте імпорт/експорт даних сайта або JSON конфігурації блоку.');
-}
+export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
   const { headers, rows } = table;
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');

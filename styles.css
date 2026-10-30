@@ -294,3 +294,11 @@ dialog{background:var(--surface)}
 .cms-legend-layout{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 #cms-widget-dialog .cms-legend-center{flex-direction:row;align-items:center;gap:8px;margin-left:auto;line-height:1.5}
 .cms-legend-center input{width:18px;height:18px;min-height:18px;flex-shrink:0;margin:0}
+
+#cms-publication-dialog{width:min(720px,calc(100vw - 24px));max-width:calc(100vw - 24px);color:var(--ink)}
+.publication-help{font-size:14px;line-height:1.7;color:var(--muted);margin-bottom:20px}
+.publication-options{display:grid;gap:12px;margin:20px 0}
+.publication-choice{display:flex;gap:14px;align-items:flex-start;padding:18px;border:1px solid var(--line);border-radius:10px;cursor:pointer;background:var(--surface-soft)}
+.publication-choice:has(input:checked){border-color:var(--primary-bg);outline:1px solid var(--primary-bg);background:var(--tint-blue)}
+.publication-choice input{width:20px;height:20px;min-height:20px;margin:3px 0 0;flex-shrink:0;accent-color:var(--primary-bg)}
+.publication-choice strong{display:block;font-size:16px;color:var(--ink);line-height:1.5}.publication-choice small{display:block;font-size:14px;color:var(--muted);line-height:1.6;margin-top:6px}
