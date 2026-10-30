@@ -1,4 +1,5 @@
-import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=site-styles-20261030';
+import { icon } from './icons.js?v=project-catalog-20261030';
+import { BLOCK_PALETTES, defaultBlockSettings } from './cms-data.js?v=project-catalog-20261030';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -13,9 +14,47 @@ export function renderMetricTable(table, settings) {
  const get=(r,name,i)=>r[table.headers.indexOf(name)]??r[i]??'';
  return `<div class="cms-data-scroll cms-card-scroll ${settings.showAll?'show-all':''}"><div class="stats-grid cms-metric-grid" style="--metric-columns:${settings.columns}">${table.rows.map(r=>`<article class="stat-card"><div class="stat-top">${esc(get(r,'label',0))}</div><div class="stat-value">${esc(get(r,'value',1))}<small>${esc(get(r,'unit',2))}</small></div><div class="muted">${esc(get(r,'note',3))}</div></article>`).join('')}</div></div>`;
 }
-export function renderProjectTable(table, settings) {
- const get=(r,name,index)=>r[table.headers.indexOf(name)]??r[index]??'';
- return `<div class="cms-data-scroll ${settings.showAll?'show-all':''}"><div class="project-grid">${table.rows.map(r=>`<article class="project-card"><div class="project-card-top"><span class="pill blue">${esc(get(r,'Програма',1))}</span></div><h3>${esc(get(r,'Назва',0))}</h3><div class="project-meta"><span>${esc(get(r,'Початок',2))} — ${esc(get(r,'Завершення',3))}</span><span>${esc(get(r,'Роль',4))}</span></div><div class="project-money"><span>Надходження, грн</span><strong>${esc(get(r,'Надходження, грн',5))}</strong></div></article>`).join('')}</div></div>`;
+function projectISODate(value){
+ const raw=String(value||'').trim(),m=raw.match(/^(\d{2})\.(\d{2})\.(\d{4})$/),iso=m?`${m[3]}-${m[2]}-${m[1]}`:raw;
+ return /^\d{4}-\d{2}-\d{2}$/.test(iso)&&Number.isFinite(Date.parse(iso))&&new Date(iso).toISOString().slice(0,10)===iso?iso:null;
+}
+export function projectProgress(startDate,endDate,asOf=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Kyiv'}).format(new Date())){
+ const start=projectISODate(startDate),end=projectISODate(endDate),now=projectISODate(asOf);
+ if(!start||!end||!now||end<start)return null;
+ const percent=end===start?(now<start?0:100):Math.max(0,Math.min(100,Math.round((Date.parse(now)-Date.parse(start))/(Date.parse(end)-Date.parse(start))*100)));
+ return {percent,status:now<start?'planned':now>end?'completed':'active',asOf:now};
+}
+export function projectsFromTable(table){
+ const get=(row,name,index)=>row[table.headers.indexOf(name)]??(index===undefined?'':row[index]??'');
+ return table.rows.map(row=>{
+  const international=String(get(row,'Міжнародний')).trim().toLocaleLowerCase('uk-UA');
+  return {title:get(row,'Назва',0),program:get(row,'Програма',1),startDate:get(row,'Початок',2),endDate:get(row,'Завершення',3),role:get(row,'Роль',4),revenue:get(row,'Надходження, грн',5),url:get(row,'Посилання',6),international:['true','1','так','міжнародний'].includes(international)?true:['false','0','ні','український'].includes(international)?false:null};
+ });
+}
+export function filterProjects(projects,state={}){
+ const programs=[...new Set(projects.map(p=>p.program).filter(Boolean))];
+ const selected={query:String(state.query||'').slice(0,200),program:programs.includes(state.program)?state.program:'',role:['Координатор','Партнер'].includes(state.role)?state.role:''};
+ const query=selected.query.trim().toLocaleLowerCase('uk-UA');
+ return {programs,selected,rows:projects.filter(p=>(!selected.program||p.program===selected.program)&&(!selected.role||p.role===selected.role)&&(!query||[p.title,p.program,p.role].join(' ').toLocaleLowerCase('uk-UA').includes(query)))};
+}
+function projectMarker(international,settings){
+ if(international===true&&settings.showProjectGlobe!==false)return `<span class="project-origin" role="img" aria-label="Міжнародний проєкт" title="Міжнародний проєкт">${icon('globe')}</span>`;
+ if(international===false&&settings.showProjectFlag!==false)return '<span class="project-origin project-ukraine" role="img" aria-label="Український проєкт" title="Український проєкт"><svg viewBox="0 0 24 16" aria-hidden="true"><path fill="#0057b7" d="M0 0h24v8H0z"/><path fill="#ffd700" d="M0 8h24v8H0z"/></svg></span>';
+ return '';
+}
+export function renderProjectCard(project,settings={},asOf){
+ const progress=projectProgress(project.startDate,project.endDate,asOf);
+ let url='';try{const u=new URL(project.url);if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}
+ const date=value=>{const iso=projectISODate(value);return iso?iso.split('-').reverse().join('.'):esc(value);};
+ const amount=String(project.revenue).replace(/\s/g,'').replace(',','.');
+ const revenue=amount!==''&&Number.isFinite(Number(amount))?`${format(Number(amount)/1e6)}<small> млн ₴</small>`:esc(project.revenue||'—');
+ const status=progress?({planned:'Заплановано',active:'Виконується',completed:'Завершено'})[progress.status]:'';
+ return `<article class="project-card" data-project-program="${esc(project.program)}" data-project-card-role="${esc(project.role)}"><div class="project-card-top"><span class="pill ${project.international===true?'green':'blue'}">${projectMarker(project.international,settings)}${esc(project.program||'Без програми')}</span><span class="project-role">${esc(project.role)}</span></div><h3>${url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(project.title)} ${icon('external')}</a>`:esc(project.title)}</h3><div class="project-meta"><span>${icon('calendar')}${date(project.startDate)} — ${date(project.endDate)}</span></div><div class="project-money"><span>Надходження</span><strong>${revenue}</strong></div><div class="project-timeline">${progress?`<div class="project-timeline-caption"><span>${status}</span><strong>${progress.percent}%</strong></div><div class="project-timeline-track ${progress.status}" role="progressbar" aria-label="Час виконання проєкту: ${esc(project.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.percent}" aria-valuetext="${status}; минуло ${progress.percent}% строку виконання" title="Минуло ${progress.percent}% строку виконання станом на ${date(progress.asOf)}. Це часовий прогрес за датами, а не оцінка виконаних робіт."><span style="width:${progress.percent}%"></span></div>`:'<span class="muted">Для прогресу вкажіть коректні дати початку й завершення.</span>'}</div></article>`;
+}
+export function renderProjectTable(table,settings={},state={},blockId='',asOf){
+ const projects=projectsFromTable(table),{programs,selected,rows}=filterProjects(projects,state);
+ const action=(program,label)=>`<button type="button" data-cms-action="project-program" data-block-id="${esc(blockId)}" data-program="${esc(program)}" aria-pressed="${selected.program===program}" class="${selected.program===program?'selected':''}">${esc(label)}</button>`;
+ return `<div class="project-catalog" data-project-block="${esc(blockId)}"><div class="project-filter-toolbar"><label class="project-search">${icon('search')}<input type="search" data-project-query aria-label="Пошук грантових проєктів" placeholder="Пошук за назвою або програмою" maxlength="200" value="${esc(selected.query)}"></label><div class="project-programs" role="group" aria-label="Програми проєктів">${action('',`Всі програми (${projects.length})`)}${programs.map(program=>action(program,program)).join('')}</div><label class="project-role-filter"><select data-project-role aria-label="Роль ЗВО"><option value="">Всі ролі ЗВО</option>${['Координатор','Партнер'].map(role=>`<option ${selected.role===role?'selected':''}>${role}</option>`).join('')}</select></label><span class="project-count" aria-live="polite">Показано: <strong>${rows.length}</strong> з ${projects.length}</span><button type="button" class="button secondary small" data-cms-action="project-reset" data-block-id="${esc(blockId)}">Скинути фільтри</button></div><div class="project-results cms-data-scroll cms-card-scroll ${settings.showAll?'show-all':''}"><div class="project-grid">${rows.length?rows.map(p=>renderProjectCard(p,settings,asOf)).join(''):'<div class="empty"><h3>Немає проєктів за вибраними умовами</h3><p>Змініть пошук, програму, роль ЗВО або звітний рік.</p></div>'}</div></div></div>`;
 }
 function chartTooltip(table, row, active, total, settings) {
  return `${row[0]}\n${active.map(i=>`${table.headers[i+1]}: ${row[i+1]===''?'немає даних':format(num(row[i+1]))}`).join('\n')}${settings.tooltipTotal?`\nРазом: ${format(total)}`:''}`;

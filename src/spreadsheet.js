@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=site-styles-20261030';
+import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=project-catalog-20261030';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const MAX_UNPACKED = 50 * 1024 * 1024;

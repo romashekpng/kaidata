@@ -1,10 +1,11 @@
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=site-styles-20261030';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=site-styles-20261030';
-import { icon } from './icons.js?v=site-styles-20261030';
+import { renderProjectCard } from './block-view.js?v=project-catalog-20261030';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=project-catalog-20261030';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=project-catalog-20261030';
+import { icon } from './icons.js?v=project-catalog-20261030';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=site-styles-20261030';
-import { createCMS } from './cms.js?v=site-styles-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=site-styles-20261030';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=project-catalog-20261030';
+import { createCMS } from './cms.js?v=project-catalog-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=project-catalog-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -160,7 +161,7 @@ function facultyPanel(records, title='Внесок факультетів') {
   return `<article class="panel faculty-panel">${sectionHead(title,'За кількістю записів у вибраному році')}${groups.length ? `<div class="rank-bars">${groups.map(([name,n],i)=>`<div class="rank-row"><span class="rank-number">${String(i+1).padStart(2,'0')}</span><div><div class="rank-caption"><span>${e(name)}</span><strong>${fmt(n)}</strong></div><div class="rank-track"><span style="width:${n/max*100}%"></span></div></div></div>`).join('')}</div>` : empty()}</article>`;
 }
 function projectCard(p) {
-  return `<article class="project-card"><div class="project-card-top">${pill(p.program,p.international ? 'green' : 'blue')}${p.international ? `<span title="Міжнародний проєкт">${icon('globe')}</span>` : ''}</div><h3>${linkTitle(p)}</h3><div class="project-meta"><span>${icon('calendar')}${date(p.startDate)} — ${date(p.endDate)}</span><span>${icon('layers')}${e(p.role)}</span></div><div class="project-money"><span>Надходження у ${year}</span><strong>${money(p.funding.find(x=>x.year===year)?.amountUAH ?? 0)}<small> млн ₴</small></strong></div></article>`;
+  return renderProjectCard({...p,revenue:String(p.funding.find(x=>x.year===year)?.amountUAH??0)},defaultBlockSettings('projects'));
 }
 function overview() {
   const s = summarize(data,year), enabled = key => data.institution.blocks.includes(key);
@@ -226,7 +227,7 @@ function analyticsTable(source, allYears = false) {
   if(source==='fundingTable'){const ys=yearsIn(data).filter(y=>selected===null||y===selected).slice(-11),sources=[...new Set(data.revenues.map(r=>r.source))];return table(['Джерело',...ys.map(String)],sources.map(source=>[source,...ys.map(y=>{const rows=data.revenues.filter(r=>r.source===source&&r.year===y);return rows.length?rows.reduce((sum,r)=>sum+r.amountUAH,0):'';})]));}
   if(source==='publications')return table(['Назва','Автори','Рік','Факультет','Індексація','Квартиль','Тип','Посилання'],(allYears?data.publications:s.publications).map(p=>[p.title,p.authors,p.year,p.faculty,p.indexes.join(' / '),p.quartile,p.type,p.url]));
   if(source==='patents')return table(['Назва','Номер','Дата','Автори','Факультет','Посилання'],(allYears?data.patents:s.patents).map(p=>[p.title,p.number,p.date,p.authors,p.faculty,p.url]));
-  if(source==='projects')return table(['Назва','Програма','Початок','Завершення','Роль','Надходження, грн','Посилання'],(allYears?data.projects:s.projects).map(p=>[p.title,p.program,p.startDate,p.endDate,p.role,p.funding.filter(f=>selected===null||f.year===selected).reduce((sum,f)=>sum+f.amountUAH,0),p.url]));
+  if(source==='projects')return table(['Назва','Програма','Початок','Завершення','Роль','Надходження, грн','Посилання','Міжнародний'],(allYears?data.projects:s.projects).map(p=>[p.title,p.program,p.startDate,p.endDate,p.role,p.funding.filter(f=>selected===null||f.year===selected).reduce((sum,f)=>sum+f.amountUAH,0),p.url,p.international]));
   return table(['Текст'],[[source==='insight'?'Знання мають бути доступними.':data.institution.sourceNote]]);
 }
 function displayedBlockPeriod(block, table = null) {

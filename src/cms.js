@@ -1,9 +1,9 @@
-import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=site-styles-20261030';
-import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=site-styles-20261030';
-import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=site-styles-20261030';
-import { validateBundle } from './data.js?v=site-styles-20261030';
+import { CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, defaultBlockSettings, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=project-catalog-20261030';
+import { blockTable, tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=project-catalog-20261030';
+import { renderChartTable, renderBlockTable, renderMetricTable, renderProjectTable } from './block-view.js?v=project-catalog-20261030';
+import { validateBundle } from './data.js?v=project-catalog-20261030';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=site-styles-20261030';
+import { icon } from './icons.js?v=project-catalog-20261030';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -11,7 +11,7 @@ export function createCMS(options) {
   const e = escapeCMS;
   let site, draft, selected, dirty = false, temporary = false, pendingDataRestore = false, history = [], transfer = null, importValue = null, importToken = 0;
   let widgetState=null,dragItem=null;
-  const hiddenSeries=new Map();
+  const hiddenSeries=new Map(),projectFilters=new Map();
   const $ = selector => document.querySelector(selector);
   const button = (action, label, extra = '', cls = 'secondary') => `<button type="button" class="button ${cls}" data-cms-action="${action}" ${extra}>${label}</button>`;
   const input = (label, field, value, extra = '') => `<label>${label}<input data-cms-field="${field}" value="${e(value)}" ${extra}></label>`;
@@ -107,11 +107,13 @@ export function createCMS(options) {
       const page = frame.contentDocument?.querySelector('.cms-frame-page');
       if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
       frame.contentDocument?.addEventListener('click',event=>{
-        if(event.target.closest('summary'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
+        if(event.target.closest('summary,[data-project-query],[data-project-role]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
         if(el)action(el.dataset.cmsAction,el).catch(showError);
         const yearButton=event.target.closest('[data-year]');
         if(yearButton){options.selectPreviewYear(+yearButton.dataset.year);schedulePreview();}
       });
+      frame.contentDocument?.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
+      frame.contentDocument?.addEventListener('change',event=>{if(event.target.matches('[data-project-role]'))updateProjectFilter(event.target.closest('.project-catalog'),'role',event.target.value);});
       frame.contentDocument?.addEventListener('toggle',()=>{if(page)frame.style.height=`${Math.ceil(page.getBoundingClientRect().height)}px`;},true);
     };
     frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'blue')}" ${root.hasAttribute('data-site-style')?'data-site-style':''} style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{display:flow-root;padding:0}</style></head><body>${content}</body></html>`;
@@ -144,7 +146,7 @@ export function createCMS(options) {
       if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;body=renderChartTable(b,table,[...(hiddenSeries.get(b.id)||[])]);}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
         if(['stats','fundingStats','patentStats'].includes(b.source)&&b.dataMode==='manual')body=renderMetricTable(editableTable(b),s);
-        else if(b.dataMode==='manual'&&b.source==='projects')body=renderProjectTable(editableTable(b),s);
+        else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id);
         else if(b.dataMode==='manual'&&['insight','revenueNotice'].includes(b.source))body=`<div class="${b.source==='insight'?'insight-card':'notice'}"><p>${editableTable(b).rows.map(r=>e(r.join(' · '))).join('<br>')}</p></div>`;
         else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll);
         else body=`<div class="cms-analytics-content ${s.showAll?'show-all':''}">${options.renderAnalytics(b.source,s)}</div>`;
@@ -166,6 +168,21 @@ export function createCMS(options) {
       return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview?widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
+  }
+  function updateProjectFilter(catalog,field,value){
+    if(!catalog)return;
+    const id=catalog.dataset.projectBlock,block=currentBlock(id);if(!block||block.source!=='projects')return;
+    const state=field==='reset'?{}:{...projectFilters.get(id),[field]:value};
+    projectFilters.set(id,state);
+    const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderProjectTable(editableTable(block),resolvedSettings(block),state,id);
+    catalog.querySelector('.project-results').replaceWith(wrapper.querySelector('.project-results'));
+    catalog.querySelector('.project-count').innerHTML=wrapper.querySelector('.project-count').innerHTML;
+    const buttons=wrapper.querySelectorAll('.project-programs button');
+    catalog.querySelectorAll('.project-programs button').forEach((button,i)=>{button.className=buttons[i].className;button.setAttribute('aria-pressed',buttons[i].getAttribute('aria-pressed'));});
+    catalog.querySelector('[data-project-role]').value=wrapper.querySelector('[data-project-role]').value;
+    if(field==='reset')catalog.querySelector('[data-project-query]').value='';
+    const frame=$('#cms-live-frame'),page=frame?.contentDocument?.querySelector('.cms-frame-page');
+    if(page)frame.style.height=`${Math.ceil(page.getBoundingClientRect().height)}px`;
   }
   function widgetDialog(block, kind) {
     if(block.type==='existing'&&kind==='edit'){options.openDataManager('import',block.source);return;}
@@ -196,6 +213,7 @@ export function createCMS(options) {
       if(block.type==='list')body+=`<label class="checkbox-label cms-setting-check"><input type="checkbox" data-widget-text="ordered" ${block.ordered?'checked':''}><span>Нумерований список</span></label>`;
       if(block.type==='table')body+=`<label>Примітка таблиці<input data-widget-text="caption" value="${e(block.caption)}" maxlength="2000"></label>`;
       if(block.type==='banner')body+=`<div class="form-grid"><label>Оформлення<select data-widget-text="tone">${[['green','Зелене'],['blue','Синє'],['amber','Тепле'],['dark','Темне']].map(([v,t])=>`<option value="${v}" ${block.tone===v?'selected':''}>${t}</option>`).join('')}</select></label><label>Текст кнопки<input data-widget-text="linkLabel" value="${e(block.linkLabel)}"></label><label>Посилання<input data-widget-text="linkUrl" value="${e(block.linkUrl)}"></label></div>`;
+      if(block.type==='analytics'&&block.source==='projects')body+=`<fieldset><legend>Картки грантових проєктів</legend>${check('showProjectGlobe','Показувати земну кулю для міжнародних проєктів')}${check('showProjectFlag','Показувати прапор України для українських проєктів')}<p class="cms-field-help">Вимкніть обидва пункти, щоб приховати позначення. Для ручних даних колонка «Міжнародний»: true — міжнародний, false — український; порожнє значення — тип не вказано. Смуга внизу картки показує часовий прогрес за датами виконання.</p></fieldset>`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${field('Кількість карток по ширині','columns','number','min="1" max="6" step="1"')}<p class="cms-field-help">Від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням не вибрано. Після ввімкнення весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
       if(block.type!=='analytics'||block.dataMode==='manual')body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
@@ -305,6 +323,7 @@ export function createCMS(options) {
   }
   async function action(name, el) {
     const id=el.dataset.blockId, b=id?currentBlock(id):null;
+    if(name==='project-program'||name==='project-reset'){updateProjectFilter(el.closest('.project-catalog'),name==='project-reset'?'reset':'program',el.dataset.program);return;}
     if(name==='chart-legend'){
       const set=hiddenSeries.get(id)||new Set(),index=+el.dataset.series;
       if(set.has(index))set.delete(index);else set.add(index);hiddenSeries.set(id,set);
@@ -372,6 +391,7 @@ export function createCMS(options) {
     }
     schedulePreview(100);
   }
+  document.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
   document.addEventListener('input',event=>{if(event.target.closest('#cms-page-form'))updateField(event.target);});
   document.addEventListener('input',event=>{if(event.target.closest('#cms-widget-dialog'))updateWidgetField(event.target);});
   document.addEventListener('dragstart',event=>{
@@ -385,6 +405,7 @@ export function createCMS(options) {
   });
   document.addEventListener('dragend',()=>{dragItem=null;});
   document.addEventListener('change',event=>{
+    if(event.target.matches('[data-project-role]'))updateProjectFilter(event.target.closest('.project-catalog'),'role',event.target.value);
     if(event.target.closest('#cms-widget-dialog')){updateWidgetField(event.target);if((event.target.dataset.widgetSetting==='chartType'||event.target.dataset.widgetText==='dataMode')&&widgetState?.kind==='settings')renderWidgetDialog();}
     if(event.target.closest('#cms-page-form'))updateField(event.target);
     if(event.target.id==='cms-transfer-format'){importToken++;importValue=null;$('#cms-transfer-result').innerHTML='';const input=$('#cms-file-input');if(input){input.accept='.'+event.target.value;input.value='';}}
