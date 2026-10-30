@@ -30,3 +30,23 @@ test('фон не витісняє наявні колонки: аналітич
  const block=tableToCMSBlock(colored,{id:'wide-metrics',type:'analytics',source:'stats',title:'Показники',visible:true});
  assert.equal(block.dataTable.headers.length,14);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(block,ExcelJS),block,ExcelJS),block);
 });
+
+test('зміна лише фону чи порядку зберігає автоматичний режим та передає оформлення через JSON/CSV/XLSX',async()=>{
+ const {metricAppearanceFromTable,applyMetricAppearance}=await import('../src/cms-data.js');
+ const current={id:'live-metrics',type:'analytics',source:'stats',title:'Показники',visible:true,dataMode:'live',dataTable:structuredClone(table)};
+ const edited=moveTableItem(table,'row',0,1);edited.rows[1][4]='green';
+ const next=tableToCMSBlock(edited,current);assert.equal(next.dataMode,'live');assert.equal(next.metricAppearance[0].key,'Гранти');
+ assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:next}),'block',next),next);
+ assert.equal(importCMSBlockCSV(cmsBlockCSV(next),next).dataMode,'live');assert.equal((await importCMSBlockXLSX(await cmsBlockXLSX(next,ExcelJS),next,ExcelJS)).dataMode,'live');
+ const updated=structuredClone(table);updated.rows[0][1]='150';const styled=applyMetricAppearance(updated,metricAppearanceFromTable(edited));assert.equal(styled.rows[1][1],'150');assert.equal(styled.rows[1][4],'green');
+ const changed=structuredClone(edited);changed.rows[0][1]='999';const manual=tableToCMSBlock(changed,current);assert.equal(manual.dataMode,'manual');assert.equal(manual.metricEditingVersion,1);
+});
+
+test('виправлення старих кольорових знімків повертає автоматику без втрати фону та не підміняє власні дані',async()=>{
+ const {restoreMetricSnapshot}=await import('../src/cms-data.js');
+ const old={id:'old-stats',type:'analytics',source:'stats',title:'Показники',visible:true,dataMode:'manual',dataPeriod:'2026',dataTable:structuredClone(table)};
+ const restored=restoreMetricSnapshot(old,table);assert.equal(restored.dataMode,'live');assert.equal(restored.metricAppearance[0].background,'menu');assert.deepEqual(restored.dataTable,old.dataTable);assert.equal(old.dataMode,'manual');
+ const custom=structuredClone(old);custom.dataTable.rows[0][1]='999';assert.equal(restoreMetricSnapshot(custom,table),custom);
+ const explicit={...old,metricEditingVersion:1};assert.equal(restoreMetricSnapshot(explicit,table),explicit);
+ const withBackup=validateCMSBlock({...restored,metricManualBackup:{dataTable:custom.dataTable,dataPeriod:'2026'}});assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:withBackup}),'block',withBackup).metricManualBackup.dataTable,custom.dataTable);
+});

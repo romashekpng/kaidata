@@ -1,11 +1,11 @@
-import { renderProjectCard } from './block-view.js?v=metric-colors-20261030';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=metric-colors-20261030';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=metric-colors-20261030';
-import { icon } from './icons.js?v=metric-colors-20261030';
+import { renderProjectCard } from './block-view.js?v=metric-details-fix-20261030';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=metric-details-fix-20261030';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV, groupCount } from './data.js?v=metric-details-fix-20261030';
+import { icon } from './icons.js?v=metric-details-fix-20261030';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=metric-colors-20261030';
-import { createCMS } from './cms.js?v=metric-colors-20261030';
-import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=metric-colors-20261030';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=metric-details-fix-20261030';
+import { createCMS } from './cms.js?v=metric-details-fix-20261030';
+import { cmsRoute, defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=metric-details-fix-20261030';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -119,7 +119,7 @@ function delta(now, prev, exists) {
   const d = ((now - prev) / prev * 100);
   return `<span class="delta ${d < 0 ? 'negative' : ''}">${d >= 0 ? '↗' : '↘'} ${d > 0 ? '+' : ''}${d.toFixed(1).replace('.', ',')}%</span><span class="muted">до ${year - 1}</span>`;
 }
-function stat(label, value, unit, ico, detail, color='') { return `<article class="stat-card"><div class="stat-top"><span>${label}</span><span class="stat-icon ${color}">${icon(ico)}</span></div><div class="stat-value">${value}<small>${unit}</small></div><div class="stat-detail">${detail}</div></article>`; }
+function stat(label, value, unit, ico, detail, color='') { return `<article class="stat-card" data-metric-key="${e(label)}"><div class="stat-top"><span>${label}</span><span class="stat-icon ${color}">${icon(ico)}</span></div><div class="stat-value">${value}<small>${unit}</small></div><div class="stat-detail">${detail}</div></article>`; }
 function stats() {
   const s = summarize(data, year), prev = summarize(data, year - 1), hasPrev = yearsIn(data).includes(year - 1);
   let cards = [];
@@ -187,7 +187,7 @@ function tableBody(kind, showAll = cms?.getPage(route)?.blocks.find(b=>b.type===
 }
 function recordsPage(kind) {
   const pub=kind==='publications', s=summarize(data,year);
-  return `${pub?`<div class="chart-grid">${publicationChart()}${quartileChart()}</div>`:`<div class="patents-summary">${stat('Отримано патентів',fmt(s.patents.length),'','award','<span class="muted">За датою реєстрації у вибраному році</span>')}${facultyPanel(s.patents,'Винахідницька активність')}</div>`}<section class="panel records-panel">${sectionHead(pub?'Каталог публікацій':'Реєстр патентів',pub?'Усі публікації, включно з неіндексованими':'Патенти на винаходи та корисні моделі',`<button class="button secondary small" data-action="csv-export" data-dataset="${kind}">${icon('download')}CSV / XLSX</button>`)}${toolbar(kind)}<div id="records-body">${tableBody(kind)}</div></section>${pub?facultyPanel(s.publications):''}`;
+  return `${pub?`<div class="chart-grid">${publicationChart()}${quartileChart()}</div>`:`<div class="patents-summary">${stat('Патентів отримано',fmt(s.patents.length),'','award','<span class="muted">За датою реєстрації у вибраному році</span>')}${facultyPanel(s.patents,'Винахідницька активність')}</div>`}<section class="panel records-panel">${sectionHead(pub?'Каталог публікацій':'Реєстр патентів',pub?'Усі публікації, включно з неіндексованими':'Патенти на винаходи та корисні моделі',`<button class="button secondary small" data-action="csv-export" data-dataset="${kind}">${icon('download')}CSV / XLSX</button>`)}${toolbar(kind)}<div id="records-body">${tableBody(kind)}</div></section>${pub?facultyPanel(s.publications):''}`;
 }
 function projectsPage() {
   const s=summarize(data,year), now=today();
@@ -207,10 +207,10 @@ function existingPage(source) {
   try { route = source; return source==='overview'?overview():source==='publications'||source==='patents'?recordsPage(source):source==='projects'?projectsPage():fundingPage(); }
   finally { route = previous; }
 }
-function analyticsTable(source, allYears = false) {
-  const selected=allYears?null:year, s=summarize(data,year), table=(headers,rows)=>({headers,rows:rows.map(r=>r.map(v=>String(v??'')))});
+function analyticsTable(source, allYears = false, reportYear = year) {
+  const selected=allYears?null:reportYear, s=summarize(data,reportYear), table=(headers,rows)=>({headers,rows:rows.map(r=>r.map(v=>String(v??'')))});
   if(['stats','fundingStats','patentStats'].includes(source)){
-    const cards=source==='fundingStats'?[['Надходження на науку',s.revenue==null?'—':money(s.revenue),'млн ₴',`${year} рік`],['Джерел фінансування',new Set(data.revenues.filter(r=>r.year===year).map(r=>r.source)).size,'','За вибраний рік']]:source==='patentStats'?[['Патентів отримано',s.patents.length,'',`${year} рік`]]:[['Наукових публікацій',s.publications.length,'',`${year} рік`],['Scopus / Web of Science',s.indexed.length,'','Індексовані публікації'],['Публікацій Q1–Q2',s.q12,'','Серед індексованих'],['Грантових проєктів',s.projects.length,'',`Виконуються у ${year} році`],['Надходження грантів',money(s.grants),'млн ₴','За вибраний рік'],['Патентів отримано',s.patents.length,'',`${year} рік`]];
+    const cards=source==='fundingStats'?[['Надходження на науку',s.revenue==null?'—':money(s.revenue),'млн ₴',`${reportYear} рік`],['Джерел фінансування',new Set(data.revenues.filter(r=>r.year===reportYear).map(r=>r.source)).size,'','За вибраний рік']]:source==='patentStats'?[['Патентів отримано',s.patents.length,'',`${reportYear} рік`]]:[['Наукових публікацій',s.publications.length,'',`${reportYear} рік`],['Scopus / Web of Science',s.indexed.length,'','Індексовані публікації'],['Публікацій Q1–Q2',s.q12,'','Серед індексованих'],['Грантових проєктів',s.projects.length,'',`Виконуються у ${reportYear} році`],['Надходження грантів',money(s.grants),'млн ₴','За вибраний рік'],['Патентів отримано',s.patents.length,'',`${reportYear} рік`]];
     return table(['label','value','unit','note'],cards);
   }
   if(source==='publicationChart')return table(['Рік','Scopus / Web of Science','Інші публікації'],[...new Set(data.publications.map(p=>p.year))].sort().filter(y=>selected===null||y===selected).map(y=>{const x=summarize(data,y);return[y,x.indexed.length,x.publications.length-x.indexed.length];}));
@@ -254,7 +254,7 @@ function analyticsBlock(source, settings = {}) {
   const s=summarize(data,year);
   if(source==='stats')return stats();
   if(source==='fundingStats'){const previous=route;try{route='funding';return stats();}finally{route=previous;}}
-  if(source==='patentStats')return `<div class="stats-grid">${stat('Отримано патентів',fmt(s.patents.length),'','award','<span class="muted">За датою реєстрації у вибраному році</span>')}</div>`;
+  if(source==='patentStats')return `<div class="stats-grid">${stat('Патентів отримано',fmt(s.patents.length),'','award','<span class="muted">За датою реєстрації у вибраному році</span>')}</div>`;
   if(source==='insight')return `<article class="insight-card"><div class="insight-top">${icon('globe')}<span>ВІДКРИТА НАУКА</span></div><h2>Знання мають бути доступними.</h2><p>Публікації, дослідження та винаходи університету — в одному просторі даних.</p><a href="#publications">Дослідити публікації ${icon('arrow')}</a></article>`;
   if(source==='revenueNotice')return `<div class="notice source-notice">${icon('info')}<span><strong>Надходження на науку у ${year} році:</strong> ${s.revenue==null?'дані не завантажено':money(s.revenue)+' млн ₴'}. Грантові кошти обліковуються окремо; ці суми не додаються автоматично.</span></div>`;
   if(['publications','patents'].includes(source))return `<section class="panel records-panel">${toolbar(source)}<div id="records-body">${tableBody(source,settings.showAll)}</div></section>`;
@@ -265,6 +265,9 @@ function analyticsBlock(source, settings = {}) {
   if(source==='funding')return `<article class="panel">${sectionHead('Надходження за роками','Млн грн')}${barChart('funding')}</article>`;
   const publications=source==='publications',rows=publications?s.publications:s.patents;
   return `<div class="panel"><p class="cms-field-help">${rows.length} записів за ${year} рік. Показано перші 100; повні дані доступні через експорт аналітики.</p>${rows.length?`<div class="table-scroll"><table><thead><tr><th>${publications?'Публікація':'Патент'}</th><th>Автори</th><th>${publications?'Індексація':'Номер'}</th></tr></thead><tbody>${rows.slice(0,100).map(r=>`<tr><td>${linkTitle(r)}</td><td>${e(r.authors)}</td><td>${e(publications?r.indexes.join(' / '):r.number)}</td></tr>`).join('')}</tbody></table></div>`:empty()}</div>`;
+}
+function renderMetricReference(source,settings,reportYear=year){
+  const previous=year;try{year=reportYear;return analyticsBlock(source,settings);}finally{year=previous;}
 }
 function render() {
   if(route!=='admin'&&!cms.pages().some(p=>cmsRoute(p)===route))route=cms.pages()[0]?cmsRoute(cms.pages()[0]):'empty';
@@ -434,9 +437,10 @@ try {
   const response=await fetch('./data/demo.json');if(!response.ok)throw new Error('Не вдалося завантажити початковий набір даних.');demo=validateBundle(await response.json());
   let stored;try{stored=localStorage.getItem(STORE);}catch{storageAvailable=false;}
   if(stored){try{data=validateBundle(JSON.parse(stored));}catch{data=structuredClone(demo);toast('Локальний набір пошкоджено або застарів. Завантажено початкові дані; збережений запис не видалено.');}}else data=structuredClone(demo);
+  const years=yearsIn(data);year=years.includes(new Date().getFullYear())?new Date().getFullYear():years.at(-1)||new Date().getFullYear();
   cms=createCMS({
     getData:()=>data,dataStorageKey:()=>STORE,getYear:()=>year,selectPreviewYear:value=>{if(yearsIn(data).includes(value)){year=value;resetFilters();}},isAdmin:()=>route==='admin',rerender:render,notify:toast,download,
-    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,getBlockTable:analyticsTable,getBlockPeriod:displayedBlockPeriod,
+    renderHeader:header,renderExisting:existingPage,renderAnalytics:analyticsBlock,renderMetricHTML:renderMetricReference,getBlockTable:analyticsTable,getBlockPeriod:displayedBlockPeriod,
     replaceData:(next,write=true)=>{if(write)persist(next);else data=next;const years=yearsIn(next);if(!years.includes(year))year=years.at(-1)||new Date().getFullYear();resetFilters();},
     openDataManager:(mode,source)=>{
       const key=({stats:'bundle',publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',projects:'projects',patents:'patents',funding:'revenues',overview:'bundle'})[source]||'bundle';
@@ -445,5 +449,5 @@ try {
     }
   });
   const pagesResponse=await fetch('./data/pages.json');if(!pagesResponse.ok)throw new Error('Не вдалося завантажити сторінки сайта.');cms.init(await pagesResponse.json());
-  const years=yearsIn(data);year=years.includes(new Date().getFullYear())?new Date().getFullYear():years.at(-1)||new Date().getFullYear();setRoute();
+  setRoute();
 }catch(err){$('#content').innerHTML=`<div class="empty"><h1>Не вдалося завантажити дані</h1><p>${e(err.message)}</p><p>Перевірте файл data/demo.json та його відповідність формату.</p></div>`;}

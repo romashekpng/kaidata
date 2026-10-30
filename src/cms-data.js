@@ -17,6 +17,40 @@ export function metricColorTable(input){
  for(const [key,value]of [['background','default'],['backgroundColor','#25395d']])if(!table.headers.includes(key)){table.headers.push(key);table.rows.forEach(row=>row.push(value));}
  return table;
 }
+export function validateMetricDataTable(input){
+ const extra=Array.isArray(input?.headers)?['background','backgroundColor'].filter(h=>input.headers.includes(h)).length:0;
+ const table=validateBlockTable(input,false,12+extra),b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
+ for(const row of table.rows)validateMetricBackground(b<0?undefined:row[b],c<0?undefined:row[c]);
+ return table;
+}
+export function metricDataEqual(left,right){
+ if(!left||!right||!Array.isArray(left.headers)||!Array.isArray(right.headers))return false;
+ const canonical=table=>{
+  const keys=table.headers.filter(h=>!['background','backgroundColor'].includes(h)).sort();
+  return {keys,rows:table.rows.map(row=>JSON.stringify(keys.map(key=>String(row[table.headers.indexOf(key)]??'').trim()))).sort()};
+ };
+ return JSON.stringify(canonical(left))===JSON.stringify(canonical(right));
+}
+export function metricAppearanceFromTable(table){
+ const label=table.headers.indexOf('label'),b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
+ if(label<0)return [];
+ const seen=new Set();return table.rows.flatMap(row=>{
+  const key=String(row[label]).trim();if(!key||seen.has(key))return [];seen.add(key);
+  return [{key,...validateMetricBackground(b<0?undefined:row[b],c<0?undefined:row[c])}];
+ });
+}
+export function applyMetricAppearance(table,appearance=[]){
+ const out=metricColorTable(table),label=out.headers.indexOf('label'),b=out.headers.indexOf('background'),c=out.headers.indexOf('backgroundColor');
+ if(label<0)return out;
+ const byKey=new Map(appearance.map((entry,i)=>[entry.key,{...entry,index:i}]));
+ out.rows.forEach(row=>{const entry=byKey.get(row[label]);if(entry){row[b]=entry.background;row[c]=entry.backgroundColor;}});
+ out.rows=out.rows.map((row,i)=>({row,index:byKey.get(row[label])?.index??appearance.length+i})).sort((a,b)=>a.index-b.index).map(x=>x.row);
+ return out;
+}
+export function restoreMetricSnapshot(block,reference){
+ if(block.type!=='analytics'||!isMetricBlock(block)||block.dataMode!=='manual'||block.metricEditingVersion===1||!block.dataTable?.headers.includes('background')||!metricDataEqual(block.dataTable,reference))return block;
+ return {...block,dataMode:'live',metricEditingVersion:1,metricAppearance:metricAppearanceFromTable(block.dataTable)};
+}
 export function customBackgroundStyle(color){
  if(typeof color!=='string'||!/^#[0-9a-f]{6}$/i.test(color))throw new Error('Некоректний колір фону.');
  const channels=color.slice(1).match(/../g).map(c=>{const v=parseInt(c,16)/255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;});
@@ -144,10 +178,17 @@ export function validateCMSBlock(input) {
     if(input.subtitle===undefined)out.subtitle='За кількістю записів у вибраному році';
   }
   if(input.type==='analytics'){
+    if(isMetricBlock(input)){
+      if(input.metricEditingVersion!==undefined){if(input.metricEditingVersion!==1)fail('Невідома версія редагування показників.');out.metricEditingVersion=1;}
+      if(input.metricManualBackup!==undefined){if(!obj(input.metricManualBackup))fail('Некоректна ручна копія показників.');out.metricManualBackup={dataTable:validateMetricDataTable(input.metricManualBackup.dataTable),dataPeriod:normalizeBlockPeriod(input.metricManualBackup.dataPeriod||'')};}
+      if(input.metricAppearance!==undefined){
+        if(!Array.isArray(input.metricAppearance)||input.metricAppearance.length>1000)fail('Некоректне оформлення карток.');
+        const keys=new Set();out.metricAppearance=input.metricAppearance.map(entry=>{if(!obj(entry))fail('Некоректне оформлення картки.');const key=str(entry.key,'Ключ картки',160,true);if(keys.has(key))fail('Повторюється ключ оформлення картки.');keys.add(key);return {key,...validateMetricBackground(entry.background,entry.backgroundColor)};});
+      }
+    }
     if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
     if(input.dataMode!==undefined)out.dataMode=input.dataMode;
-    if(input.dataTable!==undefined){const extra=METRIC_SOURCES.includes(input.source)&&Array.isArray(input.dataTable?.headers)?['background','backgroundColor'].filter(h=>input.dataTable.headers.includes(h)).length:0;out.dataTable=validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source),12+extra);}
-    if(METRIC_SOURCES.includes(input.source)&&out.dataTable){const b=out.dataTable.headers.indexOf('background'),c=out.dataTable.headers.indexOf('backgroundColor');for(const row of out.dataTable.rows)validateMetricBackground(b<0?undefined:row[b],c<0?undefined:row[c]);}
+    if(input.dataTable!==undefined)out.dataTable=isMetricBlock(input)?validateMetricDataTable(input.dataTable):validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
   if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&['pie','donut','progress'].includes((out.settings||defaultBlockSettings(input.source)).chartType)){

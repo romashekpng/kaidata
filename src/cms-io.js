@@ -1,6 +1,6 @@
-import { parseCSV, validateBundle } from './data.js?v=metric-colors-20261030';
-import { readXLSXWorkbook } from './spreadsheet.js?v=metric-colors-20261030';
-import { validateCMSBlock, validateCMSPage, validateSite, metricColorTable, isMetricBlock } from './cms-data.js?v=metric-colors-20261030';
+import { parseCSV, validateBundle } from './data.js?v=metric-details-fix-20261030';
+import { readXLSXWorkbook } from './spreadsheet.js?v=metric-details-fix-20261030';
+import { validateCMSBlock, validateCMSPage, validateSite, metricColorTable, isMetricBlock, metricDataEqual, metricAppearanceFromTable } from './cms-data.js?v=metric-details-fix-20261030';
 const fail = message => { throw new Error(message); };
 export function blockTable(block) {
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
@@ -21,7 +21,13 @@ export function tableToCMSBlock(table, current) {
   if (!Array.isArray(rows) || rows.length > 1000) fail('Не більше 1000 рядків у блоці.');
   const out = structuredClone(current);
   if (out.type === 'table' || out.type === 'chart') { out.columns = headers; out.rows = rows; }
-  else if(out.type==='analytics'){out.dataTable={headers,rows};out.dataMode='manual';}
+  else if(out.type==='analytics'){
+    out.dataTable={headers,rows};out.dataMode='manual';
+    if(isMetricBlock(out)){
+      out.metricEditingVersion=1;
+      if(current.dataMode!=='manual'&&metricDataEqual(out.dataTable,current.dataTable)){out.dataMode='live';out.metricAppearance=metricAppearanceFromTable(out.dataTable);}
+    }
+  }
   else {
     const expected = out.type==='metrics'?['label','value','unit','note']:blockTable(out).headers;
     if ((out.type==='metrics'?headers.some(h=>![...expected,'background','backgroundColor'].includes(h)):expected.length!==headers.length) || expected.some(h => !headers.includes(h))) fail(`Очікуються колонки: ${expected.join(', ')}.`);
