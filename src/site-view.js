@@ -1,7 +1,7 @@
-import { createChartRenderer } from './chart-runtime.js?v=chart-libraries-20261030';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-libraries-20261030';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=chart-libraries-20261030';
-import { icon } from './icons.js?v=chart-libraries-20261030';
+import { createChartRenderer } from './chart-runtime.js?v=project-filters-20261031';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=project-filters-20261031';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=project-filters-20261031';
+import { icon } from './icons.js?v=project-filters-20261031';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer();
@@ -90,6 +90,10 @@ export function createSiteView(options){
     const buttons=wrapper.querySelectorAll('.project-programs button');
     catalog.querySelectorAll('.project-programs button').forEach((button,i)=>{button.className=buttons[i].className;button.setAttribute('aria-pressed',buttons[i].getAttribute('aria-pressed'));});
     catalog.querySelector('[data-project-role]').value=wrapper.querySelector('[data-project-role]').value;
+    catalog.querySelector('[data-project-program-select]').value=wrapper.querySelector('[data-project-program-select]').value;
+    const reset=catalog.querySelector('[data-cms-action="project-reset"]'),wasFocused=reset===catalog.ownerDocument.activeElement;
+    reset.hidden=wrapper.querySelector('[data-cms-action="project-reset"]').hidden;
+    if(wasFocused&&reset.hidden)catalog.querySelector('[data-project-query]').focus({preventScroll:true});
     if(field==='reset')catalog.querySelector('[data-project-query]').value='';
     options.afterUpdate?.();
   }
@@ -105,7 +109,7 @@ export function createSiteView(options){
  function bindInputs(root){
   charts.observe(root);
   root.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
-  root.addEventListener('change',event=>{if(event.target.matches('[data-project-role]'))updateProjectFilter(event.target.closest('.project-catalog'),'role',event.target.value);});
+  root.addEventListener('change',event=>{if(event.target.matches('[data-project-role],[data-project-program-select]'))updateProjectFilter(event.target.closest('.project-catalog'),event.target.matches('[data-project-role]')?'role':'program',event.target.value);});
  }
  return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

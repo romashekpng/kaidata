@@ -1,9 +1,9 @@
-import { createAnalytics } from './analytics.js?v=chart-libraries-20261030';
-import { createSiteView } from './site-view.js?v=chart-libraries-20261030';
-import { validateBundle, yearsIn } from './data.js?v=chart-libraries-20261030';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=chart-libraries-20261030';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=chart-libraries-20261030';
-import { icon } from './icons.js?v=chart-libraries-20261030';
+import { createAnalytics } from './analytics.js?v=project-filters-20261031';
+import { createSiteView } from './site-view.js?v=project-filters-20261031';
+import { validateBundle, yearsIn } from './data.js?v=project-filters-20261031';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=project-filters-20261031';
+import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=project-filters-20261031';
+import { icon } from './icons.js?v=project-filters-20261031';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

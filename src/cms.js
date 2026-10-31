@@ -1,11 +1,11 @@
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=chart-libraries-20261030';
-import { createSiteView } from './site-view.js?v=chart-libraries-20261030';
-import { CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=chart-libraries-20261030';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=chart-libraries-20261030';
-import { renderBlockTable } from './block-view.js?v=chart-libraries-20261030';
-import { validateBundle } from './data.js?v=chart-libraries-20261030';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=project-filters-20261031';
+import { createSiteView } from './site-view.js?v=project-filters-20261031';
+import { CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=project-filters-20261031';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=project-filters-20261031';
+import { renderBlockTable } from './block-view.js?v=project-filters-20261031';
+import { validateBundle } from './data.js?v=project-filters-20261031';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=chart-libraries-20261030';
+import { icon } from './icons.js?v=project-filters-20261031';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -113,7 +113,7 @@ export function createCMS(options) {
       const page = frame.contentDocument?.querySelector('.cms-frame-page');
       if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
       frame.contentDocument?.addEventListener('click',event=>{
-        if(event.target.closest('summary,[data-project-query],[data-project-role]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
+        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
         if(el)action(el.dataset.cmsAction,el).catch(showError);
         const yearButton=event.target.closest('[data-year]');
         if(yearButton){options.selectPreviewYear(+yearButton.dataset.year);schedulePreview();}
