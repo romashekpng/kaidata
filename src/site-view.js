@@ -1,7 +1,7 @@
-import { createChartRenderer } from './chart-runtime.js?v=horizontal-stacked-20261031';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=horizontal-stacked-20261031';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=horizontal-stacked-20261031';
-import { icon } from './icons.js?v=horizontal-stacked-20261031';
+import { createChartRenderer } from './chart-runtime.js?v=project-views-20261031';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=project-views-20261031';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=project-views-20261031';
+import { icon } from './icons.js?v=project-views-20261031';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer();
@@ -82,11 +82,14 @@ export function createSiteView(options){
   function updateProjectFilter(catalog,field,value){
     if(!catalog)return;
     const id=catalog.dataset.projectBlock,block=currentBlock(id);if(!block||block.source!=='projects')return;
-    const state=field==='reset'?{}:{...projectFilters.get(id),[field]:value};
+    const state=field==='reset'?{view:projectFilters.get(id)?.view}:{...projectFilters.get(id),[field]:value};
     projectFilters.set(id,state);
     const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderProjectTable(editableTable(block),resolvedSettings(block),state,id);
     catalog.querySelector('.project-results').replaceWith(wrapper.querySelector('.project-results'));
     catalog.querySelector('.project-count').innerHTML=wrapper.querySelector('.project-count').innerHTML;
+    catalog.querySelectorAll('[data-project-view]').forEach(button=>{
+      const next=wrapper.querySelector(`[data-project-view="${button.dataset.projectView}"]`);button.className=next.className;button.setAttribute('aria-pressed',next.getAttribute('aria-pressed'));
+    });
     const buttons=wrapper.querySelectorAll('.project-programs button');
     catalog.querySelectorAll('.project-programs button').forEach((button,i)=>{button.className=buttons[i].className;button.setAttribute('aria-pressed',buttons[i].getAttribute('aria-pressed'));});
     catalog.querySelector('[data-project-role]').value=wrapper.querySelector('[data-project-role]').value;
@@ -99,6 +102,7 @@ export function createSiteView(options){
   }
 
  function handleAction(name,el){
+  if(name==='project-view'){if(['cards','table'].includes(el.dataset.projectView))updateProjectFilter(el.closest('.project-catalog'),'view',el.dataset.projectView);return true;}
   if(name==='project-program'||name==='project-reset'){updateProjectFilter(el.closest('.project-catalog'),name==='project-reset'?'reset':'program',el.dataset.program);return true;}
   if(name==='chart-legend'){
    const id=el.dataset.blockId,set=hiddenSeries.get(id)||new Set(),index=+el.dataset.series;

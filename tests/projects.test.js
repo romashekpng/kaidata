@@ -38,3 +38,9 @@ test('ручні проєкти, ознака міжнародності та н
  assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block}),'block',block),block);assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(block),block),block);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(block,ExcelJS),block,ExcelJS),block);
  assert.throws(()=>validateCMSBlock({...block,settings:{...block.settings,showProjectGlobe:'false'}}));
 });
+test('табличний вигляд використовує відфільтровані записи, безпечно показує посилання й довільний текст',()=>{
+ const input=structuredClone(table);input.rows[0][0]='<img src=x onerror=alert(1)>';input.rows[0][6]='javascript:alert(1)';input.rows[3][6]='https://example.com/project';
+ const html=renderProjectTable(input,defaultBlockSettings('projects'),{view:'table',program:'Horizon Europe',role:'Координатор'},'projects','2026-05-01');
+ assert(html.includes('https://example.com/project'));assert(!html.includes('Авіаційні матеріали'));assert(!html.includes('class="project-card"'));assert(html.includes('aria-valuenow="33"'));
+ const hostile=renderProjectTable(input,{showProjectGlobe:false,showProjectFlag:false},{view:'table'},'projects','2026-05-01');assert(!hostile.includes('<img'));assert(!hostile.includes('javascript:'));assert(hostile.includes('&lt;img'));assert(!hostile.includes('class="project-origin'));
+});

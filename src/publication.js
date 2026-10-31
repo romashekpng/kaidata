@@ -1,5 +1,5 @@
-import { validateBundle } from './data.js?v=horizontal-stacked-20261031';
-import { validateSite } from './cms-data.js?v=horizontal-stacked-20261031';
+import { validateBundle } from './data.js?v=project-views-20261031';
+import { validateSite } from './cms-data.js?v=project-views-20261031';
 export const CHART_ASSETS=['src/chart-runtime.js','src/vendor/echarts.min.js','src/vendor/echarts.LICENSE.txt','src/vendor/echarts.NOTICE.txt','src/vendor/chart.min.js','src/vendor/chart.LICENSE.txt','src/vendor/plotly.min.js','src/vendor/plotly.LICENSE.txt'];
 export const PUBLICATION_ASSETS=['index.html','styles.css','src/app.js','src/viewer.js','src/analytics.js','src/site-view.js','src/publication.js','src/style-data.js','src/data.js','src/icons.js','src/spreadsheet.js','src/cms-data.js','src/block-view.js','src/cms-io.js','src/cms.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt',...CHART_ASSETS];
 export const VISITOR_ASSETS=['index.html','styles.css','src/viewer.js','src/analytics.js','src/site-view.js','src/style-data.js','src/data.js','src/icons.js','src/cms-data.js','src/block-view.js',...CHART_ASSETS];
@@ -11,7 +11,7 @@ export function buildPublicationFiles(assets,data,site,mode){
   const index=files.find(file=>file.name==='index.html');
   const entry=/<script type="module" src="\.\/src\/app\.js(?:\?[^"<>]*)?"><\/script>/;
   if(!entry.test(index.data))throw new Error('Не вдалося знайти файл запуску сайта для підготовки версії відвідувачів.');
-  index.data=index.data.replace(entry,'<script type="module" src="./src/viewer.js?v=horizontal-stacked-20261031"><\/script>').replace(/\s*<dialog\b[^>]*id="manager"[^>]*>[\s\S]*?<\/dialog>/,'').replace('<html lang="uk"','<html data-publication="visitor" lang="uk"');
+  index.data=index.data.replace(entry,'<script type="module" src="./src/viewer.js?v=project-views-20261031"><\/script>').replace(/\s*<dialog\b[^>]*id="manager"[^>]*>[\s\S]*?<\/dialog>/,'').replace('<html lang="uk"','<html data-publication="visitor" lang="uk"');
   cleanSite.pages=cleanSite.pages.filter(p=>p.visible||p.kind==='builtin').map(p=>({...p,blocks:p.visible?p.blocks.filter(b=>b.visible).map(b=>{const block={...b};delete block.metricManualBackup;if(block.type==='analytics'&&block.dataMode!=='manual'){delete block.dataTable;delete block.dataPeriod;}return block;}):[]}));
  }
  const instructions=mode==='editor'
