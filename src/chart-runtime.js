@@ -1,4 +1,4 @@
-import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=project-view-icons-20261031';
+import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=compact-project-table-20261031';
 const chartLoads=new Map();
 const chartVendor={echarts:['echarts.min.js','echarts'],chartjs:['chart.min.js','Chart'],plotly:['plotly.min.js','Plotly']};
 const chartEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +12,7 @@ export async function loadChartLibrary(library){
   const complete=()=>{if(globalThis[name])resolve(globalThis[name]);else reject(new Error(`Не вдалося запустити ${CHART_LIBRARIES[library]}.`));};
   script.onerror=()=>{script.remove();reject(new Error(`Не вдалося завантажити ${CHART_LIBRARIES[library]}. Перевірте файли бібліотеки.`));};
   if(globalThis.KAI_PUBLIC_ASSETS?.[asset]){script.textContent=globalThis.KAI_PUBLIC_ASSETS[asset];document.head.append(script);complete();}
-  else{script.src=new URL(asset,document.baseURI).href+'?v=project-view-icons-20261031';script.onload=complete;document.head.append(script);}
+  else{script.src=new URL(asset,document.baseURI).href+'?v=compact-project-table-20261031';script.onload=complete;document.head.append(script);}
  }).catch(error=>{chartLoads.delete(library);throw error;}));
  return chartLoads.get(library);
 }
