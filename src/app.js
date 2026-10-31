@@ -1,11 +1,11 @@
-import { createAnalytics } from './analytics.js?v=project-views-20261031';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=project-views-20261031';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV } from './data.js?v=project-views-20261031';
-import { icon } from './icons.js?v=project-views-20261031';
+import { createAnalytics } from './analytics.js?v=project-view-icons-20261031';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=project-view-icons-20261031';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, yearsIn, summarize, importCSV, toCSV } from './data.js?v=project-view-icons-20261031';
+import { icon } from './icons.js?v=project-view-icons-20261031';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=project-views-20261031';
-import { createCMS } from './cms.js?v=project-views-20261031';
-import { cmsRoute } from './cms-data.js?v=project-views-20261031';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=project-view-icons-20261031';
+import { createCMS } from './cms.js?v=project-view-icons-20261031';
+import { cmsRoute } from './cms-data.js?v=project-view-icons-20261031';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);

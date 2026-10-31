@@ -1,7 +1,7 @@
-import { BLOCKS, yearsIn, summarize, groupCount } from './data.js?v=project-views-20261031';
-import { icon } from './icons.js?v=project-views-20261031';
-import { renderProjectCard } from './block-view.js?v=project-views-20261031';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=project-views-20261031';
+import { BLOCKS, yearsIn, summarize, groupCount } from './data.js?v=project-view-icons-20261031';
+import { icon } from './icons.js?v=project-view-icons-20261031';
+import { renderProjectCard } from './block-view.js?v=project-view-icons-20261031';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=project-view-icons-20261031';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=v=>v==null?'—':new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(v/1e6);
