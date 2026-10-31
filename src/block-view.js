@@ -1,5 +1,5 @@
-import { icon } from './icons.js?v=project-filters-20261031';
-import { BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=project-filters-20261031';
+import { icon } from './icons.js?v=horizontal-stacked-20261031';
+import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=horizontal-stacked-20261031';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -94,7 +94,7 @@ export function renderChartTable(block, table, hidden = []) {
  let graphic='';
  if(!table.rows.length)graphic='<div class="empty"><p>Додайте дані для побудови графіка.</p></div>';
  else if(s.chartType==='progress')graphic=renderProgressChart(block,table,s,colors,hiddenSet,totals);
- else if(s.chartType==='horizontal')graphic=renderHorizontalChart(block,table,s,colors,hiddenSet,totals);
+ else if(isHorizontalChartType(s.chartType))graphic=renderHorizontalChart(block,table,s,colors,hiddenSet,totals);
  else if(pie){
   const total=values.reduce((sum,v,i)=>sum+(hiddenSet.has(i)?0:v),0);let angle=-Math.PI/2;
   const point=a=>[100+83*Math.cos(a),100+83*Math.sin(a)];

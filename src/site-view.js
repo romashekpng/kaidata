@@ -1,7 +1,7 @@
-import { createChartRenderer } from './chart-runtime.js?v=project-filters-20261031';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=project-filters-20261031';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=project-filters-20261031';
-import { icon } from './icons.js?v=project-filters-20261031';
+import { createChartRenderer } from './chart-runtime.js?v=horizontal-stacked-20261031';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=horizontal-stacked-20261031';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=horizontal-stacked-20261031';
+import { icon } from './icons.js?v=horizontal-stacked-20261031';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer();

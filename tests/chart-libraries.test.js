@@ -21,7 +21,7 @@ test('JSON та XLSX блоків зберігають активну біблі
 });
 test('спільна модель бібліотек зберігає нулі, пропуски, знаки й підсумовує лише видимі серії або сектори',()=>{
  const table={headers:['Назва','A','B'],rows:[['Перший','0','5'],['Другий','-2',''],['Третій','10,5','2']]};
- const model=chartModel({table,settings:defaultBlockSettings(),hidden:[1]});assert.deepEqual(model.totals,[0,-2,10.5]);assert.deepEqual(model.series[0].values,[0,-2,10.5]);
+ const model=chartModel({table,settings:{...defaultBlockSettings(),chartType:'horizontalStacked'},hidden:[1]});assert.equal(model.horizontal,true);assert.deepEqual(model.totals,[0,-2,10.5]);assert.deepEqual(model.series[0].values,[0,-2,10.5]);
  const pie=chartModel({table:{...table,rows:[['A','10','5'],['B','20','5']]},settings:{chartType:'donut'},hidden:[0]});assert.equal(pie.total,25);assert.deepEqual(pie.values,[15,25]);
  assert.deepEqual(wrapChartLabel('Факультет транспорту та інженерії',20),['Факультет транспорту','та інженерії']);assert(wrapChartLabel('А'.repeat(80),20).every(line=>line.length<=20));
 });

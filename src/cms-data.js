@@ -2,7 +2,7 @@ export const CORE_PAGES = { overview: 'Огляд', publications: 'Публік�
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
-export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
+export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', horizontalStacked: 'Горизонтальні накопичувальні стовпчики', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
 export const TEXT_BACKGROUNDS = { menu:'Колір меню', accent:'Основний акцент', blue:'Блакитний відтінок', green:'Зелений відтінок', amber:'Теплий відтінок', violet:'Фіолетовий відтінок', default:'Стандартний фон', custom:'Власний колір' };
 export const METRIC_SOURCES = ['stats','fundingStats','patentStats'];
 export function isMetricBlock(block){return block.type==='metrics'||(block.type==='analytics'&&METRIC_SOURCES.includes(block.source));}
@@ -84,6 +84,7 @@ export function selectChartLibrary(settings, library, source = '') {
  // A library's first profile starts from the currently visible settings.
  return {...next,librarySettings:saved.librarySettings};
 }
+export function isHorizontalChartType(type) { return type==='horizontal'||type==='horizontalStacked'; }
 export function defaultBlockSettings(source = '') {
  return { chartLibrary:'echarts', showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, legendCentered:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }

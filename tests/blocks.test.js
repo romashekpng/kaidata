@@ -76,8 +76,8 @@ test('смуги прогресу масштабуються відносно н
  const noNumbers=renderChartTable({...b,settings:{...b.settings,numbering:false}},table);assert(!noNumbers.includes('cms-progress-number'));assert(noNumbers.includes('Факультет А'));
  assert.throws(()=>validateCMSBlock({...b,rows:[['А','-1','0']]}),/від’ємні/);
 });
-test('горизонтальні смуги підтримують довгі підписи, значення праворуч і приховування серій',()=>{
- const b={...defaultCMSBlock('chart'),settings:{...defaultBlockSettings(),chartType:'horizontal',wrapLabels:true}};
+for(const horizontalType of ['horizontal','horizontalStacked'])test(horizontalType+': горизонтальні смуги підтримують довгі підписи, значення праворуч і приховування серій',()=>{
+ const b={...defaultCMSBlock('chart'),settings:{...defaultBlockSettings(),chartType:horizontalType,wrapLabels:true}};
  const table={headers:['Факультет','A','B'],rows:[['Факультет архітектури, будівництва та енергетики <img src=x>','10','5']]};
  const html=renderChartTable(b,table);assert(html.includes('cms-horizontal-chart wrap-labels totals-visible'));assert.match(html,/cms-horizontal-total[^>]*>15/);assert(!html.includes('<img'));assert(html.includes('&lt;img'));
  const hidden=renderChartTable(b,table,[1]);assert.match(hidden,/cms-horizontal-total[^>]*>10/);assert(hidden.includes('Разом: 10'));assert(!hidden.includes('Разом: 15'));
@@ -90,7 +90,7 @@ test('горизонтальна шкала обробляє нулі, проп�
  }
 });
 test('нові типи, нумерація й перенесення назв зберігаються через JSON, CSV та XLSX',async()=>{
- for(const chartType of ['progress','horizontal']){
+ for(const chartType of ['progress','horizontal','horizontalStacked']){
   const b={...defaultCMSBlock('chart'),settings:{...defaultBlockSettings(),chartType,numbering:false,wrapLabels:true}};
   assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),validateCMSBlock(b));
   assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),validateCMSBlock(b));

@@ -1,4 +1,4 @@
-import { validateSiteStyles } from './style-data.js?v=project-filters-20261031';
+import { validateSiteStyles } from './style-data.js?v=horizontal-stacked-20261031';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {
