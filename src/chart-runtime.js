@@ -1,4 +1,4 @@
-import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=compact-project-table-20261031';
+import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=horizontal-labels-20261101';
 const chartLoads=new Map();
 const chartVendor={echarts:['echarts.min.js','echarts'],chartjs:['chart.min.js','Chart'],plotly:['plotly.min.js','Plotly']};
 const chartEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +12,7 @@ export async function loadChartLibrary(library){
   const complete=()=>{if(globalThis[name])resolve(globalThis[name]);else reject(new Error(`Не вдалося запустити ${CHART_LIBRARIES[library]}.`));};
   script.onerror=()=>{script.remove();reject(new Error(`Не вдалося завантажити ${CHART_LIBRARIES[library]}. Перевірте файли бібліотеки.`));};
   if(globalThis.KAI_PUBLIC_ASSETS?.[asset]){script.textContent=globalThis.KAI_PUBLIC_ASSETS[asset];document.head.append(script);complete();}
-  else{script.src=new URL(asset,document.baseURI).href+'?v=compact-project-table-20261031';script.onload=complete;document.head.append(script);}
+  else{script.src=new URL(asset,document.baseURI).href+'?v=horizontal-labels-20261101';script.onload=complete;document.head.append(script);}
  }).catch(error=>{chartLoads.delete(library);throw error;}));
  return chartLoads.get(library);
 }
@@ -26,10 +26,37 @@ export function chartModel(payload){
  const series=active.map(j=>({name:table.headers[j+1],color:colors[j%colors.length],values:table.rows.map(row=>chartNumber(row[j+1]))}));
  return {s,pie,progress,horizontal,colors,active,values,totals,total,series,labels:table.rows.map(row=>row[0]),title:payload.title||''};
 }
-export function wrapChartLabel(value,characters=26){
- const words=String(value).split(/\s+/),lines=[];let line='';
- for(let word of words){while(word.length>characters){if(line){lines.push(line);line='';}lines.push(word.slice(0,characters));word=word.slice(characters);}if(line&&line.length+word.length+1>characters){lines.push(line);line='';}line+=(line?' ':'')+word;}
- if(line)lines.push(line);return lines.length?lines:[''];
+export function wrapChartLabel(value,maxWidth=26,measure=text=>text.length){
+ const words=String(value).trim().split(/\s+/).filter(Boolean),tokens=[],lines=[];let line='';
+ // Keep short Ukrainian conjunctions/prepositions with the following word when
+ // the pair fits. Width comes from actual font metrics in the browser.
+ for(let i=0;i<words.length;i++){
+  const pair=words[i]+' '+(words[i+1]||'');
+  if(/^(та|і|й|з|із|зі|у|в|до|на)$/iu.test(words[i])&&words[i+1]&&measure(pair)<=maxWidth){tokens.push(pair);i++;}else tokens.push(words[i]);
+ }
+ const push=()=>{if(line){lines.push(line);line='';}};
+ for(const token of tokens){
+  if(measure(line?line+' '+token:token)<=maxWidth){line+=(line?' ':'')+token;continue;}
+  push();
+  if(measure(token)<=maxWidth){line=token;continue;}
+  for(const character of token){if(line&&measure(line+character)>maxWidth)push();line+=character;}
+ }
+ push();return lines.length?lines:[''];
+}
+export function horizontalLabelLayout(labels,width,measure,lineHeight=16,wrap=true){
+ const padding=8,gap=10,left=Math.round(Math.max(104,Math.min(280,width*.36))),labelWidth=Math.max(1,left-padding-gap);
+ const truncate=label=>{if(measure(label)<=labelWidth)return label;let text='';for(const character of label){if(measure(text+character+'…')>labelWidth)break;text+=character;}return text+'…';};
+ const lines=labels.map(label=>wrap?wrapChartLabel(label,labelWidth,measure):[truncate(label)]);
+ return {padding,gap,left,width:labelWidth,lines,lineHeight};
+}
+function measureChartText(node,theme){
+ const canvas=node.ownerDocument.createElement('canvas'),ctx=canvas.getContext('2d'),cache=new Map();ctx.font=`${theme.size}px ${theme.font}`;
+ return text=>{if(!cache.has(text))cache.set(text,ctx.measureText(text).width);return cache.get(text);};
+}
+function horizontalLabels(node,m,bounds){
+ const layout=m.labelLayout,layer=node.ownerDocument.createElement('div');layer.className='cms-horizontal-labels';layer.setAttribute('aria-hidden','true');
+ Object.assign(layer.style,{left:layout.padding+'px',width:layout.width+'px',top:bounds.top+'px',bottom:bounds.bottom+'px',fontFamily:m.labelTheme.font,fontSize:m.labelTheme.size+'px',lineHeight:layout.lineHeight+'px'});
+ m.labels.forEach((label,i)=>{const row=node.ownerDocument.createElement('div'),text=node.ownerDocument.createElement('span');row.className='cms-horizontal-label-item';text.textContent=layout.lines[i].join('\n');text.title=label;row.append(text);layer.append(row);});node.append(layer);
 }
 function chartTheme(node){
  const css=node.ownerDocument.defaultView.getComputedStyle(node),get=(key,fallback)=>css.getPropertyValue(key).trim()||fallback;
@@ -37,7 +64,7 @@ function chartTheme(node){
 }
 function segmentText(m,value){const parts=[];if(m.s.segmentValues)parts.push(chartFormat(value));if(m.pie&&m.s.segmentPercentages)parts.push(chartFormat(m.total?value/m.total*100:0)+'%');return parts.join('\n');}
 function tipText(m,index){return `${m.labels[index]}\n${m.series.map(series=>`${series.name}: ${series.values[index]===null?'немає даних':chartFormat(series.values[index])}`).join('\n')}${m.s.tooltipTotal?'\nРазом: '+chartFormat(m.totals[index]):''}`;}
-function labelsFor(m,width){const count=Math.max(10,Math.floor(width*.32/7));return m.labels.map(label=>m.horizontal&&m.s.wrapLabels?wrapChartLabel(label,count):[label.length>34?label.slice(0,32)+'…':label]);}
+function labelsFor(m,width){return m.labelLayout?.lines||m.labels.map(label=>[label.length>34?label.slice(0,32)+'…':label]);}
 function progressLabel(m,i){return (m.s.numbering?String(i+1).padStart(2,'0')+'  ':'')+m.labels[i];}
 function renderECharts(engine,node,m,theme,width,height){
  const chart=engine.init(node,null,{renderer:'svg'}),labelLines=labelsFor(m,width),category=m.horizontal?'yAxis':'xAxis',valueAxis=m.horizontal?'xAxis':'yAxis';
@@ -47,8 +74,8 @@ function renderECharts(engine,node,m,theme,width,height){
  }},series:[]};
  if(m.pie){option.series=[{type:'pie',stillShowZeroSum:false,radius:m.s.chartType==='donut'?['56%','90%']:'90%',center:['50%','50%'],label:{show:m.s.segmentValues||m.s.segmentPercentages,position:'inside',color:'#fff',fontSize:theme.size,formatter:p=>segmentText(m,p.value)},labelLine:{show:false},data:m.labels.map((name,i)=>({name,value:m.values[i],itemStyle:{color:m.colors[i%m.colors.length],opacity:(new Set(m.hidden)).has(i)?0:1}})).filter((_,i)=>!m.hidden.includes(i))}];}
  else{
-  option.grid={left:m.horizontal&&!m.progress?Math.max(100,Math.min(260,width*.34)):m.progress?4:48,right:m.s.totalLabels?52:18,top:m.progress?30:28,bottom:m.progress?8:42,containLabel:false};
-  option[category]={type:'category',data:m.labels,inverse:m.horizontal,axisTick:{show:false},axisLine:{show:!m.progress,lineStyle:{color:theme.line}},axisLabel:{show:!m.progress,color:theme.muted,fontSize:theme.size,interval:0,width:m.horizontal?Math.max(88,Math.min(240,width*.32)):undefined,overflow:m.s.wrapLabels?'break':'truncate',formatter:(_,i)=>labelLines[i].join('\n')}};
+  option.grid={left:m.horizontal&&!m.progress?m.labelLayout.left:m.progress?4:48,right:m.s.totalLabels?52:18,top:m.progress?30:28,bottom:m.progress?8:42,containLabel:false};
+  option[category]={type:'category',data:m.labels,inverse:m.horizontal,axisTick:{show:false},axisLine:{show:!m.progress,lineStyle:{color:theme.line}},axisLabel:{show:!m.horizontal,color:theme.muted,fontSize:theme.size,interval:0,width:m.horizontal?Math.max(88,Math.min(240,width*.32)):undefined,overflow:m.s.wrapLabels?'break':'truncate',formatter:(_,i)=>labelLines[i].join('\n')}};
   option[valueAxis]={type:'value',show:!m.progress,axisLabel:{color:theme.muted,fontSize:theme.size,formatter:chartFormat},splitLine:{lineStyle:{color:theme.line,type:'dashed'}},...(m.progress?{min:0,max:Math.max(1,...m.totals)}:{})};
   option.series=m.series.map(series=>({name:series.name,type:m.s.chartType==='line'?'line':'bar',stack:['stacked','horizontal','horizontalStacked','progress'].includes(m.s.chartType)?'values':undefined,connectNulls:false,symbolSize:7,barMaxWidth:m.progress?5:60,showBackground:m.progress,backgroundStyle:{color:theme.line},itemStyle:{color:series.color,borderRadius:m.progress?3:2},label:{show:!m.progress&&m.s.segmentValues,position:m.s.chartType==='line'?'top':'inside',color:m.s.chartType==='line'?theme.ink:'#fff',formatter:p=>chartFormat(p.value)},data:series.values}));
   if(m.s.totalLabels&&!m.progress)option.series.push({name:'',type:'scatter',symbolSize:0,tooltip:{show:false},label:{show:true,position:m.horizontal?'right':'top',color:theme.ink,formatter:p=>chartFormat(m.totals[p.dataIndex])},data:m.labels.map((label,i)=>{const high=m.s.chartType==='stacked'||m.horizontal?m.series.reduce((sum,series)=>sum+Math.max(0,series.values[i]||0),0):Math.max(0,...m.series.map(series=>series.values[i]||0));return m.horizontal?[high,label]:[label,high];})});
@@ -57,7 +84,7 @@ function renderECharts(engine,node,m,theme,width,height){
  // Hidden pie rows are removed, so use the original index stored with each slice.
  if(m.pie)option.series[0].data=m.labels.flatMap((name,i)=>m.hidden.includes(i)?[]:[{name,value:m.values[i],itemStyle:{color:m.colors[i%m.colors.length]},originalIndex:i}]);
  if(m.pie)option.tooltip.formatter=p=>chartEscape(p.name)+': '+chartFormat(p.value)+(m.s.tooltipTotal?'<br>Разом: '+chartFormat(m.total):'');
- chart.setOption(option);return {resize:()=>chart.resize(),dispose:()=>chart.dispose()};
+ chart.setOption(option);return {bounds:m.horizontal&&!m.progress?{top:option.grid.top,bottom:option.grid.bottom}:null,resize:()=>chart.resize(),dispose:()=>chart.dispose()};
 }
 function renderChartJS(engine,node,m,theme,width,height){
  const canvas=node.ownerDocument.createElement('canvas');node.append(canvas);canvas.setAttribute('role','img');canvas.setAttribute('aria-label',m.title);canvas.width=width;canvas.height=height;
@@ -82,8 +109,8 @@ function renderChartJS(engine,node,m,theme,width,height){
  }};
  const datasets=m.pie?[{data:visible.map(i=>m.values[i]),backgroundColor:visible.map(i=>m.colors[i%m.colors.length]),borderWidth:0}]:m.series.map(series=>({label:series.name,data:series.values,backgroundColor:series.color,borderColor:series.color,borderWidth:m.s.chartType==='line'?2:0,pointRadius:3,spanGaps:false,barThickness:m.progress?5:undefined,borderRadius:2}));
  const stacked=['stacked','horizontal','horizontalStacked','progress'].includes(m.s.chartType);
- const chart=new engine(canvas,{type:m.pie?m.s.chartType==='donut'?'doughnut':'pie':m.s.chartType==='line'?'line':'bar',data:{labels:m.pie?visible.map(i=>m.labels[i]):labelLines,datasets},plugins:[drawing],options:{responsive:false,animation:false,maintainAspectRatio:false,indexAxis:m.horizontal?'y':'x',cutout:m.s.chartType==='donut'?'56%':undefined,layout:{padding:m.pie?8:{top:m.progress?22:25,right:m.s.totalLabels?46:10,bottom:5,left:0}},plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{title:items=>m.pie?m.labels[visible[items[0].dataIndex]]:m.labels[items[0].dataIndex],label:item=>m.pie?chartFormat(item.raw):`${item.dataset.label}: ${item.raw===null?'немає даних':chartFormat(item.raw)}`,footer:items=>m.s.tooltipTotal?'Разом: '+chartFormat(m.pie?m.total:m.totals[items[0].dataIndex]):''}}},scales:m.pie?{}:{x:{display:!m.progress,stacked,beginAtZero:true,grace:m.progress?0:m.horizontal?'15%':undefined,...(m.progress?{min:0,max:Math.max(1,...m.totals)}:{}),grid:{color:theme.line,display:m.horizontal},ticks:{color:theme.muted,font:{family:theme.font,size:theme.size},...(m.horizontal?{callback:chartFormat}:{})}},y:{display:!m.progress,stacked,beginAtZero:true,grace:!m.horizontal?'15%':undefined,grid:{color:theme.line,display:!m.horizontal},ticks:{color:theme.muted,font:{family:theme.font,size:theme.size},autoSkip:!m.horizontal,...(!m.horizontal?{callback:chartFormat}:{})}}}}});
- return {resize:(w,h)=>chart.resize(w,h),dispose:()=>chart.destroy()};
+ const chart=new engine(canvas,{type:m.pie?m.s.chartType==='donut'?'doughnut':'pie':m.s.chartType==='line'?'line':'bar',data:{labels:m.pie?visible.map(i=>m.labels[i]):labelLines,datasets},plugins:[drawing],options:{responsive:false,animation:false,maintainAspectRatio:false,indexAxis:m.horizontal?'y':'x',cutout:m.s.chartType==='donut'?'56%':undefined,layout:{padding:m.pie?8:{top:m.progress?22:25,right:m.s.totalLabels?46:10,bottom:5,left:0}},plugins:{legend:{display:false},tooltip:{displayColors:false,callbacks:{title:items=>m.pie?m.labels[visible[items[0].dataIndex]]:m.labels[items[0].dataIndex],label:item=>m.pie?chartFormat(item.raw):`${item.dataset.label}: ${item.raw===null?'немає даних':chartFormat(item.raw)}`,footer:items=>m.s.tooltipTotal?'Разом: '+chartFormat(m.pie?m.total:m.totals[items[0].dataIndex]):''}}},scales:m.pie?{}:{x:{display:!m.progress,stacked,beginAtZero:true,grace:m.progress?0:m.horizontal?'15%':undefined,...(m.progress?{min:0,max:Math.max(1,...m.totals)}:{}),grid:{color:theme.line,display:m.horizontal},ticks:{color:theme.muted,font:{family:theme.font,size:theme.size},...(m.horizontal?{callback:chartFormat}:{})}},y:{display:!m.progress,...(m.horizontal&&!m.progress?{afterFit:axis=>{axis.width=m.labelLayout.left;},border:{display:false}}:{}),stacked,beginAtZero:true,grace:!m.horizontal?'15%':undefined,grid:{color:theme.line,display:!m.horizontal},ticks:{display:!m.horizontal,color:theme.muted,font:{family:theme.font,size:theme.size},autoSkip:!m.horizontal,...(!m.horizontal?{callback:chartFormat}:{})}}}}});
+ return {bounds:{top:chart.chartArea.top,bottom:height-chart.chartArea.bottom},resize:(w,h)=>chart.resize(w,h),dispose:()=>chart.destroy()};
 }
 async function renderPlotly(engine,node,m,theme,width,height){
  // Plotly registers its CSS in the parent document; copy it into the admin frame.
@@ -91,16 +118,16 @@ async function renderPlotly(engine,node,m,theme,width,height){
 
  const visible=m.labels.map((_,i)=>i).filter(i=>!m.hidden.includes(i)),labelLines=labelsFor(m,width),categories=m.labels.map((_,i)=>String(i)),escapedLabels=labelLines.map(lines=>lines.map(chartEscape).join('<br>'));
  const traces=m.pie?[{type:'pie',labels:visible.map(i=>chartEscape(m.labels[i])),values:visible.map(i=>m.values[i]),marker:{colors:visible.map(i=>m.colors[i%m.colors.length])},hole:m.s.chartType==='donut'?.56:0,sort:false,direction:'clockwise',text:visible.map(i=>segmentText(m,m.values[i]).replaceAll('\n','<br>')),textinfo:'text',textposition:'inside',insidetextfont:{color:'#fff'},hovertemplate:'%{label}: %{value}'+(m.s.tooltipTotal?'<br>Разом: '+chartFormat(m.total):'')+'<extra></extra>'}]:m.series.map(series=>({type:m.s.chartType==='line'?'scatter':'bar',mode:m.s.segmentValues?'lines+markers+text':'lines+markers',name:chartEscape(series.name),orientation:m.horizontal?'h':'v',x:m.horizontal?series.values:categories,y:m.horizontal?categories:series.values,marker:{color:series.color},line:{color:series.color},connectgaps:false,text:!m.progress&&m.s.segmentValues?series.values.map(value=>value===null?'':chartFormat(value)):undefined,textposition:m.s.chartType==='line'?'top center':'inside',textfont:{color:m.s.chartType==='line'?theme.ink:'#fff'},hovertext:m.labels.map((_,i)=>chartEscape(tipText(m,i)).replaceAll('\n','<br>')),hovertemplate:'%{hovertext}<extra></extra>',width:m.progress?.09:undefined}));
- const axis={gridcolor:theme.line,zerolinecolor:theme.line,tickfont:{color:theme.muted,size:theme.size},automargin:false,fixedrange:true},cat={...axis,type:'category',categoryorder:'array',categoryarray:categories,tickvals:categories,ticktext:escapedLabels,showgrid:false,autorange:m.horizontal?'reversed':true,visible:!m.progress};
+ const axis={gridcolor:theme.line,zerolinecolor:theme.line,tickfont:{color:theme.muted,size:theme.size},automargin:false,fixedrange:true},cat={...axis,type:'category',categoryorder:'array',categoryarray:categories,tickvals:categories,ticktext:escapedLabels,showgrid:false,showticklabels:!m.horizontal,autorange:m.horizontal?false:true,...(m.horizontal?{range:[m.labels.length-.5,-.5]}:{}),visible:!m.progress};
  const annotations=[];
  if(!m.pie)m.labels.forEach((label,i)=>{
   if(m.progress){annotations.push({xref:'paper',yref:'y',x:0,y:String(i),xanchor:'left',yshift:20,text:chartEscape(progressLabel(m,i)),showarrow:false,font:{color:theme.muted,size:theme.size}},...(m.s.totalLabels?[{xref:'paper',yref:'y',x:1,y:String(i),xanchor:'right',yshift:20,text:chartFormat(m.totals[i]),showarrow:false,font:{color:theme.ink,size:theme.size}}]:[]));}
   else if(m.s.totalLabels){const high=m.s.chartType==='stacked'||m.horizontal?m.series.reduce((sum,series)=>sum+Math.max(0,series.values[i]||0),0):Math.max(0,...m.series.map(series=>series.values[i]||0));annotations.push({x:m.horizontal?high:String(i),y:m.horizontal?String(i):high,xanchor:m.horizontal?'left':'center',xshift:m.horizontal?7:0,yshift:m.horizontal?0:14,text:chartFormat(m.totals[i]),showarrow:false,font:{color:theme.ink,size:theme.size}});}
  });
- const layout={width,height,separators:', ',paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{family:theme.font,size:theme.size,color:theme.muted},showlegend:false,barmode:['stacked','horizontal','horizontalStacked','progress'].includes(m.s.chartType)?'relative':'group',margin:m.pie?{l:8,r:8,t:8,b:8}:{l:m.horizontal&&!m.progress?Math.max(100,Math.min(260,width*.34)):m.progress?4:48,r:m.s.totalLabels?52:18,t:m.progress?30:28,b:m.progress?8:42},annotations,xaxis:m.horizontal?{...axis,visible:!m.progress,rangemode:'tozero'}:cat,yaxis:m.horizontal?cat:{...axis,rangemode:'tozero'}};
- await engine.newPlot(node,traces,layout,{displayModeBar:false,responsive:false,scrollZoom:false,showTips:false});return {resize:(w,h)=>engine.relayout(node,{width:w,height:h}),dispose:()=>engine.purge(node)};
+ const layout={width,height,separators:', ',paper_bgcolor:'rgba(0,0,0,0)',plot_bgcolor:'rgba(0,0,0,0)',font:{family:theme.font,size:theme.size,color:theme.muted},showlegend:false,barmode:['stacked','horizontal','horizontalStacked','progress'].includes(m.s.chartType)?'relative':'group',margin:m.pie?{l:8,r:8,t:8,b:8}:{l:m.horizontal&&!m.progress?m.labelLayout.left:m.progress?4:48,r:m.s.totalLabels?52:18,t:m.progress?30:28,b:m.progress?8:42},annotations,xaxis:m.horizontal?{...axis,visible:!m.progress,rangemode:'tozero'}:cat,yaxis:m.horizontal?cat:{...axis,rangemode:'tozero'}};
+ await engine.newPlot(node,traces,layout,{displayModeBar:false,responsive:false,scrollZoom:false,showTips:false});return {bounds:{top:layout.margin.t,bottom:layout.margin.b},resize:(w,h)=>engine.relayout(node,{width:w,height:h}),dispose:()=>engine.purge(node)};
 }
-export function createChartRenderer(){
+export function createChartRenderer(afterRender=()=>{}){
  const entries=new Map(),documents=new Map();let queued=false;
  const invalidate=node=>{const entry=entries.get(node);if(!entry)return;entry.cancelled=true;entry.resize?.disconnect();entry.instance?.dispose();entries.delete(node);};
  const clean=()=>{for(const [node,entry]of entries){if(!node.isConnected||(entry.frame&&entry.frame.contentDocument!==node.ownerDocument)){entry.cancelled=true;entry.instance?.dispose();entry.resize?.disconnect();entries.delete(node);}}};
@@ -110,16 +137,19 @@ export function createChartRenderer(){
   try{
    const engine=await loadChartLibrary(m.s.chartLibrary);if(entry.cancelled||!node.isConnected)return;
    const host=node.ownerDocument.createElement('div');host.className='cms-library-host';host.setAttribute('role','img');host.setAttribute('aria-label',`${payload.title||'Діаграма'} — ${CHART_LIBRARIES[m.s.chartLibrary]}`);
-   const width=Math.max(180,Math.round(node.getBoundingClientRect().width)),labelHeight=m.horizontal&&m.s.wrapLabels?Math.max(0,...labelsFor(m,width).map(lines=>lines.length))*16:0;
+   if(m.horizontal&&!m.progress&&!m.s.showAll)Object.assign(node.style,{maxHeight:m.s.height+'px',overflowX:'hidden',overflowY:'auto',scrollbarGutter:'stable'});
+   const width=Math.max(180,node.clientWidth),theme=chartTheme(node);
+   if(m.horizontal&&!m.progress){m.labelTheme=theme;m.labelLayout=horizontalLabelLayout(m.labels,width,measureChartText(node,theme),Math.ceil(theme.size*1.35),m.s.wrapLabels);}
+   const labelHeight=m.labelLayout?Math.max(0,...m.labelLayout.lines.map(lines=>lines.length))*m.labelLayout.lineHeight:0;
    const height=m.progress?Math.max(100,m.labels.length*56+38):m.horizontal?Math.max(m.s.height,m.labels.length*Math.max(30,labelHeight+10)+60):m.s.height;
    host.style.height=height+'px';const plot=node.ownerDocument.createElement('div');plot.className='cms-library-canvas';host.append(plot);node.replaceChildren(host);node.dataset.chartKind=m.s.chartType;
-   if(m.horizontal&&!m.progress&&!m.s.showAll){node.style.maxHeight=m.s.height+'px';node.style.overflow='auto';}
-   const theme=chartTheme(node),render=m.s.chartLibrary==='echarts'?renderECharts:m.s.chartLibrary==='chartjs'?renderChartJS:renderPlotly;
+   const render=m.s.chartLibrary==='echarts'?renderECharts:m.s.chartLibrary==='chartjs'?renderChartJS:renderPlotly;
    entry.instance=await render(engine,plot,m,theme,width,height);
    if(entry.cancelled||!node.isConnected){entry.instance.dispose();return;}
+   if(m.labelLayout)horizontalLabels(host,m,entry.instance.bounds);
    if((m.s.chartType==='donut'&&m.s.totalLabels)||(m.pie&&!m.total)){const total=node.ownerDocument.createElement('strong');total.className='cms-library-total'+(!m.total?' cms-library-empty':'');total.textContent=m.total?chartFormat(m.total):'Немає даних';host.append(total);}
-   let lastWidth=width;entry.resize=new ResizeObserver(()=>{const next=Math.round(node.getBoundingClientRect().width);if(next>0&&Math.abs(next-lastWidth)>1){lastWidth=next;invalidate(node);schedule();}});entry.resize.observe(node);node.dataset.chartLibrary=m.s.chartLibrary;node.dataset.chartStatus='ready';
-  }catch(error){if(entry.cancelled||!node.isConnected)return;node.innerHTML=fallback;const note=node.ownerDocument.createElement('p');note.className='cms-chart-library-error';note.textContent=error.message+' Показано резервну діаграму.';node.append(note);node.dataset.chartStatus='error';}
+   let lastWidth=width;entry.resize=new ResizeObserver(()=>{const next=node.clientWidth;if(next>0&&Math.abs(next-lastWidth)>1){lastWidth=next;invalidate(node);schedule();}});entry.resize.observe(node);node.dataset.chartLibrary=m.s.chartLibrary;node.dataset.chartStatus='ready';afterRender();
+  }catch(error){if(entry.cancelled||!node.isConnected)return;node.innerHTML=fallback;const note=node.ownerDocument.createElement('p');note.className='cms-chart-library-error';note.textContent=error.message+' Показано резервну діаграму.';node.append(note);node.dataset.chartStatus='error';afterRender();}
  }
  function scan(){queued=false;clean();for(const [root,info]of documents){if(info.frame&&info.frame.contentDocument!==root){info.observer.disconnect();info.themeObserver.disconnect();documents.delete(root);continue;}root.querySelectorAll('[data-library-chart]').forEach(node=>{if(!entries.has(node))mount(node);});}}
  function schedule(){if(!queued){queued=true;queueMicrotask(scan);}}

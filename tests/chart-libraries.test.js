@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {defaultCMSBlock,defaultBlockSettings,validateBlockSettings,validateCMSBlock,selectChartLibrary,rememberChartSettings,chartSettingsForLibrary} from '../src/cms-data.js';
 import {readCMSJSON,cmsBlockXLSX,importCMSBlockXLSX} from '../src/cms-io.js';import ExcelJS from 'exceljs';
-import {chartModel,wrapChartLabel} from '../src/chart-runtime.js';
+import {chartModel,wrapChartLabel,horizontalLabelLayout} from '../src/chart-runtime.js';
 test('старі діаграми починають з ECharts, а профілі трьох бібліотек перемикаються незалежно',()=>{
  let settings=validateBlockSettings({palette:'purple',height:420});assert.equal(settings.chartLibrary,'echarts');
  settings=selectChartLibrary(settings,'chartjs');settings.height=260;settings.legend='bottom';settings=rememberChartSettings(settings);
@@ -24,4 +24,17 @@ test('спільна модель бібліотек зберігає нулі, 
  const model=chartModel({table,settings:{...defaultBlockSettings(),chartType:'horizontalStacked'},hidden:[1]});assert.equal(model.horizontal,true);assert.deepEqual(model.totals,[0,-2,10.5]);assert.deepEqual(model.series[0].values,[0,-2,10.5]);
  const pie=chartModel({table:{...table,rows:[['A','10','5'],['B','20','5']]},settings:{chartType:'donut'},hidden:[0]});assert.equal(pie.total,25);assert.deepEqual(pie.values,[15,25]);
  assert.deepEqual(wrapChartLabel('Факультет транспорту та інженерії',20),['Факультет транспорту','та інженерії']);assert(wrapChartLabel('А'.repeat(80),20).every(line=>line.length<=20));
+});
+
+test('перенесення горизонтальних підписів використовує ширину шрифту й не відриває короткі сполучники',()=>{
+ const measure=text=>[...text].reduce((sum,char)=>sum+(/[mwШЩ]/.test(char)?11:char===' '?3:6),0);
+ const label='Факультет комп’ютерних наук та технологій';
+ for(const width of [320,500,640,900]){
+  const layout=horizontalLabelLayout([label,'Факультет аеронавігації, електроніки та телекомунікацій'],width,measure,17,true);
+  assert.equal(layout.padding,8);assert.equal(layout.width+layout.padding+layout.gap,layout.left);
+  for(const lines of layout.lines){for(const line of lines)assert(measure(line)<=layout.width);assert.equal(lines.some(line=>line==='та'),false);}
+  assert(layout.lines[0].some(line=>line.includes('та технологій')));
+ }
+ const noWrap=horizontalLabelLayout([label],320,measure,17,false);assert.equal(noWrap.lines[0].length,1);assert(noWrap.lines[0][0].endsWith('…'));assert(measure(noWrap.lines[0][0])<=noWrap.width);
+ assert.deepEqual(wrapChartLabel('WWW iii iii',25,text=>[...text].reduce((n,c)=>n+(c==='W'?8:c===' '?2:1),0)),['WWW','iii iii']);
 });
