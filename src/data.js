@@ -1,4 +1,4 @@
-import { validateSiteStyles } from './style-data.js?v=horizontal-labels-20261101';
+import { validateSiteStyles } from './style-data.js?v=publication-quartiles-20261101';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {
@@ -24,6 +24,15 @@ function url(v, field) {
   if (!v) return '';
   try { const u = new URL(v); if (!['https:', 'http:'].includes(u.protocol) || u.username || u.password) throw new Error(); return u.href; }
   catch { fail(`${field}: дозволено лише http/https URL без облікових даних.`); }
+}
+export function normalizeQuartile(value,field='Квартиль') {
+ if(value==null)return null;
+ if(typeof value!=='string')fail(`${field}: Q1, Q2, Q3, Q4, «Без квартиля» або порожня комірка.`);
+ const text=value.trim();
+ if(!text||/^без\s+квартиля$/iu.test(text)||text==='—'||text==='-')return null;
+ const quartile=text.toUpperCase();
+ if(!['Q1','Q2','Q3','Q4'].includes(quartile))fail(`${field}: Q1, Q2, Q3, Q4, «Без квартиля» або порожня комірка.`);
+ return quartile;
 }
 export function validateBundle(input) {
   if (!isObject(input) || input.schemaVersion !== 1) fail('Очікується JSON-об’єкт зі schemaVersion: 1. Завантажте приклад формату.');
@@ -52,9 +61,9 @@ export function validateBundle(input) {
       }
       if (key === 'publications') {
         if (!Array.isArray(r.indexes) || r.indexes.some(x => !['Scopus', 'WoS'].includes(x)) || new Set(r.indexes).size !== r.indexes.length) fail(`${f('indexes')}: масив із Scopus та/або WoS, або [].`);
-        if (r.quartile !== null && !['Q1', 'Q2', 'Q3', 'Q4'].includes(r.quartile)) fail(`${f('quartile')}: Q1, Q2, Q3, Q4 або null.`);
-        if (r.quartile && !r.indexes.length) fail(`${f('quartile')}: квартиль потребує індексації.`);
-        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile: r.quartile, type: text(r.type, f('type')) };
+        const quartile=normalizeQuartile(r.quartile,f('quartile'));
+        if (quartile && !r.indexes.length) fail(`${f('quartile')}: квартиль потребує індексації.`);
+        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile, type: text(r.type, f('type')) };
       }
       if (key === 'projects') {
         const startDate = date(r.startDate, f('startDate')), endDate = date(r.endDate, f('endDate'));

@@ -20,3 +20,10 @@ test('невідомі, повторювані та відсутні загол�
 test('один довільно названий аркуш імпортується як обрана таблиця',async()=>{const book=await load(await toXLSX(small(),'revenues',ExcelJS));book.worksheets[0].name='Sheet1';const result=await importXLSX(await save(book),'revenues',demo,ExcelJS);assert.deepEqual(result.revenues,small().revenues);});
 test('неповна повна книга та неоднозначні аркуші відхиляються',async()=>{const bytes=await toXLSX(small(),'patents',ExcelJS);await assert.rejects(()=>importXLSX(bytes,'bundle',demo,ExcelJS),/5 аркушів/);const book=await load(bytes);book.addWorksheet('patents').addRow(CSV_HEADERS.patents);const bad=await save(book);await assert.rejects(()=>importXLSX(bad,'patents',demo,ExcelJS),/два аркуші/);});
 test('пошкоджені архіви, надмірний розпакований розмір і неправильні суми відхиляються',async()=>{await assert.rejects(()=>importXLSX(new TextEncoder().encode('not xlsx'),'bundle',demo,ExcelJS),/пошкоджено/);const bytes=new Uint8Array(await toXLSX(small(),'revenues',ExcelJS));const bad=new Uint8Array(bytes);const view=new DataView(bad.buffer);let found=false;for(let i=0;i<bad.length-28;i++){if(view.getUint32(i,true)===0x02014b50){view.setUint32(i+24,100*1024*1024,true);found=true;break;}}assert.equal(found,true);await assert.rejects(()=>importXLSX(bad,'revenues',demo,ExcelJS),/50 МБ/);const book=await load(bytes);book.worksheets[0].getCell('C2').value=-1;const negative=await save(book);await assert.rejects(()=>importXLSX(negative,'revenues',demo,ExcelJS),/число/);});
+test('імпорт XLSX приймає Q1–Q4, текст «Без квартиля» та порожні клітинки',async()=>{
+ const book=new ExcelJS.Workbook(),sheet=book.addWorksheet(SHEET_NAMES.publications);sheet.addRow(CSV_HEADERS.publications);
+ for(const [i,quartile]of ['Q1','Q2','Q3','Q4','Без квартиля','','  '].entries()){
+  const record={...demo.publications[0],id:'quartile-'+i,year:2026,indexes:i>=5?'':'Scopus',quartile};sheet.addRow(CSV_HEADERS.publications.map(key=>record[key]));
+ }
+ const result=await importXLSX(await save(book),'publications',demo,ExcelJS);assert.deepEqual(result.publications.map(p=>p.quartile),['Q1','Q2','Q3','Q4',null,null,null]);
+});

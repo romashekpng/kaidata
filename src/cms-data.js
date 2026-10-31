@@ -1,3 +1,4 @@
+import { normalizeQuartile } from './data.js?v=publication-quartiles-20261101';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
@@ -222,6 +223,10 @@ export function validateCMSBlock(input) {
     if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
     if(input.dataMode!==undefined)out.dataMode=input.dataMode;
     if(input.dataTable!==undefined)out.dataTable=isMetricBlock(input)?validateMetricDataTable(input.dataTable):validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
+    if(input.source==='publications'&&out.dataTable){
+      const column=out.dataTable.headers.findIndex(header=>/^(квартиль|quartile)$/iu.test(header.trim()));
+      if(column>=0)out.dataTable.rows=out.dataTable.rows.map((row,index)=>row.map((value,i)=>i===column?(normalizeQuartile(value,`Каталог публікацій, рядок ${index+1}, квартиль`)||'Без квартиля'):value));
+    }
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
   if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&[out.settings||defaultBlockSettings(input.source),...Object.values(out.settings?.librarySettings||{})].some(s=>['pie','donut','progress'].includes(s.chartType))){

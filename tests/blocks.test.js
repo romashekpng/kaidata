@@ -132,3 +132,10 @@ test('визначення періоду враховує роки, дати т
  assert.equal(inferTablePeriod({headers:['label','value','note'],rows:[['Статей','88','2026 рік']]}),'2026');
  assert.equal(inferTablePeriod({headers:['Квартиль','Кількість'],rows:[['Q1','12']]}),'');assert.equal(inferTablePeriod({headers:['Рік','Сума'],rows:[]}),'');
 });
+test('ручний каталог публікацій нормалізує квартиль після CSV/XLSX імпорту та зберігає решту клітинок',async()=>{
+ const b={...defaultCMSBlock('analytics'),source:'publications'},table={headers:['Назва','Квартиль'],rows:[['Публікація 1','Q1'],['Публікація 2',''],['Публікація 3','Без квартиля']]};
+ const next=tableToCMSBlock(table,b);assert.deepEqual(next.dataTable.rows,[['Публікація 1','Q1'],['Публікація 2','Без квартиля'],['Публікація 3','Без квартиля']]);
+ assert.deepEqual(importCMSBlockCSV('Назва;Квартиль\nПублікація 1;Q1\nПублікація 2;\nПублікація 3;Без квартиля',b).dataTable,next.dataTable);
+ assert.deepEqual((await importCMSBlockXLSX(await cmsBlockXLSX(next,ExcelJS),b,ExcelJS)).dataTable,next.dataTable);
+ assert.throws(()=>tableToCMSBlock({headers:['Назва','Квартиль'],rows:[['Текст','Q5']]},b),/квартиль/);
+});

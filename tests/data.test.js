@@ -29,3 +29,9 @@ test('невалідні дані відхиляються: дати, id, ква
 test('валідатор відхиляє фінансування поза проєктом і дубльовані роки',()=>{const d=structuredClone(demo);d.projects[0].funding=[{year:2199,amountUAH:5}];assert.throws(()=>validateBundle(d),/у межах проєкту/);d.projects[0].funding=[{year:2021,amountUAH:5},{year:2021,amountUAH:6}];assert.throws(()=>validateBundle(d),/унікальний рік/);});
 test('експорт CSV екранує формули в текстових полях',()=>{const d=base();d.publications=[pub('1',{title:'=HYPERLINK("https://example.com")'})];assert.match(toCSV(d,'publications'),/"'=HYPERLINK/);});
 test('порожній власний набір підтримується без демонстраційних домішок',()=>{const d=validateBundle(base());assert.equal(d.demo,false);assert.deepEqual(yearsIn(d),[]);assert.equal(summarize(d,2026).publications.length,0);assert.equal(summarize(d,2026).revenue,null);});
+test('квартиль із CSV або JSON зберігає Q1–Q4, а порожні комірки й «Без квартиля» стають відсутнім квартилем',()=>{
+ const d=base();d.publications=['Q1','Q2','Q3','Q4','Без квартиля','','   ',null].map((quartile,i)=>pub(String(i),{quartile,indexes:i>=5?[]:['Scopus']}));
+ const expected=['Q1','Q2','Q3','Q4',null,null,null,null];assert.deepEqual(validateBundle(d).publications.map(p=>p.quartile),expected);
+ assert.deepEqual(importCSV(toCSV(d,'publications'),'publications',base()).publications.map(p=>p.quartile),expected);
+ for(const quartile of ['Q5','невідомо',true,5]){const invalid=base();invalid.publications=[pub('1',{quartile})];assert.throws(()=>validateBundle(invalid),/quartile/);}
+});
