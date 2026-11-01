@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=publication-catalog-20261101';
+import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=money-thousands-20261101';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const MAX_UNPACKED = 50 * 1024 * 1024;
@@ -62,11 +62,11 @@ function readSettings(sheet) {
     entries.set(key, cellText(sheet.getCell(n, 2), `${sheet.name}, ${key}`));
   }
   if(SETTINGS.some(key=>!entries.has(key)))fail('XLSX: відсутні обов’язкові налаштування університету.');
-  if (!['true', 'false'].includes(entries.get('demo')) || entries.get('schemaVersion') !== '1') fail('XLSX: schemaVersion має бути 1, demo — true або false.');
+  if (!['true', 'false'].includes(entries.get('demo')) || !['1','2'].includes(entries.get('schemaVersion'))) fail('XLSX: schemaVersion має бути 1 або 2, demo — true або false.');
   const institution = Object.fromEntries(SETTINGS.filter(k => k.startsWith('institution.')).map(k => [k.slice(12), entries.get(k)]));
   institution.blocks = institution.blocks ? institution.blocks.split('|') : [];
   if(entries.has('institution.styles')){try{institution.styles=JSON.parse(entries.get('institution.styles'));}catch{fail('XLSX: некоректний JSON стилів сайта.');}}
-  return { schemaVersion: 1, demo: entries.get('demo') === 'true', updatedAt: entries.get('updatedAt'), institution };
+  return { schemaVersion: Number(entries.get('schemaVersion')), demo: entries.get('demo') === 'true', updatedAt: entries.get('updatedAt'), institution };
 }
 export async function readXLSXWorkbook(buffer, engine = globalThis.ExcelJS) {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
@@ -131,7 +131,7 @@ export async function toXLSX(data, target = 'bundle', engine = globalThis.ExcelJ
       return value ?? '';
     }));
     styleSheet(sheet, CSV_HEADERS[key]);
-    if (key === 'revenues') sheet.getColumn(CSV_HEADERS[key].indexOf('amountUAH') + 1).numFmt = '#,##0.00';
+    if (key === 'revenues') sheet.getColumn(CSV_HEADERS[key].indexOf('amountThousandUAH') + 1).numFmt = '#,##0.#####';
   }
   return book.xlsx.writeBuffer();
 }

@@ -1,4 +1,5 @@
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=publication-catalog-20261101';
+import { convertMoneyBlock } from './money.js?v=money-thousands-20261101';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=money-thousands-20261101';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
@@ -169,6 +170,7 @@ export function safeCMSLink(value) {
 }
 export function newCMSId(prefix = 'block') { return `${prefix}-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`; }
 export function validateCMSBlock(input) {
+  input=convertMoneyBlock(input);
   if (!obj(input) || !Object.hasOwn(BLOCK_TYPES, input.type)) fail('Невідомий тип блоку.');
   const out = { id: id(input.id, 'ID блоку'), type: input.type, title: str(input.title, 'Заголовок блоку', 240), visible: bool(input.visible, 'Видимість блоку') };
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
@@ -200,6 +202,7 @@ export function validateCMSBlock(input) {
   }
   if (input.type === 'analytics') { if (!Object.hasOwn(ANALYTICS, input.source)) fail('Невідоме джерело аналітики.'); out.source = input.source; }
   if (input.type === 'existing') { if (!Object.hasOwn(CORE_PAGES, input.source)) fail('Невідома вбудована сторінка.'); out.source = input.source; }
+  if(input.moneyUnit!==undefined)out.moneyUnit=input.moneyUnit;
   if(input.subtitle!==undefined)out.subtitle=str(input.subtitle,'Підзаголовок',2000);
   if(input.dataPeriod!==undefined)out.dataPeriod=normalizeBlockPeriod(input.dataPeriod);
   if(input.settings!==undefined)out.settings=validateBlockSettings(input.settings,input.source);

@@ -1,8 +1,9 @@
-import { icon } from './icons.js?v=publication-catalog-20261101';
-import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=publication-catalog-20261101';
+import { formatMoney, convertMoneyTable } from './money.js?v=money-thousands-20261101';
+import { icon } from './icons.js?v=money-thousands-20261101';
+import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=money-thousands-20261101';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
-const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
+const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
 export function blockColors(block) {
  const s={...defaultBlockSettings(block.source),...block.settings};
  return s.palette==='custom'?s.customColors:BLOCK_PALETTES[s.palette].colors;
@@ -56,10 +57,11 @@ export function projectProgress(startDate,endDate,asOf=new Intl.DateTimeFormat('
  return {percent,status:now<start?'planned':now>end?'completed':'active',asOf:now};
 }
 export function projectsFromTable(table){
+ table=convertMoneyTable(table,{source:'projects'});
  const get=(row,name,index)=>row[table.headers.indexOf(name)]??(index===undefined?'':row[index]??'');
  return table.rows.map(row=>{
   const international=String(get(row,'Міжнародний')).trim().toLocaleLowerCase('uk-UA');
-  return {title:get(row,'Назва',0),program:get(row,'Програма',1),startDate:get(row,'Початок',2),endDate:get(row,'Завершення',3),role:get(row,'Роль',4),revenue:get(row,'Надходження, грн',5),url:get(row,'Посилання',6),progressPercent:get(row,'Виконання, %')===''?null:Number(get(row,'Виконання, %')),international:['true','1','так','міжнародний'].includes(international)?true:['false','0','ні','український'].includes(international)?false:null};
+  return {title:get(row,'Назва',0),program:get(row,'Програма',1),startDate:get(row,'Початок',2),endDate:get(row,'Завершення',3),role:get(row,'Роль',4),revenue:get(row,'Надходження, тис. грн',5),url:get(row,'Посилання',6),progressPercent:get(row,'Виконання, %')===''?null:Number(get(row,'Виконання, %')),international:['true','1','так','міжнародний'].includes(international)?true:['false','0','ні','український'].includes(international)?false:null};
  });
 }
 export function filterProjects(projects,state={}){
@@ -80,7 +82,7 @@ function projectDisplay(project,asOf){
  let url='';try{const u=new URL(project.url);if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}
  const date=value=>{const iso=projectISODate(value);return iso?iso.split('-').reverse().join('.'):esc(value);};
  const amount=String(project.revenue).replace(/\s/g,'').replace(',','.');
- const revenue=amount!==''&&Number.isFinite(Number(amount))?`${format(Number(amount)/1e6)}<small> млн ₴</small>`:esc(project.revenue||'—');
+ const revenue=amount!==''&&Number.isFinite(Number(amount))?`${formatMoney(Number(amount))}<small> тис. грн</small>`:esc(project.revenue||'—');
  const status=progress?({planned:'Заплановано',active:'Виконується',completed:'Завершено'})[progress.status]:'';
  return {progress,url,revenue,status,date};
 }

@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=publication-catalog-20261101';
-import { createChartRenderer } from './chart-runtime.js?v=publication-catalog-20261101';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-catalog-20261101';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=publication-catalog-20261101';
-import { icon } from './icons.js?v=publication-catalog-20261101';
+import { reportDate, currentReportingYear } from './data.js?v=money-thousands-20261101';
+import { createChartRenderer } from './chart-runtime.js?v=money-thousands-20261101';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=money-thousands-20261101';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=money-thousands-20261101';
+import { icon } from './icons.js?v=money-thousands-20261101';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());

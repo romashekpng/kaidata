@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "demo": true,
   "updatedAt": "2026-10-24",
   "institution": {
@@ -7883,15 +7883,15 @@
       "funding": [
         {
           "year": 2021,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         },
         {
           "year": 2022,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2023,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         }
       ],
       "url": ""
@@ -7908,15 +7908,15 @@
       "funding": [
         {
           "year": 2022,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         },
         {
           "year": 2023,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2024,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         }
       ],
       "url": ""
@@ -7933,15 +7933,15 @@
       "funding": [
         {
           "year": 2023,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2024,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2025,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         }
       ],
       "url": ""
@@ -7958,15 +7958,15 @@
       "funding": [
         {
           "year": 2024,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2025,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2026,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         }
       ],
       "url": ""
@@ -7983,15 +7983,15 @@
       "funding": [
         {
           "year": 2025,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2026,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         },
         {
           "year": 2027,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         }
       ],
       "url": ""
@@ -8008,15 +8008,15 @@
       "funding": [
         {
           "year": 2026,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2027,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         },
         {
           "year": 2028,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         }
       ],
       "url": ""
@@ -8033,15 +8033,15 @@
       "funding": [
         {
           "year": 2021,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2022,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2023,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         }
       ],
       "url": ""
@@ -8058,15 +8058,15 @@
       "funding": [
         {
           "year": 2022,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2023,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         },
         {
           "year": 2024,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         }
       ],
       "url": ""
@@ -8083,15 +8083,15 @@
       "funding": [
         {
           "year": 2023,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2024,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         },
         {
           "year": 2025,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         }
       ],
       "url": ""
@@ -8108,15 +8108,15 @@
       "funding": [
         {
           "year": 2024,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         },
         {
           "year": 2025,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         },
         {
           "year": 2026,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         }
       ],
       "url": ""
@@ -8133,15 +8133,15 @@
       "funding": [
         {
           "year": 2025,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         },
         {
           "year": 2026,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         },
         {
           "year": 2027,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         }
       ],
       "url": ""
@@ -8158,15 +8158,15 @@
       "funding": [
         {
           "year": 2026,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         },
         {
           "year": 2027,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         },
         {
           "year": 2028,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         }
       ],
       "url": ""
@@ -8183,15 +8183,15 @@
       "funding": [
         {
           "year": 2021,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         },
         {
           "year": 2022,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         },
         {
           "year": 2023,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         }
       ],
       "url": ""
@@ -8208,15 +8208,15 @@
       "funding": [
         {
           "year": 2022,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         },
         {
           "year": 2023,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         },
         {
           "year": 2024,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         }
       ],
       "url": ""
@@ -8233,15 +8233,15 @@
       "funding": [
         {
           "year": 2023,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         },
         {
           "year": 2024,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         },
         {
           "year": 2025,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         }
       ],
       "url": ""
@@ -8258,15 +8258,15 @@
       "funding": [
         {
           "year": 2024,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         },
         {
           "year": 2025,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2026,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         }
       ],
       "url": ""
@@ -8283,15 +8283,15 @@
       "funding": [
         {
           "year": 2025,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         },
         {
           "year": 2026,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2027,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         }
       ],
       "url": ""
@@ -8308,15 +8308,15 @@
       "funding": [
         {
           "year": 2026,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2027,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2028,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         }
       ],
       "url": ""
@@ -8333,15 +8333,15 @@
       "funding": [
         {
           "year": 2021,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         },
         {
           "year": 2022,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2023,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         }
       ],
       "url": ""
@@ -8358,15 +8358,15 @@
       "funding": [
         {
           "year": 2022,
-          "amountUAH": 620000
+          "amountThousandUAH": 620
         },
         {
           "year": 2023,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2024,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         }
       ],
       "url": ""
@@ -8383,15 +8383,15 @@
       "funding": [
         {
           "year": 2023,
-          "amountUAH": 1470000
+          "amountThousandUAH": 1470
         },
         {
           "year": 2024,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2025,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         }
       ],
       "url": ""
@@ -8408,15 +8408,15 @@
       "funding": [
         {
           "year": 2024,
-          "amountUAH": 790000
+          "amountThousandUAH": 790
         },
         {
           "year": 2025,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2026,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         }
       ],
       "url": ""
@@ -8433,15 +8433,15 @@
       "funding": [
         {
           "year": 2025,
-          "amountUAH": 1640000
+          "amountThousandUAH": 1640
         },
         {
           "year": 2026,
-          "amountUAH": 1810000
+          "amountThousandUAH": 1810
         },
         {
           "year": 2027,
-          "amountUAH": 450000
+          "amountThousandUAH": 450
         }
       ],
       "url": ""
@@ -8458,15 +8458,15 @@
       "funding": [
         {
           "year": 2026,
-          "amountUAH": 960000
+          "amountThousandUAH": 960
         },
         {
           "year": 2027,
-          "amountUAH": 1130000
+          "amountThousandUAH": 1130
         },
         {
           "year": 2028,
-          "amountUAH": 1300000
+          "amountThousandUAH": 1300
         }
       ],
       "url": ""
@@ -8757,77 +8757,77 @@
     {
       "year": 2021,
       "source": "Державне фінансування",
-      "amountUAH": 2280000
+      "amountThousandUAH": 2280
     },
     {
       "year": 2021,
       "source": "Договори з підприємствами",
-      "amountUAH": 1660000
+      "amountThousandUAH": 1660
     },
     {
       "year": 2021,
       "source": "Послуги наукових лабораторій",
-      "amountUAH": 1040000
+      "amountThousandUAH": 1040
     },
     {
       "year": 2022,
       "source": "Державне фінансування",
-      "amountUAH": 2700000
+      "amountThousandUAH": 2700
     },
     {
       "year": 2022,
       "source": "Договори з підприємствами",
-      "amountUAH": 2080000
+      "amountThousandUAH": 2080
     },
     {
       "year": 2022,
       "source": "Послуги наукових лабораторій",
-      "amountUAH": 1460000
+      "amountThousandUAH": 1460
     },
     {
       "year": 2023,
       "source": "Державне фінансування",
-      "amountUAH": 3120000
+      "amountThousandUAH": 3120
     },
     {
       "year": 2023,
       "source": "Договори з підприємствами",
-      "amountUAH": 2500000
+      "amountThousandUAH": 2500
     },
     {
       "year": 2023,
       "source": "Послуги наукових лабораторій",
-      "amountUAH": 1880000
+      "amountThousandUAH": 1880
     },
     {
       "year": 2024,
       "source": "Державне фінансування",
-      "amountUAH": 3540000
+      "amountThousandUAH": 3540
     },
     {
       "year": 2024,
       "source": "Договори з підприємствами",
-      "amountUAH": 2920000
+      "amountThousandUAH": 2920
     },
     {
       "year": 2024,
       "source": "Послуги наукових лабораторій",
-      "amountUAH": 2300000
+      "amountThousandUAH": 2300
     },
     {
       "year": 2025,
       "source": "Державне фінансування",
-      "amountUAH": 3960000
+      "amountThousandUAH": 3960
     },
     {
       "year": 2025,
       "source": "Договори з підприємствами",
-      "amountUAH": 3340000
+      "amountThousandUAH": 3340
     },
     {
       "year": 2025,
       "source": "Послуги наукових лабораторій",
-      "amountUAH": 2720000
+      "amountThousandUAH": 2720
     }
   ]
 }

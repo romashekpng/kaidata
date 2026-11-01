@@ -4,11 +4,11 @@ import ExcelJS from 'exceljs';
 import {projectProgress,projectsFromTable,filterProjects,renderProjectTable,renderProjectCard} from '../src/block-view.js';
 import {defaultBlockSettings,validateCMSBlock} from '../src/cms-data.js';
 import {cmsBlockCSV,importCMSBlockCSV,cmsBlockXLSX,importCMSBlockXLSX,readCMSJSON} from '../src/cms-io.js';
-const table={headers:['Назва','Програма','Початок','Завершення','Роль','Надходження, грн','Посилання','Міжнародний'],rows:[
- ['Авіація','Horizon Europe','2026-01-01','2026-12-31','Партнер','1000000','https://example.com','true'],
- ['Екологія','МОН України','2026-01-01','2026-12-31','Координатор','500000','','false'],
- ['Авіаційні матеріали','Госпдоговори','2026-01-01','2026-12-31','Партнер','200000','','false'],
- ['Освіта','Horizon Europe','2026-01-01','2026-12-31','Координатор','750000','','true']
+const table={headers:['Назва','Програма','Початок','Завершення','Роль','Надходження, тис. грн','Посилання','Міжнародний'],rows:[
+ ['Авіація','Horizon Europe','2026-01-01','2026-12-31','Партнер','1000','https://example.com','true'],
+ ['Екологія','МОН України','2026-01-01','2026-12-31','Координатор','500','','false'],
+ ['Авіаційні матеріали','Госпдоговори','2026-01-01','2026-12-31','Партнер','200','','false'],
+ ['Освіта','Horizon Europe','2026-01-01','2026-12-31','Координатор','750','','true']
 ]};
 test('часовий прогрес коректний до початку, в середині, після завершення та при одноденному строку',()=>{
  assert.deepEqual(projectProgress('2026-01-01','2026-01-11','2026-01-06'),{percent:50,status:'active',asOf:'2026-01-06'});

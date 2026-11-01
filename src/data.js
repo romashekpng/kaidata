@@ -1,11 +1,12 @@
-import { validateSiteStyles } from './style-data.js?v=publication-catalog-20261101';
+import { scaleMoney } from './money.js?v=money-thousands-20261101';
+import { validateSiteStyles } from './style-data.js?v=money-thousands-20261101';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {
   publications: ['id', 'title', 'authors', 'year', 'faculty', 'department', 'indexes', 'quartile', 'type', 'url'],
   projects: ['id', 'title', 'program', 'startDate', 'endDate', 'role', 'international', 'faculty', 'funding', 'url', 'progressByYear'],
   patents: ['id', 'title', 'number', 'date', 'authors', 'faculty', 'url'],
-  revenues: ['year', 'source', 'amountUAH'],
+  revenues: ['year', 'source', 'amountThousandUAH'],
 };
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 function fail(message) { throw new Error(message); }
@@ -15,7 +16,15 @@ function text(v, field, max = 2000) {
 }
 function optional(v, f) { return v == null || v === '' ? '' : text(v, f); }
 function year(v, field) { if (!Number.isInteger(v) || v < 1900 || v > 2200) fail(`${field}: рік має бути цілим числом 1900–2200.`); return v; }
-function amount(v, field) { if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 1e15) fail(`${field}: потрібна невід’ємна сума у гривнях.`); return v; }
+function amount(v, field) { if (typeof v !== 'number' || !Number.isFinite(v) || v < 0 || v > 1e12) fail(`${field}: потрібна невід’ємна сума у тис. грн.`); return v; }
+function financialAmount(record,field){
+ const modern=Object.hasOwn(record,'amountThousandUAH'),legacy=Object.hasOwn(record,'amountUAH');
+ if(modern&&legacy)fail(`${field}: вкажіть лише amountThousandUAH (тис. грн) або старе amountUAH (грн).`);
+ if(modern)return amount(record.amountThousandUAH,field);
+ const value=record.amountUAH;
+ if(!legacy||typeof value!=='number'||!Number.isFinite(value)||value<0||value>1e15)fail(`${field}: потрібна невід’ємна сума.`);
+ return amount(scaleMoney(value,-3),field);
+}
 function date(v, field) {
   if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v) || !Number.isFinite(Date.parse(v)) || new Date(v).toISOString().slice(0, 10) !== v) fail(`${field}: очікується дійсна дата YYYY-MM-DD.`);
   year(Number(v.slice(0, 4)), field); return v;
@@ -37,7 +46,7 @@ export function reportDate(reportYear,asOf=new Date()) {
 }
 export function projectReceipts(project,reportYear=null,asOf=new Date()) {
  const entries=project.funding.filter(f=>f.year<=currentReportingYear(asOf)&&(reportYear==null||f.year===reportYear));
- return entries.length?entries.reduce((sum,f)=>sum+f.amountUAH,0):null;
+ return entries.length?entries.reduce((sum,f)=>sum+f.amountThousandUAH,0):null;
 }
 export function normalizeProjectProgress(value,field='Виконання') {
  if(value==null||(typeof value==='string'&&!value.trim()))return null;
@@ -50,7 +59,7 @@ export function updateProjectReports(project,rows,asOf=new Date()) {
  for(const row of rows){
   if(!Number.isInteger(row.year)||row.year<start||row.year>Math.min(end,last)||seen.has(row.year))fail('Рік звіту має бути унікальним, у межах проєкту та не пізнішим за поточний рік.');seen.add(row.year);
   const raw=String(row.amount??'').trim();
-  if(raw){const text=raw.replace(/[\s\u00a0]/g,'').replace(',','.');if(!/^\d+(?:\.\d+)?$/.test(text))fail(`${row.year}: вкажіть невід’ємну суму у гривнях.`);funding.push({year:row.year,amountUAH:amount(Number(text),`${row.year}, надходження`)});}
+  if(raw){const text=raw.replace(/[\s\u00a0]/g,'').replace(',','.');if(!/^\d+(?:\.\d+)?$/.test(text))fail(`${row.year}: вкажіть невід’ємну суму у тис. грн.`);funding.push({year:row.year,amountThousandUAH:amount(Number(text),`${row.year}, надходження`)});}
   const percent=normalizeProjectProgress(String(row.percent??'').trim(),`${row.year}, виконання`);if(percent!==null)progress.push({year:row.year,percent});
  }
  // Preserve years not shown in a partial editor, and any future source records.
@@ -67,13 +76,13 @@ export function normalizeQuartile(value,field='Квартиль') {
  return quartile;
 }
 export function validateBundle(input) {
-  if (!isObject(input) || input.schemaVersion !== 1) fail('Очікується JSON-об’єкт зі schemaVersion: 1. Завантажте приклад формату.');
+  if (!isObject(input) || ![1,2].includes(input.schemaVersion)) fail('Очікується JSON-об’єкт зі schemaVersion: 1 або 2. Завантажте приклад формату.');
   const i = input.institution;
   if (!isObject(i)) fail('Відсутні налаштування institution.');
   if (!/^#[0-9a-fA-F]{6}$/.test(i.accent)) fail('institution.accent: колір у форматі #RRGGBB.');
   if (!Array.isArray(i.blocks) || i.blocks.some(b => !Object.hasOwn(BLOCKS, b)) || new Set(i.blocks).size !== i.blocks.length) fail('institution.blocks: унікальний список publications, projects, patents, funding.');
   if (typeof input.demo !== 'boolean') fail('demo має бути true (демонстрація) або false (власні дані).');
-  const out = { schemaVersion: 1, demo: input.demo, updatedAt: date(input.updatedAt, 'updatedAt'), institution: {
+  const out = { schemaVersion: 2, demo: input.demo, updatedAt: date(input.updatedAt, 'updatedAt'), institution: {
     name: text(i.name, 'institution.name', 180), shortName: text(i.shortName, 'institution.shortName', 24),
     subtitle: optional(i.subtitle, 'institution.subtitle'), accent: i.accent, website: url(i.website, 'institution.website'),
     sourceNote: optional(i.sourceNote, 'institution.sourceNote'), blocks: [...i.blocks],
@@ -102,13 +111,13 @@ export function validateBundle(input) {
         if (endDate < startDate) fail(`${f('endDate')}: завершення передує початку.`);
         if (!['Координатор', 'Партнер'].includes(r.role)) fail(`${f('role')}: Координатор або Партнер.`);
         if (typeof r.international !== 'boolean') fail(`${f('international')}: true або false.`);
-        if (!Array.isArray(r.funding)) fail(`${f('funding')}: масив {year, amountUAH}.`);
+        if (!Array.isArray(r.funding)) fail(`${f('funding')}: масив {year, amountThousandUAH}.`);
         const fundingYears = new Set();
         const funding = r.funding.map(x => {
-          if (!isObject(x)) fail(`${f('funding')}: очікується {year, amountUAH}.`);
+          if (!isObject(x)) fail(`${f('funding')}: очікується {year, amountThousandUAH}.`);
           const y = year(x.year, f('funding.year'));
           if (y < Number(startDate.slice(0, 4)) || y > Number(endDate.slice(0, 4)) || fundingYears.has(y)) fail(`${f('funding.year')}: унікальний рік у межах проєкту.`);
-          fundingYears.add(y); return { year: y, amountUAH: amount(x.amountUAH, f('funding.amountUAH')) };
+          fundingYears.add(y); return { year: y, amountThousandUAH: financialAmount(x, f('funding.amountThousandUAH')) };
         });
         const progressByYear=[];
         if(r.progressByYear!==undefined){
@@ -118,7 +127,7 @@ export function validateBundle(input) {
         return { ...common, program: text(r.program, f('program')), startDate, endDate, role: r.role, international: r.international, faculty: optional(r.faculty, f('faculty')), funding,...(progressByYear.length?{progressByYear}:{} ) };
       }
       if (key === 'patents') return { ...common, number: text(r.number, f('number'), 100), date: date(r.date, f('date')), authors: text(r.authors, f('authors')), faculty: text(r.faculty, f('faculty')) };
-      return { year: year(r.year, f('year')), source: text(r.source, f('source')), amountUAH: amount(r.amountUAH, f('amountUAH')) };
+      return { year: year(r.year, f('year')), source: text(r.source, f('source')), amountThousandUAH: financialAmount(r, f('amountThousandUAH')) };
     });
   }
   return out;
@@ -135,11 +144,11 @@ export function summarize(data, year) {
   const publications = data.publications.filter(x => x.year === year);
   const indexed = publications.filter(x => x.indexes.length);
   const projects = data.projects.filter(x => +x.startDate.slice(0, 4) <= year && +x.endDate.slice(0, 4) >= year);
-  const grants = projects.reduce((sum, x) => sum + x.funding.filter(f => f.year === year).reduce((s, f) => s + f.amountUAH, 0), 0);
-  const international = projects.filter(x => x.international).reduce((s, x) => s + x.funding.filter(f => f.year === year).reduce((a, f) => a + f.amountUAH, 0), 0);
+  const grants = projects.reduce((sum, x) => sum + x.funding.filter(f => f.year === year).reduce((s, f) => s + f.amountThousandUAH, 0), 0);
+  const international = projects.filter(x => x.international).reduce((s, x) => s + x.funding.filter(f => f.year === year).reduce((a, f) => a + f.amountThousandUAH, 0), 0);
   const revenues = data.revenues.filter(x => x.year === year);
   return { publications, indexed, projects, grants, international, hasGrantData:projects.some(p=>p.funding.some(f=>f.year===year)), q12: indexed.filter(x => ['Q1', 'Q2'].includes(x.quartile)).length,
-    patents: data.patents.filter(x => +x.date.slice(0, 4) === year), revenue: revenues.length ? revenues.reduce((s, x) => s + x.amountUAH, 0) : null };
+    patents: data.patents.filter(x => +x.date.slice(0, 4) === year), revenue: revenues.length ? revenues.reduce((s, x) => s + x.amountThousandUAH, 0) : null };
 }
 // RFC 4180 quoted cells, UTF-8 BOM, comma/semicolon/tab separators.
 export function parseCSV(source, allowEmpty = false) {
@@ -172,14 +181,15 @@ export function importCSV(source, dataset, current) {
 export function importTable({ headers, records }, dataset, current) {
   if (!DATASETS.includes(dataset)) fail('Оберіть тип таблиці.');
   if (records.length > 25000) fail('Таблиця містить понад 25 000 записів.');
-  const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h)&&!(dataset==='projects'&&h==='progressByYear'));
+  const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h)&&!(dataset==='projects'&&h==='progressByYear')&&!(dataset==='revenues'&&h==='amountThousandUAH'&&headers.includes('amountUAH')));
   if (missing.length) fail(`Відсутні колонки: ${missing.join(', ')}.`);
-  const extra = headers.filter(h => !CSV_HEADERS[dataset].includes(h));
+  const extra = headers.filter(h => !CSV_HEADERS[dataset].includes(h)&&!(dataset==='revenues'&&h==='amountUAH'));
   if (extra.length) fail(`Невідомі колонки: ${extra.join(', ')}.`);
   const numeric = (s, field) => { if (!s.trim()) fail(`${field}: порожнє числове поле.`); const cleaned = s.replace(/[\s\u00a0]/g, '').replace(',', '.'); if (!/^\d+(\.\d+)?$/.test(cleaned)) fail(`${field}: некоректне число.`); return Number(cleaned); };
   const converted = records.map((r, n) => {
     const x = { ...r }; const f = field => `${dataset}, рядок ${n + 2}, ${field}`;
     if ('year' in x) x.year = numeric(x.year, f('year'));
+    if ('amountThousandUAH' in x) x.amountThousandUAH = numeric(x.amountThousandUAH, f('amountThousandUAH'));
     if ('amountUAH' in x) x.amountUAH = numeric(x.amountUAH, f('amountUAH'));
     if (dataset === 'publications') { x.indexes = x.indexes ? x.indexes.split('|').map(s => s.trim()) : []; x.quartile = x.quartile || null; }
     if (dataset === 'projects') {
@@ -192,6 +202,7 @@ export function importTable({ headers, records }, dataset, current) {
   return validateBundle({ ...current, updatedAt: new Date().toISOString().slice(0, 10), [dataset]: converted });
 }
 export function toCSV(data, dataset) {
+  data=validateBundle(data);
   const encode = v => '"' + String(v ?? '').replaceAll('"', '""') + '"';
   return '\uFEFF' + [CSV_HEADERS[dataset].join(';'), ...data[dataset].map(r => CSV_HEADERS[dataset].map(h => {
     let v = r[h]; if (h === 'indexes') v = v.join('|'); if (h === 'funding'||h==='progressByYear') v = JSON.stringify(v||[]);

@@ -1,9 +1,9 @@
-import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=publication-catalog-20261101';
+import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=money-thousands-20261101';
 const chartLoads=new Map();
 const chartVendor={echarts:['echarts.min.js','echarts'],chartjs:['chart.min.js','Chart'],plotly:['plotly.min.js','Plotly']};
 const chartEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const chartNumber=value=>value===''?null:Number(String(value).replace(',','.'));
-const chartFormat=value=>new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
+const chartFormat=value=>new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
 export async function loadChartLibrary(library){
  if(!Object.hasOwn(CHART_LIBRARIES,library))throw new Error('Невідома бібліотека для діаграм.');
  const [file,name]=chartVendor[library];if(globalThis[name])return globalThis[name];
@@ -12,7 +12,7 @@ export async function loadChartLibrary(library){
   const complete=()=>{if(globalThis[name])resolve(globalThis[name]);else reject(new Error(`Не вдалося запустити ${CHART_LIBRARIES[library]}.`));};
   script.onerror=()=>{script.remove();reject(new Error(`Не вдалося завантажити ${CHART_LIBRARIES[library]}. Перевірте файли бібліотеки.`));};
   if(globalThis.KAI_PUBLIC_ASSETS?.[asset]){script.textContent=globalThis.KAI_PUBLIC_ASSETS[asset];document.head.append(script);complete();}
-  else{script.src=new URL(asset,document.baseURI).href+'?v=publication-catalog-20261101';script.onload=complete;document.head.append(script);}
+  else{script.src=new URL(asset,document.baseURI).href+'?v=money-thousands-20261101';script.onload=complete;document.head.append(script);}
  }).catch(error=>{chartLoads.delete(library);throw error;}));
  return chartLoads.get(library);
 }
