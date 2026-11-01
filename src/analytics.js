@@ -1,7 +1,7 @@
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=grant-reports-20261101';
-import { icon } from './icons.js?v=grant-reports-20261101';
-import { renderProjectCard } from './block-view.js?v=grant-reports-20261101';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=grant-reports-20261101';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=publication-catalog-20261101';
+import { icon } from './icons.js?v=publication-catalog-20261101';
+import { renderProjectCard } from './block-view.js?v=publication-catalog-20261101';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=publication-catalog-20261101';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=v=>v==null?'—':new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(v/1e6);

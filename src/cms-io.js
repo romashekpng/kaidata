@@ -1,6 +1,6 @@
-import { parseCSV, validateBundle } from './data.js?v=grant-reports-20261101';
-import { readXLSXWorkbook } from './spreadsheet.js?v=grant-reports-20261101';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=grant-reports-20261101';
+import { parseCSV, validateBundle } from './data.js?v=publication-catalog-20261101';
+import { readXLSXWorkbook } from './spreadsheet.js?v=publication-catalog-20261101';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-catalog-20261101';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {

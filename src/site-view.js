@@ -1,12 +1,12 @@
-import { reportDate, currentReportingYear } from './data.js?v=grant-reports-20261101';
-import { createChartRenderer } from './chart-runtime.js?v=grant-reports-20261101';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=grant-reports-20261101';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=grant-reports-20261101';
-import { icon } from './icons.js?v=grant-reports-20261101';
+import { reportDate, currentReportingYear } from './data.js?v=publication-catalog-20261101';
+import { createChartRenderer } from './chart-runtime.js?v=publication-catalog-20261101';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-catalog-20261101';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=publication-catalog-20261101';
+import { icon } from './icons.js?v=publication-catalog-20261101';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
- const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map();
+ const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map(),publicationFilters=new Map();
  const currentBlock=id=>options.getBlock(id);
   function resolvedSettings(block) { return chartSettingsForLibrary(block.settings,block.settings?.chartLibrary||'echarts',block.source); }
   function projectAsOf(block){return reportDate(block.dataMode==='manual'&&/^\d{4}$/.test(block.dataPeriod||'')?+block.dataPeriod:resolvedSettings(block).allYears?currentReportingYear():options.getYear());}
@@ -64,6 +64,7 @@ export function createSiteView(options){
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
         else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id,projectAsOf(b));
+        else if(b.source==='publications')body=renderPublicationCatalog(editableTable(b),s,publicationFilters.get(b.id),b.id,options.getBlockPeriod(b));
         else if(b.dataMode==='manual'&&['insight','revenueNotice'].includes(b.source))body=`<div class="${b.source==='insight'?'insight-card':'notice'}"><p>${editableTable(b).rows.map(r=>e(r.join(' · '))).join('<br>')}</p></div>`;
         else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll);
         else body=`<div class="cms-analytics-content ${s.showAll?'show-all':''}">${options.renderAnalytics(b.source,s)}</div>`;
@@ -80,6 +81,17 @@ export function createSiteView(options){
       return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
+  }
+  function updatePublicationFilter(catalog,field,value){
+    if(!catalog)return;
+    const id=catalog.dataset.publicationBlock,block=currentBlock(id);if(!block||block.source!=='publications')return;
+    const state=field==='reset'?{}:{...publicationFilters.get(id),[field]:value,...(field==='page'?{}:{page:1})};
+    publicationFilters.set(id,state);
+    const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderPublicationCatalog(editableTable(block),resolvedSettings(block),state,id,options.getBlockPeriod(block));
+    catalog.querySelector('.publication-results').replaceWith(wrapper.querySelector('.publication-results'));
+    for(const key of ['faculty','index','quartile'])catalog.querySelector(`[data-publication-${key}]`).value=wrapper.querySelector(`[data-publication-${key}]`).value;
+    if(field==='reset'){const search=catalog.querySelector('[data-publication-query]');search.value='';search.focus({preventScroll:true});}
+    options.afterUpdate?.();
   }
   function updateProjectFilter(catalog,field,value){
     if(!catalog)return;
@@ -104,6 +116,12 @@ export function createSiteView(options){
   }
 
  function handleAction(name,el){
+  if(['publication-prev','publication-next','publication-reset'].includes(name)){
+   const catalog=el.closest('.publication-catalog');
+   if(name==='publication-reset')updatePublicationFilter(catalog,'reset');
+   else {const state=publicationFilters.get(catalog?.dataset.publicationBlock)||{},current=Number(catalog?.querySelector('[data-publication-page]')?.dataset.publicationPage)||state.page||1;updatePublicationFilter(catalog,'page',current+(name==='publication-next'?1:-1));}
+   return true;
+  }
   if(name==='project-view'){if(['cards','table'].includes(el.dataset.projectView))updateProjectFilter(el.closest('.project-catalog'),'view',el.dataset.projectView);return true;}
   if(name==='project-program'||name==='project-reset'){updateProjectFilter(el.closest('.project-catalog'),name==='project-reset'?'reset':'program',el.dataset.program);return true;}
   if(name==='chart-legend'){
@@ -116,6 +134,8 @@ export function createSiteView(options){
   charts.observe(root);
   root.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{if(event.target.matches('[data-project-role],[data-project-program-select]'))updateProjectFilter(event.target.closest('.project-catalog'),event.target.matches('[data-project-role]')?'role':'program',event.target.value);});
+  root.addEventListener('input',event=>{if(event.target.matches('[data-publication-query]'))updatePublicationFilter(event.target.closest('.publication-catalog'),'query',event.target.value);});
+  root.addEventListener('change',event=>{for(const key of ['faculty','index','quartile'])if(event.target.matches(`[data-publication-${key}]`))updatePublicationFilter(event.target.closest('.publication-catalog'),key,event.target.value);});
  }
  return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

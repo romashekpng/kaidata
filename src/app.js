@@ -1,11 +1,11 @@
-import { createAnalytics } from './analytics.js?v=grant-reports-20261101';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=grant-reports-20261101';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=grant-reports-20261101';
-import { icon } from './icons.js?v=grant-reports-20261101';
+import { createAnalytics } from './analytics.js?v=publication-catalog-20261101';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=publication-catalog-20261101';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=publication-catalog-20261101';
+import { icon } from './icons.js?v=publication-catalog-20261101';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=grant-reports-20261101';
-import { createCMS } from './cms.js?v=grant-reports-20261101';
-import { cmsRoute } from './cms-data.js?v=grant-reports-20261101';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=publication-catalog-20261101';
+import { createCMS } from './cms.js?v=publication-catalog-20261101';
+import { cmsRoute } from './cms-data.js?v=publication-catalog-20261101';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);

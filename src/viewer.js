@@ -1,9 +1,9 @@
-import { createAnalytics } from './analytics.js?v=grant-reports-20261101';
-import { createSiteView } from './site-view.js?v=grant-reports-20261101';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=grant-reports-20261101';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=grant-reports-20261101';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=grant-reports-20261101';
-import { icon } from './icons.js?v=grant-reports-20261101';
+import { createAnalytics } from './analytics.js?v=publication-catalog-20261101';
+import { createSiteView } from './site-view.js?v=publication-catalog-20261101';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=publication-catalog-20261101';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=publication-catalog-20261101';
+import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=publication-catalog-20261101';
+import { icon } from './icons.js?v=publication-catalog-20261101';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

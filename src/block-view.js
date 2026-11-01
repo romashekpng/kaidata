@@ -1,5 +1,5 @@
-import { icon } from './icons.js?v=grant-reports-20261101';
-import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=grant-reports-20261101';
+import { icon } from './icons.js?v=publication-catalog-20261101';
+import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=publication-catalog-20261101';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -9,6 +9,34 @@ export function blockColors(block) {
 }
 export function renderBlockTable(table, showAll = false) {
  return `<div class="cms-data-scroll ${showAll?'show-all':''}"><table><thead><tr>${table.headers.map(h=>`<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${table.rows.map(r=>`<tr>${r.map(c=>`<td>${esc(c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+}
+export function publicationsFromTable(table){
+ const fields={title:['Назва','title'],authors:['Автори','authors'],year:['Рік','year'],faculty:['Факультет','faculty'],indexes:['Індексація','indexes'],quartile:['Квартиль','quartile'],type:['Тип','type'],url:['Посилання','url']};
+ const columns=Object.fromEntries(Object.entries(fields).map(([key,names])=>[key,table.headers.findIndex(h=>names.some(name=>h.trim().toLocaleLowerCase('uk-UA')===name.toLocaleLowerCase('uk-UA')))]));
+ return table.rows.map(row=>{
+  const record=Object.fromEntries(Object.entries(columns).map(([key,c])=>[key,String(row[c]??'').trim()]));
+  return {...record,indexes:[...(/\bscopus\b/i.test(record.indexes)?['Scopus']:[]),...(/\bwos\b|web\s+of\s+science/i.test(record.indexes)?['WoS']:[])],quartile:['Q1','Q2','Q3','Q4'].includes(record.quartile.toUpperCase())?record.quartile.toUpperCase():null};
+ });
+}
+export function filterPublications(records,state={}){
+ const faculties=[...new Set(records.map(r=>r.faculty).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'uk'));
+ const selected={query:String(state.query||'').slice(0,200),faculty:faculties.includes(state.faculty)?state.faculty:'',index:['Scopus','WoS','none'].includes(state.index)?state.index:'',quartile:['Q1','Q2','Q3','Q4','none'].includes(state.quartile)?state.quartile:''};
+ const query=selected.query.trim().toLocaleLowerCase('uk-UA');
+ const rows=records.filter(r=>(!query||`${r.title} ${r.authors}`.toLocaleLowerCase('uk-UA').includes(query))&&(!selected.faculty||r.faculty===selected.faculty)&&(!selected.index||(selected.index==='none'?!r.indexes.length:r.indexes.includes(selected.index)))&&(!selected.quartile||(selected.quartile==='none'?!r.quartile:r.quartile===selected.quartile))).sort((a,b)=>a.title.localeCompare(b.title,'uk'));
+ selected.page=Math.max(1,Math.min(Math.ceil(rows.length/10)||1,Math.floor(Number(state.page)||1)));
+ return {faculties,selected,rows};
+}
+export function renderPublicationCatalog(table,settings={},state={},blockId='',period=''){
+ const {faculties,selected,rows}=filterPublications(publicationsFromTable(table),state),filtered=selected.query.trim()||selected.faculty||selected.index||selected.quartile;
+ const option=(value,label,current)=>`<option value="${esc(value)}" ${value===current?'selected':''}>${esc(label)}</option>`;
+ const action=(name,label,disabled=false)=>`<button type="button" class="button secondary small" data-cms-action="publication-${name}" ${disabled?'disabled':''}>${label}</button>`;
+ const page=selected.page,pages=Math.max(1,Math.ceil(rows.length/10)),visible=settings.showAll?rows:rows.slice((page-1)*10,page*10);
+ const title=record=>{
+  let url='';try{const u=new URL(record.url);if(['https:','http:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}
+  return url&&settings.publicationTitleLinks!==false?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(record.title)} ${icon('external')}</a>`:esc(record.title);
+ };
+ const pill=(label,color)=>`<span class="pill ${color}">${esc(label)}</span>`;
+ return `<div class="publication-catalog cms-analytics-content ${settings.showAll?'show-all':''}" data-publication-block="${esc(blockId)}"><div class="table-toolbar publication-filter-toolbar"><label class="search-field">${icon('search')}<input type="search" data-publication-query placeholder="Назва публікації або автор…" aria-label="Пошук публікацій" maxlength="200" value="${esc(selected.query)}"></label><select data-publication-faculty aria-label="Факультет">${option('','Усі факультети',selected.faculty)}${faculties.map(f=>option(f,f,selected.faculty)).join('')}</select><select data-publication-index aria-label="Індексація">${option('','Уся індексація',selected.index)}${[['Scopus','Scopus'],['WoS','Web of Science'],['none','Без індексації']].map(([value,label])=>option(value,label,selected.index)).join('')}</select><select data-publication-quartile aria-label="Квартиль">${option('','Усі квартилі',selected.quartile)}${['Q1','Q2','Q3','Q4','none'].map(q=>option(q,q==='none'?'Без квартиля':q,selected.quartile)).join('')}</select></div><div class="publication-results" data-publication-page="${page}"><div class="results-meta" aria-live="polite" aria-atomic="true"><span>Знайдено <strong>${format(rows.length)}</strong> публікацій</span>${filtered?action('reset','Скинути фільтри'):`<span>${esc(period)}${/^\d{4}$/.test(period)?' рік':''}</span>`}</div>${rows.length?`<div class="table-scroll"><table class="publication-table"><colgroup><col style="width:48%"><col style="width:21%"><col style="width:19%"><col style="width:12%"></colgroup><thead><tr><th scope="col">Публікація та автори</th><th scope="col">Факультет</th><th scope="col">Індексація</th><th scope="col">Квартиль</th></tr></thead><tbody>${visible.map(r=>`<tr><td class="title-cell"><strong>${title(r)}</strong><span>${esc(r.authors)}</span><small>${esc(r.type)}</small></td><td class="faculty-cell">${esc(r.faculty)}</td><td>${r.indexes.length?r.indexes.map(i=>pill(i==='WoS'?'Web of Science':i,'blue')).join(' '):'<span class="muted">Без індексації</span>'}</td><td>${pill(r.quartile||'Без квартиля',['Q1','Q2'].includes(r.quartile)?'green':'neutral')}</td></tr>`).join('')}</tbody></table></div>${settings.showAll?'':`<div class="pagination"><span>${(page-1)*10+1}–${Math.min(page*10,rows.length)} із ${format(rows.length)}</span><div>${action('prev','Назад',page<=1)}<span>${page} / ${pages}</span>${action('next','Далі',page>=pages)}</div></div>`}`:'<div class="empty"><h3>За цими умовами даних немає</h3><p>Змініть фільтри або звітний рік.</p></div>'}</div></div>`;
 }
 export function renderMetricTable(table, settings) {
  const get=(r,name,i)=>r[table.headers.indexOf(name)]??r[i]??'';
