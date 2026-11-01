@@ -328,6 +328,7 @@ dialog{background:var(--surface)}
 .publication-filter-toolbar{display:grid;grid-template-columns:minmax(180px,1.6fr) minmax(130px,1fr) minmax(120px,.85fr) minmax(110px,.7fr)}
 .publication-filter-toolbar .search-field,.publication-filter-toolbar select{min-width:0;width:100%;max-width:none}
 .publication-table{table-layout:fixed;min-width:600px}
+.publication-table .title-cell>strong>a[href]{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:.16em}
 .publication-table .title-cell,.publication-table .faculty-cell{min-width:0;max-width:none;overflow-wrap:anywhere}
 .publication-table .pill{max-width:100%;white-space:normal}
 .publication-catalog .results-meta{gap:12px;flex-wrap:wrap}
