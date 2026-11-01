@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=publication-quartiles-20261101';
+import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=grant-reports-20261101';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const MAX_UNPACKED = 50 * 1024 * 1024;
@@ -127,7 +127,7 @@ export async function toXLSX(data, target = 'bundle', engine = globalThis.ExcelJ
     for (const record of clean[key]) sheet.addRow(CSV_HEADERS[key].map(field => {
       const value = record[field];
       if (field === 'indexes') return value.join('|');
-      if (field === 'funding') return JSON.stringify(value);
+      if (field === 'funding'||field==='progressByYear') return JSON.stringify(value||[]);
       return value ?? '';
     }));
     styleSheet(sheet, CSV_HEADERS[key]);

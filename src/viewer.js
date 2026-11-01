@@ -1,9 +1,9 @@
-import { createAnalytics } from './analytics.js?v=publication-quartiles-20261101';
-import { createSiteView } from './site-view.js?v=publication-quartiles-20261101';
-import { validateBundle, yearsIn } from './data.js?v=publication-quartiles-20261101';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=publication-quartiles-20261101';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=publication-quartiles-20261101';
-import { icon } from './icons.js?v=publication-quartiles-20261101';
+import { createAnalytics } from './analytics.js?v=grant-reports-20261101';
+import { createSiteView } from './site-view.js?v=grant-reports-20261101';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=grant-reports-20261101';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=grant-reports-20261101';
+import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=grant-reports-20261101';
+import { icon } from './icons.js?v=grant-reports-20261101';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
@@ -25,12 +25,15 @@ function renderShell(){
  const i=data.institution;document.title=`${i.shortName} · Наукова діяльність`;
  $('#sidebar').innerHTML=`<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button><a class="brand" href="#overview" aria-label="На головну"><span class="brand-mark">${icon('layers')}</span><span>${e(i.shortName)}<small>SCIENCE & INSIGHTS</small></span></a><div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${cms.pages().map(p=>`<a class="nav-item ${cmsRoute(p)===route?'active':''}" href="#${cmsRoute(p)}" ${cmsRoute(p)===route?'aria-current="page"':''}>${icon(navIcons[p.id]||'file')}<span>${e(p.title)}</span>${cmsRoute(p)===route?'<span class="active-dot"></span>':''}</a>`).join('')}</nav><div class="sidebar-bottom"><div class="sidebar-note"><span class="live-dot"></span>Відкриті дані. Нові можливості.<p>Знання, що формують<br>майбутнє університету.</p></div><div class="sidebar-institution">${i.website?`<a href="${e(i.website)}" target="_blank" rel="noopener noreferrer">${e(i.name)} ${icon('external')}</a>`:e(i.name)}<span>${e(i.subtitle||'Платформа наукової аналітики')}</span></div></div>`;
  $('#topbar').innerHTML=`<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(cms.getPage(route)?.title||'Сторінки')}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo?'demo':''}"><span></span>${data.demo?'Демонстраційні дані':'Опубліковані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0,3))}</span></div>`;
- $('#footer').innerHTML=`<span>© ${new Date().getFullYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}</span>`;
+ $('#footer').innerHTML=`<span>© ${currentReportingYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}</span>`;
 }
 function header(p){
- const years=yearsIn(data);
+ const years=reportingYears(data);
  return `<div class="page-heading"><div><div class="eyebrow"><span></span>НАУКОВА ДІЯЛЬНІСТЬ</div><h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${p.showYear?`<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length?years:[year]).slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}${years.length>8?`<select aria-label="Усі роки" id="all-years">${years.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select>`:''}</div></div>`:''}`;
 }
+let observedReportingYear=currentReportingYear();
+function refreshReportingCalendar(){if(!data||!cms)return;const current=currentReportingYear();if(current===observedReportingYear)return;if(year===observedReportingYear)year=current;observedReportingYear=current;render();}
+window.addEventListener('focus',refreshReportingCalendar);setInterval(refreshReportingCalendar,60000);
 function render(){
  renderShell();const p=cms.getPage(route);$('#content').innerHTML=p?header(p)+view.renderBlocks(p):'<div class="empty"><h1>Сторінки ще не опубліковано</h1></div>';
 }
@@ -67,7 +70,7 @@ try{
  const responses=await Promise.all([fetch('./data/demo.json',{cache:'no-store'}),fetch('./data/pages.json',{cache:'no-store'})]);
  if(responses.some(response=>!response.ok))throw new Error('Не вдалося завантажити опубліковані дані.');
  data=validateBundle(await responses[0].json());site=expandSiteBlocks(await responses[1].json());
- const years=yearsIn(data);year=years.includes(new Date().getFullYear())?new Date().getFullYear():years.at(-1)||new Date().getFullYear();
+ const years=reportingYears(data);year=years.includes(currentReportingYear())?currentReportingYear():years.at(-1)||currentReportingYear();
  cms={pages:()=>site.pages.filter(p=>p.visible&&(p.kind==='custom'||p.id==='overview'||data.institution.blocks.includes(p.id))),getPage:r=>site.pages.find(p=>cmsRoute(p)===r)};
  view=createSiteView({...analytics,getData:()=>data,getYear:()=>year,getBlock:id=>site.pages.flatMap(p=>p.blocks).find(b=>b.id===id),refresh:render});site=view.repairMetricSnapshots(site);view.bindInputs(document);setRoute();
 }catch(error){$('#content').innerHTML=`<div class="empty"><h1>Не вдалося завантажити сайт</h1><p>Спробуйте оновити сторінку пізніше.</p></div>`;}

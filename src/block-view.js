@@ -1,5 +1,5 @@
-import { icon } from './icons.js?v=publication-quartiles-20261101';
-import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=publication-quartiles-20261101';
+import { icon } from './icons.js?v=grant-reports-20261101';
+import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=grant-reports-20261101';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:2}).format(value);
@@ -31,7 +31,7 @@ export function projectsFromTable(table){
  const get=(row,name,index)=>row[table.headers.indexOf(name)]??(index===undefined?'':row[index]??'');
  return table.rows.map(row=>{
   const international=String(get(row,'Міжнародний')).trim().toLocaleLowerCase('uk-UA');
-  return {title:get(row,'Назва',0),program:get(row,'Програма',1),startDate:get(row,'Початок',2),endDate:get(row,'Завершення',3),role:get(row,'Роль',4),revenue:get(row,'Надходження, грн',5),url:get(row,'Посилання',6),international:['true','1','так','міжнародний'].includes(international)?true:['false','0','ні','український'].includes(international)?false:null};
+  return {title:get(row,'Назва',0),program:get(row,'Програма',1),startDate:get(row,'Початок',2),endDate:get(row,'Завершення',3),role:get(row,'Роль',4),revenue:get(row,'Надходження, грн',5),url:get(row,'Посилання',6),progressPercent:get(row,'Виконання, %')===''?null:Number(get(row,'Виконання, %')),international:['true','1','так','міжнародний'].includes(international)?true:['false','0','ні','український'].includes(international)?false:null};
  });
 }
 export function filterProjects(projects,state={}){
@@ -46,7 +46,9 @@ function projectMarker(international,settings){
  return '';
 }
 function projectDisplay(project,asOf){
- const progress=projectProgress(project.startDate,project.endDate,asOf);
+ let progress=projectProgress(project.startDate,project.endDate,asOf);
+ const manual=project.progressPercent;
+ if(manual!==null&&manual!==undefined&&Number.isFinite(manual)&&manual>=0&&manual<=100){const when=asOf||new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Kyiv'}).format(new Date());progress={percent:manual,status:manual===100?'completed':manual===0&&project.startDate>when?'planned':'active',asOf:when,manual:true};}
  let url='';try{const u=new URL(project.url);if(['http:','https:'].includes(u.protocol)&&!u.username&&!u.password)url=u.href;}catch{}
  const date=value=>{const iso=projectISODate(value);return iso?iso.split('-').reverse().join('.'):esc(value);};
  const amount=String(project.revenue).replace(/\s/g,'').replace(',','.');
@@ -57,7 +59,7 @@ function projectDisplay(project,asOf){
 function projectTitle(project,url){return url?`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">${esc(project.title)} ${icon('external')}</a>`:esc(project.title);}
 function projectTimeline(project,details){
  const {progress,status,date}=details;
- return `<div class="project-timeline">${progress?`<div class="project-timeline-caption"><span>${status}</span><strong>${progress.percent}%</strong></div><div class="project-timeline-track ${progress.status}" role="progressbar" aria-label="Час виконання проєкту: ${esc(project.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.percent}" aria-valuetext="${status}; минуло ${progress.percent}% строку виконання" title="Минуло ${progress.percent}% строку виконання станом на ${date(progress.asOf)}. Це часовий прогрес за датами, а не оцінка виконаних робіт."><span style="width:${progress.percent}%"></span></div>`:'<span class="muted">Для прогресу вкажіть коректні дати початку й завершення.</span>'}</div>`;
+ return `<div class="project-timeline">${progress?`<div class="project-timeline-caption"><span>${status}</span><strong>${progress.percent}%</strong></div><div class="project-timeline-track ${progress.status}" role="progressbar" aria-label="${progress.manual?'Виконання':'Час виконання'} проєкту: ${esc(project.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress.percent}" aria-valuetext="${status}; ${progress.manual?`фактичне виконання ${progress.percent}%`:`минуло ${progress.percent}% строку виконання`}" title="${progress.manual?`Фактичне виконання за ${progress.asOf.slice(0,4)} рік: ${progress.percent}%.`:`Минуло ${progress.percent}% строку виконання станом на ${date(progress.asOf)}. Це часовий прогрес за датами, а не оцінка виконаних робіт.`}"><span style="width:${progress.percent}%"></span></div>`:'<span class="muted">Для прогресу вкажіть коректні дати початку й завершення.</span>'}</div>`;
 }
 export function renderProjectCard(project,settings={},asOf){
  const details=projectDisplay(project,asOf),{url,revenue,date}=details;

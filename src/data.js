@@ -1,9 +1,9 @@
-import { validateSiteStyles } from './style-data.js?v=publication-quartiles-20261101';
+import { validateSiteStyles } from './style-data.js?v=grant-reports-20261101';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {
   publications: ['id', 'title', 'authors', 'year', 'faculty', 'department', 'indexes', 'quartile', 'type', 'url'],
-  projects: ['id', 'title', 'program', 'startDate', 'endDate', 'role', 'international', 'faculty', 'funding', 'url'],
+  projects: ['id', 'title', 'program', 'startDate', 'endDate', 'role', 'international', 'faculty', 'funding', 'url', 'progressByYear'],
   patents: ['id', 'title', 'number', 'date', 'authors', 'faculty', 'url'],
   revenues: ['year', 'source', 'amountUAH'],
 };
@@ -24,6 +24,38 @@ function url(v, field) {
   if (!v) return '';
   try { const u = new URL(v); if (!['https:', 'http:'].includes(u.protocol) || u.username || u.password) throw new Error(); return u.href; }
   catch { fail(`${field}: дозволено лише http/https URL без облікових даних.`); }
+}
+const reportingYearFormatter=new Intl.DateTimeFormat('en',{timeZone:'Europe/Kyiv',year:'numeric'});
+export function currentReportingYear(asOf=new Date()) { return +reportingYearFormatter.format(new Date(asOf)); }
+export function reportingYears(data,asOf=new Date()) {
+ const current=currentReportingYear(asOf),past=yearsIn(data).filter(y=>y<=current),first=past.length?Math.min(...past):current;
+ return Array.from({length:current-first+1},(_,i)=>first+i);
+}
+export function reportDate(reportYear,asOf=new Date()) {
+ const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Kyiv'}).format(new Date(asOf));
+ return +reportYear<currentReportingYear(asOf)?`${reportYear}-12-31`:today;
+}
+export function projectReceipts(project,reportYear=null,asOf=new Date()) {
+ const entries=project.funding.filter(f=>f.year<=currentReportingYear(asOf)&&(reportYear==null||f.year===reportYear));
+ return entries.length?entries.reduce((sum,f)=>sum+f.amountUAH,0):null;
+}
+export function normalizeProjectProgress(value,field='Виконання') {
+ if(value==null||(typeof value==='string'&&!value.trim()))return null;
+ const n=typeof value==='string'?Number(value.trim()):value;
+ if(!Number.isFinite(n)||n<0||n>100||n%5!==0)fail(`${field}: від 0 до 100 із кроком 5%.`);
+ return n;
+}
+export function updateProjectReports(project,rows,asOf=new Date()) {
+ const last=currentReportingYear(asOf),start=+project.startDate.slice(0,4),end=+project.endDate.slice(0,4),seen=new Set(),funding=project.funding.filter(f=>f.year>last),progress=(project.progressByYear||[]).filter(r=>r.year>last);
+ for(const row of rows){
+  if(!Number.isInteger(row.year)||row.year<start||row.year>Math.min(end,last)||seen.has(row.year))fail('Рік звіту має бути унікальним, у межах проєкту та не пізнішим за поточний рік.');seen.add(row.year);
+  const raw=String(row.amount??'').trim();
+  if(raw){const text=raw.replace(/[\s\u00a0]/g,'').replace(',','.');if(!/^\d+(?:\.\d+)?$/.test(text))fail(`${row.year}: вкажіть невід’ємну суму у гривнях.`);funding.push({year:row.year,amountUAH:amount(Number(text),`${row.year}, надходження`)});}
+  const percent=normalizeProjectProgress(String(row.percent??'').trim(),`${row.year}, виконання`);if(percent!==null)progress.push({year:row.year,percent});
+ }
+ // Preserve years not shown in a partial editor, and any future source records.
+ funding.push(...project.funding.filter(f=>f.year<=last&&!seen.has(f.year)));progress.push(...(project.progressByYear||[]).filter(r=>r.year<=last&&!seen.has(r.year)));
+ const next={...project,funding:funding.sort((a,b)=>a.year-b.year)};if(progress.length)next.progressByYear=progress.sort((a,b)=>a.year-b.year);else delete next.progressByYear;return next;
 }
 export function normalizeQuartile(value,field='Квартиль') {
  if(value==null)return null;
@@ -78,7 +110,12 @@ export function validateBundle(input) {
           if (y < Number(startDate.slice(0, 4)) || y > Number(endDate.slice(0, 4)) || fundingYears.has(y)) fail(`${f('funding.year')}: унікальний рік у межах проєкту.`);
           fundingYears.add(y); return { year: y, amountUAH: amount(x.amountUAH, f('funding.amountUAH')) };
         });
-        return { ...common, program: text(r.program, f('program')), startDate, endDate, role: r.role, international: r.international, faculty: optional(r.faculty, f('faculty')), funding };
+        const progressByYear=[];
+        if(r.progressByYear!==undefined){
+          if(!Array.isArray(r.progressByYear))fail(`${f('progressByYear')}: масив {year, percent}.`);const seen=new Set();
+          for(const entry of r.progressByYear){if(!isObject(entry))fail(`${f('progressByYear')}: очікується {year, percent}.`);const y=year(entry.year,f('progressByYear.year'));if(y<+startDate.slice(0,4)||y>+endDate.slice(0,4)||seen.has(y))fail(`${f('progressByYear.year')}: унікальний рік у межах проєкту.`);seen.add(y);const percent=normalizeProjectProgress(entry.percent,f('progressByYear.percent'));if(percent===null)fail(`${f('progressByYear.percent')}: потрібне число.`);progressByYear.push({year:y,percent});}
+        }
+        return { ...common, program: text(r.program, f('program')), startDate, endDate, role: r.role, international: r.international, faculty: optional(r.faculty, f('faculty')), funding,...(progressByYear.length?{progressByYear}:{} ) };
       }
       if (key === 'patents') return { ...common, number: text(r.number, f('number'), 100), date: date(r.date, f('date')), authors: text(r.authors, f('authors')), faculty: text(r.faculty, f('faculty')) };
       return { year: year(r.year, f('year')), source: text(r.source, f('source')), amountUAH: amount(r.amountUAH, f('amountUAH')) };
@@ -101,7 +138,7 @@ export function summarize(data, year) {
   const grants = projects.reduce((sum, x) => sum + x.funding.filter(f => f.year === year).reduce((s, f) => s + f.amountUAH, 0), 0);
   const international = projects.filter(x => x.international).reduce((s, x) => s + x.funding.filter(f => f.year === year).reduce((a, f) => a + f.amountUAH, 0), 0);
   const revenues = data.revenues.filter(x => x.year === year);
-  return { publications, indexed, projects, grants, international, q12: indexed.filter(x => ['Q1', 'Q2'].includes(x.quartile)).length,
+  return { publications, indexed, projects, grants, international, hasGrantData:projects.some(p=>p.funding.some(f=>f.year===year)), q12: indexed.filter(x => ['Q1', 'Q2'].includes(x.quartile)).length,
     patents: data.patents.filter(x => +x.date.slice(0, 4) === year), revenue: revenues.length ? revenues.reduce((s, x) => s + x.amountUAH, 0) : null };
 }
 // RFC 4180 quoted cells, UTF-8 BOM, comma/semicolon/tab separators.
@@ -135,7 +172,7 @@ export function importCSV(source, dataset, current) {
 export function importTable({ headers, records }, dataset, current) {
   if (!DATASETS.includes(dataset)) fail('Оберіть тип таблиці.');
   if (records.length > 25000) fail('Таблиця містить понад 25 000 записів.');
-  const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h));
+  const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h)&&!(dataset==='projects'&&h==='progressByYear'));
   if (missing.length) fail(`Відсутні колонки: ${missing.join(', ')}.`);
   const extra = headers.filter(h => !CSV_HEADERS[dataset].includes(h));
   if (extra.length) fail(`Невідомі колонки: ${extra.join(', ')}.`);
@@ -148,7 +185,7 @@ export function importTable({ headers, records }, dataset, current) {
     if (dataset === 'projects') {
       if (!['true', 'false'].includes(x.international)) fail(`${f('international')}: true або false.`);
       x.international = x.international === 'true';
-      try { x.funding = JSON.parse(x.funding || '[]'); } catch { fail(`${f('funding')}: некоректний JSON-масив.`); }
+      try { x.funding = JSON.parse(x.funding || '[]');if(x.progressByYear)x.progressByYear=JSON.parse(x.progressByYear);else delete x.progressByYear; } catch { fail(`${f('funding')}: некоректний JSON-масив.`); }
     }
     return x;
   });
@@ -157,7 +194,7 @@ export function importTable({ headers, records }, dataset, current) {
 export function toCSV(data, dataset) {
   const encode = v => '"' + String(v ?? '').replaceAll('"', '""') + '"';
   return '\uFEFF' + [CSV_HEADERS[dataset].join(';'), ...data[dataset].map(r => CSV_HEADERS[dataset].map(h => {
-    let v = r[h]; if (h === 'indexes') v = v.join('|'); if (h === 'funding') v = JSON.stringify(v);
+    let v = r[h]; if (h === 'indexes') v = v.join('|'); if (h === 'funding'||h==='progressByYear') v = JSON.stringify(v||[]);
     // Protect spreadsheets from formula injection in free-text fields.
     if (typeof v === 'string' && /^[=+@\-\t\r]/.test(v)) v = "'" + v;
     return encode(v);

@@ -1,13 +1,15 @@
-import { createChartRenderer } from './chart-runtime.js?v=publication-quartiles-20261101';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-quartiles-20261101';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=publication-quartiles-20261101';
-import { icon } from './icons.js?v=publication-quartiles-20261101';
+import { reportDate, currentReportingYear } from './data.js?v=grant-reports-20261101';
+import { createChartRenderer } from './chart-runtime.js?v=grant-reports-20261101';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=grant-reports-20261101';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderBlockTable } from './block-view.js?v=grant-reports-20261101';
+import { icon } from './icons.js?v=grant-reports-20261101';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
  const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map();
  const currentBlock=id=>options.getBlock(id);
   function resolvedSettings(block) { return chartSettingsForLibrary(block.settings,block.settings?.chartLibrary||'echarts',block.source); }
+  function projectAsOf(block){return reportDate(block.dataMode==='manual'&&/^\d{4}$/.test(block.dataPeriod||'')?+block.dataPeriod:resolvedSettings(block).allYears?currentReportingYear():options.getYear());}
   function editableTable(block) {
     if(block.type==='analytics'){
       if(block.dataMode==='manual')return structuredClone(block.dataTable);
@@ -61,7 +63,7 @@ export function createSiteView(options){
       if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
-        else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id);
+        else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id,projectAsOf(b));
         else if(b.dataMode==='manual'&&['insight','revenueNotice'].includes(b.source))body=`<div class="${b.source==='insight'?'insight-card':'notice'}"><p>${editableTable(b).rows.map(r=>e(r.join(' · '))).join('<br>')}</p></div>`;
         else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll);
         else body=`<div class="cms-analytics-content ${s.showAll?'show-all':''}">${options.renderAnalytics(b.source,s)}</div>`;
@@ -84,7 +86,7 @@ export function createSiteView(options){
     const id=catalog.dataset.projectBlock,block=currentBlock(id);if(!block||block.source!=='projects')return;
     const state=field==='reset'?{view:projectFilters.get(id)?.view}:{...projectFilters.get(id),[field]:value};
     projectFilters.set(id,state);
-    const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderProjectTable(editableTable(block),resolvedSettings(block),state,id);
+    const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderProjectTable(editableTable(block),resolvedSettings(block),state,id,projectAsOf(block));
     catalog.querySelector('.project-results').replaceWith(wrapper.querySelector('.project-results'));
     catalog.querySelector('.project-count').innerHTML=wrapper.querySelector('.project-count').innerHTML;
     catalog.querySelectorAll('[data-project-view]').forEach(button=>{
