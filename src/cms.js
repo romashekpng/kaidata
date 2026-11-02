@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=chart-defaults-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=chart-defaults-20261102';
-import { createSiteView } from './site-view.js?v=chart-defaults-20261102';
-import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=chart-defaults-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=chart-defaults-20261102';
-import { renderBlockTable } from './block-view.js?v=chart-defaults-20261102';
-import { validateBundle } from './data.js?v=chart-defaults-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=scopus-layout-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=scopus-layout-20261102';
+import { createSiteView } from './site-view.js?v=scopus-layout-20261102';
+import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=scopus-layout-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=scopus-layout-20261102';
+import { renderBlockTable } from './block-view.js?v=scopus-layout-20261102';
+import { validateBundle } from './data.js?v=scopus-layout-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=chart-defaults-20261102';
+import { icon } from './icons.js?v=scopus-layout-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -428,7 +428,7 @@ export function createCMS(options) {
   document.addEventListener('submit',event=>{if(event.target.id==='cms-page-form'){event.preventDefault();try{savePage();}catch(err){showError(err);}}});
   window.addEventListener('beforeunload',event=>{if(dirty||temporary){event.preventDefault();event.returnValue='';}});
   return {
-    init(initial){site=expandSiteBlocks(initial);let saved=null;try{saved=localStorage.getItem(CMS_KEY);if(saved)site=expandSiteBlocks(JSON.parse(saved));}catch{saved=null;options.notify('Локальні сторінки недоступні або пошкоджені. Завантажено серверну версію.');}repairMetricSnapshots();if(saved&&JSON.stringify(site)!==saved)writeLocal(site);},
+    init(initial){site=expandSiteBlocks(initial);let saved=null;try{saved=localStorage.getItem(CMS_KEY);if(saved)site=expandSiteBlocks(JSON.parse(saved),site);}catch{saved=null;options.notify('Локальні сторінки недоступні або пошкоджені. Завантажено серверну версію.');}repairMetricSnapshots();if(saved&&JSON.stringify(site)!==saved)writeLocal(site);},
     pages:()=>activePages(),getPage:findPage,renderAdmin,renderBlocks,
     getSite:()=>structuredClone(site),isDirty:()=>dirty,
   };

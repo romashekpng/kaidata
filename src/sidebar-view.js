@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=chart-defaults-20261102';
-import { icon } from './icons.js?v=chart-defaults-20261102';
+import { SIDEBAR_DEFAULTS } from './data.js?v=scopus-layout-20261102';
+import { icon } from './icons.js?v=scopus-layout-20261102';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarTextSections(institution){
  const i={...SIDEBAR_DEFAULTS,...institution},e=sidebarEscape,multiline=text=>e(text).replaceAll('\n','<br>');

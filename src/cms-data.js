@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=chart-defaults-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-defaults-20261102';
+import { convertMoneyBlock } from './money.js?v=scopus-layout-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=scopus-layout-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
@@ -284,6 +284,7 @@ export function validateCMSPage(input) {
   const existing = out.blocks.filter(x => x.type === 'existing');
   if (existing.length > 1 || existing.some(x => out.kind !== 'builtin' || x.source !== out.id)) fail('Повна вбудована аналітика дозволена лише один раз на її початковій сторінці. Для інших сторінок додайте окремі аналітичні блоки.');
   if (new Set(out.blocks.map(x => x.id)).size !== out.blocks.length) fail('ID блоків сторінки не мають повторюватися.');
+  if(input.scopusLayoutVersion!==undefined){if(input.scopusLayoutVersion!==1)fail('Невідома версія розташування діаграм публікацій.');out.scopusLayoutVersion=1;}
   return out;
 }
 export function validateSite(input) {
@@ -313,7 +314,7 @@ export function defaultCMSBlock(type) {
   return block;
 }
 export function cmsRoute(page) { return page.kind === 'builtin' ? page.id : `page/${page.slug}`; }
-export function expandSiteBlocks(input) {
+export function expandSiteBlocks(input, defaults = null) {
  const site=structuredClone(validateSite(input)),used=new Set(site.pages.flatMap(p=>p.blocks.map(b=>b.id)));
  const layouts={overview:[['stats',100],['publicationChart',66],['quartiles',34],['projects',100],['faculties',50],['insight',50],['revenueNotice',100]],publications:[['publicationChart',66],['quartiles',34],['publications',100],['faculties',100]],projects:[['projectChart',50],['programs',50],['projects',100]],patents:[['patentStats',33],['patentFaculties',67],['patents',100]],funding:[['fundingStats',100],['funding',50],['fundingSources',50],['fundingTable',100],['revenueNotice',100]]};
  for(const page of site.pages)page.blocks=page.blocks.flatMap(block=>{
@@ -323,6 +324,25 @@ export function expandSiteBlocks(input) {
    return {id,type:'analytics',title:ANALYTICS[source],visible:block.visible,source,dataMode:'live',chartDefaultsVersion:1,settings:{...defaultBlockSettings(source),width}};
   });
  });
+ // Apply the server's new publication layout once to previously saved pages.
+ // The page marker preserves later edits, including removing the new chart.
+ const template=defaults?.pages.find(p=>p.kind==='builtin'&&p.id==='publications');
+ const page=site.pages.find(p=>p.kind==='builtin'&&p.id==='publications');
+ const chart=template?.scopusLayoutVersion===1&&template.blocks.find(b=>b.id==='scopus-document-types'&&b.type==='chart');
+ if(chart&&page&&page.scopusLayoutVersion!==1){
+  let existing=page.blocks.find(b=>b.id===chart.id||(b.type==='chart'&&b.title===chart.title));
+  if(existing||page.blocks.length<50){
+   if(!existing){
+    existing=structuredClone(chart);let n=1;while(used.has(existing.id))existing.id=`${chart.id}-${n++}`;used.add(existing.id);
+    const lastPublication=page.blocks.findLastIndex(b=>b.type==='analytics'&&['publicationChart','quartiles'].includes(b.source));
+    const facultyIndex=page.blocks.findIndex(b=>b.type==='analytics'&&b.source==='faculties');
+    page.blocks.splice(lastPublication>=0?lastPublication+1:facultyIndex>=0?facultyIndex:page.blocks.length,0,existing);
+   }
+   const facultyIndex=page.blocks.findIndex(b=>b.type==='analytics'&&b.source==='faculties');
+   if(facultyIndex>=0){const [faculty]=page.blocks.splice(facultyIndex,1);faculty.settings={...(faculty.settings||defaultBlockSettings('faculties')),width:34};page.blocks.splice(page.blocks.indexOf(existing)+1,0,faculty);}
+   page.scopusLayoutVersion=1;
+  }
+ }
  return validateSite(site);
 }
 
