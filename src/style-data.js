@@ -17,7 +17,7 @@ export const STYLE_FIELDS = {
 };
 export function defaultSiteStyles(){
  const standard=Object.fromEntries(Object.entries(STYLE_FIELDS).map(([key,f])=>[key,f.value]));
- return {version:1,defaultPreset:'standard',presets:[
+ return {version:1,focusHighlight:{enabled:false,color:'#3479c6'},defaultPreset:'standard',presets:[
   {id:'standard',name:'Стандартний',values:standard},
   {id:'compact',name:'Компактний',values:{...standard,bodySize:14,headingSize:32,sectionSize:19,valueSize:30,menuSize:14,controlsSize:14,tableSize:13,chartSize:11,smallSize:12,lineHeight:1.25,paragraphGap:8,blockGap:12,blockPadding:14,rowPadding:6,radius:10}},
   {id:'comfortable',name:'Комфортний',values:{...standard,bodySize:18,headingSize:44,sectionSize:24,valueSize:42,menuSize:18,controlsSize:18,tableSize:16,chartSize:14,smallSize:15,lineHeight:1.75,paragraphGap:20,blockGap:28,blockPadding:26,rowPadding:16}}
@@ -25,6 +25,8 @@ export function defaultSiteStyles(){
 }
 export function validateSiteStyles(input){
  if(!input||input.version!==1||!Array.isArray(input.presets)||!input.presets.length||input.presets.length>20)throw new Error('Стилі: потрібно від 1 до 20 пресетів та version: 1.');
+ const focus=input.focusHighlight===undefined?{enabled:false,color:'#3479c6'}:input.focusHighlight;
+ if(!focus||typeof focus.enabled!=='boolean'||typeof focus.color!=='string'||!/^#[0-9a-f]{6}$/iu.test(focus.color))throw new Error('Виділення рамки: увімкнення true/false та колір у форматі #RRGGBB.');
  const ids=new Set();
  const presets=input.presets.map(p=>{
   if(!p||typeof p.id!=='string'||!/^[a-zA-Z0-9_-]{1,80}$/.test(p.id)||ids.has(p.id))throw new Error('Стилі: пресети повинні мати унікальні ID.');ids.add(p.id);
@@ -37,9 +39,9 @@ export function validateSiteStyles(input){
   return {id:p.id,name:p.name.trim(),values};
  });
  if(!ids.has(input.defaultPreset))throw new Error('Виберіть наявний пресет за замовчуванням.');
- return {version:1,defaultPreset:input.defaultPreset,presets};
+ return {version:1,focusHighlight:{enabled:focus.enabled,color:focus.color},defaultPreset:input.defaultPreset,presets};
 }
 export function siteStyleVariables(input){
  const styles=validateSiteStyles(input),values=styles.presets.find(p=>p.id===styles.defaultPreset).values;
- return Object.fromEntries(Object.entries(STYLE_FIELDS).map(([key,f])=>['--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),`${values[key]}${f.unit}`]));
+ return {...Object.fromEntries(Object.entries(STYLE_FIELDS).map(([key,f])=>['--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()),`${values[key]}${f.unit}`])), '--site-focus-width':styles.focusHighlight.enabled?'2px':'0px','--site-focus-color':styles.focusHighlight.color};
 }

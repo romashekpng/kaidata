@@ -21,7 +21,7 @@ test('ширина, картки, палітри та прокрутка пер�
  const b={...defaultCMSBlock('list'),settings:{...defaultBlockSettings(),width:37.5,columns:4,showAll:true,palette:'custom',customColors:['#123456']}};
  assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),validateCMSBlock(b));
  for(const change of [{width:0},{width:101},{columns:7},{height:100},{showAll:'false'},{legend:'bad'},{palette:'bad'},{customColors:['red']},{customColors:['#123456;display:none']}])assert.throws(()=>validateBlockSettings(change));
- assert.equal(defaultBlockSettings().showAll,false);
+ assert.equal(defaultBlockSettings().showAll,true);
 });
 test('переміщення колонки переміщує відповідні значення всіх рядків і не змінює оригінал',()=>{
  const original={headers:['Рік','A','B'],rows:[['2025','10','20'],['2026','30','40']]};

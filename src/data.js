@@ -1,5 +1,5 @@
-import { scaleMoney } from './money.js?v=publication-links-20261102';
-import { validateSiteStyles } from './style-data.js?v=publication-links-20261102';
+import { scaleMoney } from './money.js?v=list-focus-20261102';
+import { validateSiteStyles } from './style-data.js?v=list-focus-20261102';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const CSV_HEADERS = {

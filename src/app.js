@@ -1,12 +1,12 @@
-import { formatMoney } from './money.js?v=publication-links-20261102';
-import { createAnalytics } from './analytics.js?v=publication-links-20261102';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=publication-links-20261102';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=publication-links-20261102';
-import { icon } from './icons.js?v=publication-links-20261102';
+import { formatMoney } from './money.js?v=list-focus-20261102';
+import { createAnalytics } from './analytics.js?v=list-focus-20261102';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=list-focus-20261102';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=list-focus-20261102';
+import { icon } from './icons.js?v=list-focus-20261102';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=publication-links-20261102';
-import { createCMS } from './cms.js?v=publication-links-20261102';
-import { cmsRoute } from './cms-data.js?v=publication-links-20261102';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=list-focus-20261102';
+import { createCMS } from './cms.js?v=list-focus-20261102';
+import { cmsRoute } from './cms-data.js?v=list-focus-20261102';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -49,10 +49,13 @@ function themeSettings() {
   return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається для цього браузера.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
 }
 function applySiteStyles(settings) {
-  const root=document.documentElement;
-  for(const key of Object.keys(STYLE_FIELDS))root.style.removeProperty('--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase()));
-  root.toggleAttribute('data-site-style',!!settings);
-  if(settings)for(const [key,value]of Object.entries(siteStyleVariables(settings)))root.style.setProperty(key,value);
+  const roots=[document.documentElement,document.querySelector('#cms-live-frame')?.contentDocument?.documentElement].filter(Boolean);
+  const variables=settings?siteStyleVariables(settings):{};
+  for(const root of roots){
+    for(const key of [...Object.keys(STYLE_FIELDS).map(key=>'--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())),'--site-focus-width','--site-focus-color'])root.style.removeProperty(key);
+    root.toggleAttribute('data-site-style',!!settings);
+    for(const [key,value]of Object.entries(variables))root.style.setProperty(key,value);
+  }
 }
 function previewStyleDraft(){
   try{
@@ -66,7 +69,7 @@ function stylesContent(){
   const preset=styleDraft.presets.find(p=>p.id===editingStyleId);
   const options=selected=>styleDraft.presets.map(p=>`<option value="${p.id}" ${p.id===selected?'selected':''}>${e(p.name)}</option>`).join('');
   const fields=keys=>keys.map(key=>{const f=STYLE_FIELDS[key];return `<label>${f.label}${f.unit?' · '+f.unit:''}<input type="number" data-style-value="${key}" value="${preset.values[key]}" min="${f.min}" max="${f.max}" step="${f.step}" required><small>${f.min}–${f.max}${f.unit?' '+f.unit:''}</small></label>`;}).join('');
-  return `<form id="site-styles-form"><p class="style-help">Налаштуйте розміри тексту та компактність. Перегляд змінюється одразу; закриття без збереження скасовує зміни. На телефоні великі заголовки адаптуються до ширини екрана.</p><div class="form-grid settings-details"><label>Пресет для редагування<select id="style-preset">${options(editingStyleId)}</select></label><label>Пресет за замовчуванням<select id="style-default">${options(styleDraft.defaultPreset)}</select></label><label class="span-2">Назва пресета<input id="style-preset-name" value="${e(preset.name)}" required maxlength="80"></label></div><div class="style-preset-actions"><button type="button" class="button secondary small" data-action="style-new" ${styleDraft.presets.length>=20?'disabled':''}>+ Новий пресет із поточного</button><button type="button" class="button secondary small" data-action="style-reset">Початкові значення</button><button type="button" class="button secondary small danger" data-action="style-delete" ${styleDraft.presets.length===1?'disabled':''}>Видалити пресет</button></div><fieldset><legend>Розміри шрифтів</legend><div class="form-grid style-fields">${fields(['bodySize','headingSize','sectionSize','valueSize','menuSize','controlsSize','tableSize','chartSize','smallSize'])}</div></fieldset><fieldset><legend>Інтервали та вигляд блоків</legend><div class="form-grid style-fields">${fields(['lineHeight','paragraphGap','blockGap','blockPadding','rowPadding','radius'])}</div></fieldset><div class="style-preview" aria-label="Зразок оформлення"><span class="style-preview-caption">Зразок поточного пресета</span><h2>Наукова діяльність</h2><p>Знання, дослідження та результати університету.</p><p>Другий абзац допомагає оцінити міжрядковий інтервал і відступи.</p><div class="style-preview-value">128</div><table><thead><tr><th>Показник</th><th>Значення</th></tr></thead><tbody><tr><td>Публікації</td><td>128</td></tr><tr><td>Проєкти</td><td>12</td></tr></tbody></table></div><div id="style-error" class="form-error" role="alert"></div><p class="style-help">Для відвідувачів застосовується пресет за замовчуванням. Збереження діє в цьому браузері. Для перенесення використайте резервну копію сайта; для публікації — «Сайт для публікації» в адмінці.</p><div class="dialog-actions"><button type="button" class="button secondary" data-action="close-dialog">Скасувати</button><button type="submit" class="button primary">Зберегти стилі</button></div></form>`;
+  return `<form id="site-styles-form"><p class="style-help">Налаштуйте розміри тексту та компактність. Перегляд змінюється одразу; закриття без збереження скасовує зміни. На телефоні великі заголовки адаптуються до ширини екрана.</p><div class="form-grid settings-details"><label>Пресет для редагування<select id="style-preset">${options(editingStyleId)}</select></label><label>Пресет за замовчуванням<select id="style-default">${options(styleDraft.defaultPreset)}</select></label><label class="span-2">Назва пресета<input id="style-preset-name" value="${e(preset.name)}" required maxlength="80"></label></div><div class="style-preset-actions"><button type="button" class="button secondary small" data-action="style-new" ${styleDraft.presets.length>=20?'disabled':''}>+ Новий пресет із поточного</button><button type="button" class="button secondary small" data-action="style-reset">Початкові значення</button><button type="button" class="button secondary small danger" data-action="style-delete" ${styleDraft.presets.length===1?'disabled':''}>Видалити пресет</button></div><fieldset><legend>Розміри шрифтів</legend><div class="form-grid style-fields">${fields(['bodySize','headingSize','sectionSize','valueSize','menuSize','controlsSize','tableSize','chartSize','smallSize'])}</div></fieldset><fieldset><legend>Інтервали та вигляд блоків</legend><div class="form-grid style-fields">${fields(['lineHeight','paragraphGap','blockGap','blockPadding','rowPadding','radius'])}</div></fieldset><fieldset><legend>Виділення активних полів і фільтрів</legend><label class="checkbox-label"><input type="checkbox" id="style-focus-enabled" ${styleDraft.focusHighlight.enabled?'checked':''}>Підсвічувати рамку активного поля</label><label>Колір рамки<input type="color" id="style-focus-color" value="${e(styleDraft.focusHighlight.color)}" ${styleDraft.focusHighlight.enabled?'':'disabled'}></label><p class="style-help">За замовчуванням вимкнено. Колір спільний для фільтрів, полів і кнопок сайта. Рамка розташована всередині елемента й не обрізається краями блоку.</p><label>Приклад фільтра<select id="style-focus-preview" aria-label="Приклад фільтра"><option>Усі факультети</option><option>Аерокосмічний факультет</option></select></label></fieldset><div class="style-preview" aria-label="Зразок оформлення"><span class="style-preview-caption">Зразок поточного пресета</span><h2>Наукова діяльність</h2><p>Знання, дослідження та результати університету.</p><p>Другий абзац допомагає оцінити міжрядковий інтервал і відступи.</p><div class="style-preview-value">128</div><table><thead><tr><th>Показник</th><th>Значення</th></tr></thead><tbody><tr><td>Публікації</td><td>128</td></tr><tr><td>Проєкти</td><td>12</td></tr></tbody></table></div><div id="style-error" class="form-error" role="alert"></div><p class="style-help">Для відвідувачів застосовується пресет за замовчуванням. Збереження діє в цьому браузері. Для перенесення використайте резервну копію сайта; для публікації — «Сайт для публікації» в адмінці.</p><div class="dialog-actions"><button type="button" class="button secondary" data-action="close-dialog">Скасувати</button><button type="submit" class="button primary">Зберегти стилі</button></div></form>`;
 }
 function refreshStyleEditor(){
   $('#manager .dialog-body').innerHTML=stylesContent();previewStyleDraft();
@@ -261,6 +264,8 @@ document.addEventListener('input',ev=>{
   const el=ev.target;if(!styleDraft||!el.closest('#site-styles-form'))return;
   const preset=styleDraft.presets.find(p=>p.id===editingStyleId);
   if(el.dataset.styleValue)preset.values[el.dataset.styleValue]=el.value===''?NaN:Number(el.value);
+  if(el.id==='style-focus-enabled'){styleDraft.focusHighlight.enabled=el.checked;$('#style-focus-color').disabled=!el.checked;}
+  if(el.id==='style-focus-color')styleDraft.focusHighlight.color=el.value;
   if(el.id==='style-preset-name'){
     preset.name=el.value;
     for(const select of [$('#style-preset'),$('#style-default')])for(const option of select.options)if(option.value===preset.id)option.textContent=preset.name;

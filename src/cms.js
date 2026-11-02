@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=publication-links-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=publication-links-20261102';
-import { createSiteView } from './site-view.js?v=publication-links-20261102';
-import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=publication-links-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=publication-links-20261102';
-import { renderBlockTable } from './block-view.js?v=publication-links-20261102';
-import { validateBundle } from './data.js?v=publication-links-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=list-focus-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=list-focus-20261102';
+import { createSiteView } from './site-view.js?v=list-focus-20261102';
+import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=list-focus-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=list-focus-20261102';
+import { renderBlockTable } from './block-view.js?v=list-focus-20261102';
+import { validateBundle } from './data.js?v=list-focus-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=publication-links-20261102';
+import { icon } from './icons.js?v=list-focus-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -188,7 +188,7 @@ export function createCMS(options) {
       if(block.type==='analytics'&&block.source==='publications')body+=`<fieldset><legend>Каталог публікацій</legend>${check('publicationTitleLinks','Посилання зробити активним для назви статті','Якщо в полі «Посилання» є http/https-адреса, назва відкриває статтю в новій вкладці. Без адреси або з вимкненим пунктом назва є звичайним текстом.')}<p class="cms-field-help">Пошук, фільтри й чотири стовпці каталогу однакові для обох джерел даних. Автори та тип показуються під назвою; рік і адреса посилання залишаються в даних. «Аналітика сайта» оновлює записи за вибраний рік. «Власні дані» — окрема копія за період на момент редагування; вона не змінює спільний набір і графіки. Перемикання на аналітику показує спільні записи замість ручної копії.</p></fieldset>`;
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${field('Кількість карток по ширині','columns','number','min="1" max="6" step="1"')}<p class="cms-field-help">Від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
-      if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням не вибрано. Після ввімкнення весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
+      if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
       if(block.type!=='analytics'||block.dataMode==='manual')body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
     } else {
