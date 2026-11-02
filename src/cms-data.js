@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=money-thousands-20261101';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=money-thousands-20261101';
+import { convertMoneyBlock } from './money.js?v=chart-percentages-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-percentages-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
@@ -71,7 +71,7 @@ export const BLOCK_PALETTES = {
  pastel: { name: 'Пастельна', colors: ['#6988b8','#66a5a1','#b38bc2','#d3a363','#aaaec1'] }
 };
 export const CHART_LIBRARIES = { echarts:'Apache ECharts', chartjs:'Chart.js', plotly:'Plotly.js' };
-export const LIBRARY_SETTING_KEYS = ['chartType','palette','customColors','legend','legendCentered','totalLabels','tooltipTotal','segmentValues','segmentPercentages','numbering','wrapLabels','allYears','height','showChartData'];
+export const LIBRARY_SETTING_KEYS = ['chartType','palette','customColors','legend','legendCentered','totalLabels','tooltipTotal','segmentValues','segmentPercentages','segmentPercentageDecimals','smallPercentagesAsDecimal','numbering','wrapLabels','allYears','height','showChartData'];
 export function chartSettingsForLibrary(settings = {}, library = settings.chartLibrary || 'echarts', source = '') {
  if(!Object.hasOwn(CHART_LIBRARIES,library))throw new Error('Невідома бібліотека для діаграм.');
  return structuredClone({...defaultBlockSettings(source),...settings,...settings.librarySettings?.[library],chartLibrary:library});
@@ -88,7 +88,13 @@ export function selectChartLibrary(settings, library, source = '') {
 }
 export function isHorizontalChartType(type) { return type==='horizontal'||type==='horizontalStacked'; }
 export function defaultBlockSettings(source = '') {
- return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, legendCentered:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:false, showChartData:false, legendCentered:false, palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:false, segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+}
+export function formatSegmentPercentage(value,total,settings={}) {
+ const percent=total>0?value/total*100:0;
+ const decimals=settings.segmentPercentageDecimals??1;
+ const digits=decimals===0&&settings.smallPercentagesAsDecimal!==false&&percent>0&&percent<1?1:decimals;
+ return new Intl.NumberFormat('uk-UA',{maximumFractionDigits:digits}).format(percent)+'%';
 }
 export function normalizeBlockPeriod(value) {
  if(typeof value!=='string')throw new Error('Період: вкажіть рік або діапазон, наприклад 2026 чи 2021-2026.');
@@ -119,7 +125,8 @@ function validateFlatBlockSettings(input = {}, source = '') {
  if(!Object.hasOwn(CHART_LIBRARIES,out.chartLibrary))throw new Error('Невідома бібліотека для діаграм.');
  if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||typeof out.backgroundColor!=='string'||!/^#[0-9a-f]{6}$/i.test(out.backgroundColor))throw new Error('Фон блоку: виберіть колір теми або колір у форматі #RRGGBB.');
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
- for(const key of ['publicationTitleLinks','legendCentered','showProjectGlobe','showProjectFlag','showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ for(const key of ['publicationTitleLinks','legendCentered','showProjectGlobe','showProjectFlag','showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','smallPercentagesAsDecimal','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ if(![0,1].includes(out.segmentPercentageDecimals))throw new Error('Округлення відсотків: 0 або 1 знак після коми.');
  out.period=normalizeBlockPeriod(out.period);
  if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
  if(!Array.isArray(out.customColors)||!out.customColors.length||out.customColors.length>12||out.customColors.some(c=>typeof c!=='string'||!/^#[0-9a-f]{6}$/i.test(c)))throw new Error('Вкажіть від 1 до 12 кольорів у форматі #RRGGBB.');

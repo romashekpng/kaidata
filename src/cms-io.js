@@ -1,6 +1,6 @@
-import { parseCSV, validateBundle } from './data.js?v=money-thousands-20261101';
-import { readXLSXWorkbook } from './spreadsheet.js?v=money-thousands-20261101';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=money-thousands-20261101';
+import { parseCSV, validateBundle } from './data.js?v=chart-percentages-20261102';
+import { readXLSXWorkbook } from './spreadsheet.js?v=chart-percentages-20261102';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-percentages-20261102';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {

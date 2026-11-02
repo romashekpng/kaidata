@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=money-thousands-20261101';
+import { DATASETS, CSV_HEADERS, importTable, validateBundle } from './data.js?v=chart-percentages-20261102';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const MAX_UNPACKED = 50 * 1024 * 1024;

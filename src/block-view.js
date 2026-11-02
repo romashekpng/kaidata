@@ -1,6 +1,6 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=money-thousands-20261101';
-import { icon } from './icons.js?v=money-thousands-20261101';
-import { isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=money-thousands-20261101';
+import { formatMoney, convertMoneyTable } from './money.js?v=chart-percentages-20261102';
+import { icon } from './icons.js?v=chart-percentages-20261102';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=chart-percentages-20261102';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
@@ -153,9 +153,9 @@ export function renderChartTable(block, table, hidden = []) {
    const share=value/total,from=point(angle),next=angle+share*Math.PI*2,to=point(next),mid=angle+share*Math.PI,tip=`${table.rows[i][0]}: ${format(value)}${s.tooltipTotal?`\nРазом: ${format(total)}`:''}`;
    const shape=share>=.999999?`<circle cx="100" cy="100" r="83" fill="${colors[i%colors.length]}"><title>${esc(tip)}</title></circle>`:`<path d="M100 100 L${from.join(' ')} A83 83 0 ${share>.5?1:0} 1 ${to.join(' ')} Z" fill="${colors[i%colors.length]}"><title>${esc(tip)}</title></path>`;
    angle=next;
-   const labelX=100+63*Math.cos(mid),labelY=104+63*Math.sin(mid),percent=new Intl.NumberFormat('uk-UA',{maximumFractionDigits:1}).format(share*100)+'%';
+   const labelX=100+63*Math.cos(mid),labelY=104+63*Math.sin(mid),percent=formatSegmentPercentage(value,total,s);
    const label=s.segmentValues&&s.segmentPercentages?`<tspan x="${labelX}" dy="-5">${format(value)}</tspan><tspan x="${labelX}" dy="13">${percent}</tspan>`:s.segmentPercentages?percent:format(value);
-   return shape+((s.segmentValues||s.segmentPercentages)&&share>.035?`<text class="cms-segment-label" x="${labelX}" y="${labelY}">${label}</text>`:'');
+   return shape+((s.segmentValues||s.segmentPercentages)&&(s.segmentPercentages||share>.035)?`<text class="cms-segment-label" x="${labelX}" y="${labelY}">${label}</text>`:'');
   }).join('');
   graphic=`<svg class="cms-chart-svg cms-pie-svg" viewBox="0 0 200 200" role="img" aria-label="${esc(block.title)}">${slices}${s.chartType==='donut'?`<circle cx="100" cy="100" r="48" fill="var(--surface)"/>${s.totalLabels?`<text x="100" y="104" text-anchor="middle" class="cms-donut-total">${format(total)}</text>`:''}`:''}${!total?'<text x="100" y="105" text-anchor="middle">Немає даних</text>':''}</svg>`;
  } else {

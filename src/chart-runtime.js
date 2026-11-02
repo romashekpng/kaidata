@@ -1,4 +1,4 @@
-import { isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=money-thousands-20261101';
+import { formatSegmentPercentage, isHorizontalChartType, CHART_LIBRARIES, BLOCK_PALETTES, chartSettingsForLibrary } from './cms-data.js?v=chart-percentages-20261102';
 const chartLoads=new Map();
 const chartVendor={echarts:['echarts.min.js','echarts'],chartjs:['chart.min.js','Chart'],plotly:['plotly.min.js','Plotly']};
 const chartEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -12,7 +12,7 @@ export async function loadChartLibrary(library){
   const complete=()=>{if(globalThis[name])resolve(globalThis[name]);else reject(new Error(`Не вдалося запустити ${CHART_LIBRARIES[library]}.`));};
   script.onerror=()=>{script.remove();reject(new Error(`Не вдалося завантажити ${CHART_LIBRARIES[library]}. Перевірте файли бібліотеки.`));};
   if(globalThis.KAI_PUBLIC_ASSETS?.[asset]){script.textContent=globalThis.KAI_PUBLIC_ASSETS[asset];document.head.append(script);complete();}
-  else{script.src=new URL(asset,document.baseURI).href+'?v=money-thousands-20261101';script.onload=complete;document.head.append(script);}
+  else{script.src=new URL(asset,document.baseURI).href+'?v=chart-percentages-20261102';script.onload=complete;document.head.append(script);}
  }).catch(error=>{chartLoads.delete(library);throw error;}));
  return chartLoads.get(library);
 }
@@ -62,12 +62,13 @@ function chartTheme(node){
  const css=node.ownerDocument.defaultView.getComputedStyle(node),get=(key,fallback)=>css.getPropertyValue(key).trim()||fallback;
  return {ink:get('--ink','#18324d'),muted:get('--muted','#52687c'),line:get('--line','#e3e9ef'),surface:get('--surface','#fff'),font:css.fontFamily,size:parseFloat(get('--site-chart-size','12'))||12};
 }
-function segmentText(m,value){const parts=[];if(m.s.segmentValues)parts.push(chartFormat(value));if(m.pie&&m.s.segmentPercentages)parts.push(chartFormat(m.total?value/m.total*100:0)+'%');return parts.join('\n');}
+function segmentText(m,value){const parts=[];if(m.s.segmentValues)parts.push(chartFormat(value));if(m.pie&&m.s.segmentPercentages)parts.push(formatSegmentPercentage(value,m.total,m.s));return parts.join('\n');}
 function tipText(m,index){return `${m.labels[index]}\n${m.series.map(series=>`${series.name}: ${series.values[index]===null?'немає даних':chartFormat(series.values[index])}`).join('\n')}${m.s.tooltipTotal?'\nРазом: '+chartFormat(m.totals[index]):''}`;}
 function labelsFor(m,width){return m.labelLayout?.lines||m.labels.map(label=>[label.length>34?label.slice(0,32)+'…':label]);}
 function progressLabel(m,i){return (m.s.numbering?String(i+1).padStart(2,'0')+'  ':'')+m.labels[i];}
 function renderECharts(engine,node,m,theme,width,height){
- const chart=engine.init(node,null,{renderer:'svg'}),labelLines=labelsFor(m,width),category=m.horizontal?'yAxis':'xAxis',valueAxis=m.horizontal?'xAxis':'yAxis';
+ // Use measured dimensions across documents, including the sandboxed admin frame.
+ const chart=engine.init(node,null,{renderer:'svg',width,height}),labelLines=labelsFor(m,width),category=m.horizontal?'yAxis':'xAxis',valueAxis=m.horizontal?'xAxis':'yAxis';
  const option={animation:false,textStyle:{fontFamily:theme.font,fontSize:theme.size,color:theme.muted},color:m.colors,tooltip:{confine:true,trigger:m.pie?'item':'axis',formatter:params=>{
   if(m.pie){const p=params;return chartEscape(m.labels[p.dataIndex])+': '+chartFormat(m.values[p.dataIndex])+(m.s.tooltipTotal?'<br>Разом: '+chartFormat(m.total):'');}
   const index=params[0]?.dataIndex??0;return chartEscape(tipText(m,index)).replaceAll('\n','<br>');
@@ -84,7 +85,7 @@ function renderECharts(engine,node,m,theme,width,height){
  // Hidden pie rows are removed, so use the original index stored with each slice.
  if(m.pie)option.series[0].data=m.labels.flatMap((name,i)=>m.hidden.includes(i)?[]:[{name,value:m.values[i],itemStyle:{color:m.colors[i%m.colors.length]},originalIndex:i}]);
  if(m.pie)option.tooltip.formatter=p=>chartEscape(p.name)+': '+chartFormat(p.value)+(m.s.tooltipTotal?'<br>Разом: '+chartFormat(m.total):'');
- chart.setOption(option);return {bounds:m.horizontal&&!m.progress?{top:option.grid.top,bottom:option.grid.bottom}:null,resize:()=>chart.resize(),dispose:()=>chart.dispose()};
+ chart.setOption(option);return {bounds:m.horizontal&&!m.progress?{top:option.grid.top,bottom:option.grid.bottom}:null,resize:(width,height)=>chart.resize({width,height}),dispose:()=>chart.dispose()};
 }
 function renderChartJS(engine,node,m,theme,width,height){
  const canvas=node.ownerDocument.createElement('canvas');node.append(canvas);canvas.setAttribute('role','img');canvas.setAttribute('aria-label',m.title);canvas.width=width;canvas.height=height;

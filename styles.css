@@ -332,6 +332,7 @@ dialog{background:var(--surface)}
 .publication-table .title-cell,.publication-table .faculty-cell{min-width:0;max-width:none;overflow-wrap:anywhere}
 .publication-table .pill{max-width:100%;white-space:normal}
 .publication-catalog .results-meta{gap:12px;flex-wrap:wrap}
+.cms-percentage-options{margin:0 0 16px;padding:12px 16px;border-left:2px solid var(--line)}
 @media(max-width:900px){.publication-filter-toolbar{grid-template-columns:1fr 1fr}}
 @media(max-width:540px){.publication-filter-toolbar{grid-template-columns:minmax(0,1fr)}}
 
