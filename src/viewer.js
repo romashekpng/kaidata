@@ -1,10 +1,10 @@
-import { sidebarTextSections } from './sidebar-view.js?v=metric-layout-20261102';
-import { createAnalytics } from './analytics.js?v=metric-layout-20261102';
-import { createSiteView } from './site-view.js?v=metric-layout-20261102';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=metric-layout-20261102';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=metric-layout-20261102';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=metric-layout-20261102';
-import { icon } from './icons.js?v=metric-layout-20261102';
+import { sidebarTextSections } from './sidebar-view.js?v=metric-defaults-20261102';
+import { createAnalytics } from './analytics.js?v=metric-defaults-20261102';
+import { createSiteView } from './site-view.js?v=metric-defaults-20261102';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=metric-defaults-20261102';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=metric-defaults-20261102';
+import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=metric-defaults-20261102';
+import { icon } from './icons.js?v=metric-defaults-20261102';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

@@ -1,6 +1,6 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=metric-layout-20261102';
-import { icon } from './icons.js?v=metric-layout-20261102';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=metric-layout-20261102';
+import { formatMoney, convertMoneyTable } from './money.js?v=metric-defaults-20261102';
+import { icon } from './icons.js?v=metric-defaults-20261102';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=metric-defaults-20261102';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);

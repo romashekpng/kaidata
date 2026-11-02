@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import ExcelJS from 'exceljs';
 import {defaultCMSBlock,defaultBlockSettings,validateBlockSettings,validateCMSBlock} from '../src/cms-data.js';
 import {readCMSJSON,cmsBlockCSV,importCMSBlockCSV,cmsBlockXLSX,importCMSBlockXLSX} from '../src/cms-io.js';
-test('automatic metric columns are optional and retain the saved fixed count',()=>{
- assert.equal(defaultBlockSettings().autoColumns,false);
- const old=validateBlockSettings({columns:4});assert.equal(old.columns,4);assert.equal(old.autoColumns,false);
+test('automatic metric columns are the default and retain the saved fixed count',()=>{
+ assert.equal(defaultBlockSettings().autoColumns,true);
+ const old=validateBlockSettings({columns:4});assert.equal(old.columns,4);assert.equal(old.autoColumns,true);
  const auto=validateBlockSettings({...old,autoColumns:true});assert.equal(auto.autoColumns,true);assert.equal(auto.columns,4);assert.equal(validateBlockSettings({...auto,autoColumns:false}).columns,4);
  assert.throws(()=>validateBlockSettings({autoColumns:'true'}));
 });
@@ -19,4 +19,14 @@ test('automatic layout persists through native, live and manual metric block tra
   assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(block),block),block);
   assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(block,ExcelJS),block,ExcelJS),block);
  }
+});
+
+test('previously saved metrics adopt automatic rows once and subsequent opt-outs persist',()=>{
+ for(const source of ['stats','fundingStats','patentStats','native']){
+  const old=source==='native'?{...defaultCMSBlock('metrics')}:{id:'old-'+source,type:'analytics',source,title:'Показники',visible:true,dataMode:'live'};
+  delete old.metricLayoutVersion;old.settings={...defaultBlockSettings(source),columns:4,autoColumns:false};
+  const migrated=validateCMSBlock(old);assert.equal(migrated.settings.autoColumns,true);assert.equal(migrated.settings.columns,4);assert.equal(migrated.metricLayoutVersion,1);
+  const chosen=validateCMSBlock({...migrated,settings:{...migrated.settings,autoColumns:false}});assert.equal(chosen.settings.autoColumns,false);assert.deepEqual(validateCMSBlock(chosen),chosen);assert.equal(old.settings.autoColumns,false);
+ }
+ const fresh=validateCMSBlock({...defaultCMSBlock('metrics'),settings:{...defaultBlockSettings(),autoColumns:false}});assert.equal(fresh.settings.autoColumns,false);
 });
