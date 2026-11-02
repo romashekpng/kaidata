@@ -17,10 +17,10 @@
     ],
     "sidebarStatus": "Відкриті дані. Нові можливості.",
     "sidebarTagline": "Знання, що формують\nмайбутнє університету.",
-    "showSidebarStatus": true,
-    "showSidebarTagline": true,
+    "showSidebarStatus": false,
+    "showSidebarTagline": false,
     "showSidebarName": true,
-    "showSidebarSubtitle": true
+    "showSidebarSubtitle": false
   },
   "publications": [
     {

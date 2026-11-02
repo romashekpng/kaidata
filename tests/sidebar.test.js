@@ -12,14 +12,14 @@ test('прапорці повинні бути boolean, тексти можут�
  const data=validateBundle({...demo,institution:{...demo.institution,sidebarStatus:'',sidebarTagline:'',subtitle:''}});assert.equal(sidebarTextSections(data.institution).note,'');assert(!sidebarTextSections(data.institution).details.includes('Платформа наукової аналітики'));
 });
 test('кожен текст ховається незалежно; без усіх текстів немає порожніх контейнерів',()=>{
- const i={...small().institution,sidebarStatus:'Статус',sidebarTagline:'Слоган',name:'Заклад',subtitle:'Підзаголовок'};
+ const i={...small().institution,showSidebarStatus:true,showSidebarTagline:true,showSidebarName:true,showSidebarSubtitle:true,sidebarStatus:'Статус',sidebarTagline:'Слоган',name:'Заклад',subtitle:'Підзаголовок'};
  let rendered=sidebarTextSections(i);assert.match(rendered.note,/Статус/);assert.match(rendered.note,/Слоган/);assert.match(rendered.details,/Заклад/);assert.match(rendered.details,/Підзаголовок/);
  assert(!sidebarTextSections({...i,showSidebarStatus:false}).note.includes('live-dot'));assert(sidebarTextSections({...i,showSidebarStatus:false}).note.includes('Слоган'));
  assert(!sidebarTextSections({...i,showSidebarTagline:false}).note.includes('Слоган'));assert(!sidebarTextSections({...i,showSidebarName:false}).details.includes('<a '));assert(sidebarTextSections({...i,showSidebarName:false}).details.includes('Підзаголовок'));
  assert.deepEqual(sidebarTextSections({...i,showSidebarStatus:false,showSidebarTagline:false,showSidebarName:false,showSidebarSubtitle:false}),{note:'',details:''});assert.equal(i.sidebarStatus,'Статус');
 });
 test('текст виводиться без HTML, перенесення зберігаються, посилання дозволяє лише безпечні адреси',()=>{
- const i={...small().institution,name:'<img src=x>',sidebarStatus:'<script>alert(1)</script>',sidebarTagline:'Рядок 1\nРядок 2',website:'javascript:alert(1)'};const result=sidebarTextSections(i);assert(!result.note.includes('<script>'));assert(!result.details.includes('<img'));assert(!result.details.includes('javascript:'));assert.match(result.note,/Рядок 1<br>Рядок 2/);
+ const i={...small().institution,showSidebarStatus:true,showSidebarTagline:true,name:'<img src=x>',sidebarStatus:'<script>alert(1)</script>',sidebarTagline:'Рядок 1\nРядок 2',website:'javascript:alert(1)'};const result=sidebarTextSections(i);assert(!result.note.includes('<script>'));assert(!result.details.includes('<img'));assert(!result.details.includes('javascript:'));assert.match(result.note,/Рядок 1<br>Рядок 2/);
  assert.match(sidebarTextSections({...i,website:'https://example.org'}).details,/href="https:\/\/example.org\/"/);
 });
 test('XLSX зберігає тексти, перенесення та справжні boolean у видимих рядках аркуша Університет',async()=>{

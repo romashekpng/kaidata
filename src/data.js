@@ -1,11 +1,11 @@
-import { scaleMoney } from './money.js?v=sidebar-text-20261102';
-import { validateSiteStyles } from './style-data.js?v=sidebar-text-20261102';
+import { scaleMoney } from './money.js?v=sidebar-defaults-20261102';
+import { validateSiteStyles } from './style-data.js?v=sidebar-defaults-20261102';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
  sidebarStatus:'Відкриті дані. Нові можливості.',
  sidebarTagline:'Знання, що формують\nмайбутнє університету.',
- showSidebarStatus:true,showSidebarTagline:true,showSidebarName:true,showSidebarSubtitle:true
+ showSidebarStatus:false,showSidebarTagline:false,showSidebarName:true,showSidebarSubtitle:false
 });
 export const CSV_HEADERS = {
   publications: ['id', 'title', 'authors', 'year', 'faculty', 'department', 'indexes', 'quartile', 'type', 'url'],

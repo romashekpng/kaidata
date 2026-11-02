@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=sidebar-text-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=sidebar-text-20261102';
+import { convertMoneyBlock } from './money.js?v=sidebar-defaults-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=sidebar-defaults-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
