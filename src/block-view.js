@@ -1,9 +1,16 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=metric-defaults-20261102';
-import { icon } from './icons.js?v=metric-defaults-20261102';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle } from './cms-data.js?v=metric-defaults-20261102';
+import { formatMoney, convertMoneyTable } from './money.js?v=feature-card-20261102';
+import { icon } from './icons.js?v=feature-card-20261102';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock } from './cms-data.js?v=feature-card-20261102';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
+export function renderFeatureCard(input) {
+ const b=validateCMSBlock(input),s=b.appearance;
+ const variables=Object.entries(s).filter(([key])=>!['background','align'].includes(key)).map(([key,value])=>`--feature-${key}:${typeof value==='number'?value+'px':value}`).join(';');
+ const background=s.background==='custom'?`;--text-block-bg:${s.backgroundColor}`:'';
+ const top=b.eyebrow||b.icon!=='none'?`<div class="cms-feature-eyebrow">${b.icon==='none'?'':icon(b.icon)}${b.eyebrow?`<span>${esc(b.eyebrow)}</span>`:''}</div>`:'';
+ return `<article class="cms-feature-card cms-text-bg-${s.background}" data-align="${s.align}" style="${variables}${background}">${top}${b.headline?`<h3 class="cms-feature-headline">${esc(b.headline)}</h3>`:''}${b.text?`<p class="cms-feature-description">${esc(b.text)}</p>`:''}${b.linkUrl&&b.linkLabel?`<a class="cms-feature-link" href="${esc(b.linkUrl)}" ${b.openInNewTab?'target="_blank" rel="noopener noreferrer"':''}><span>${esc(b.linkLabel)}</span>${b.linkIcon==='none'?'':icon(b.linkIcon)}</a>`:''}</article>`;
+}
 export function blockColors(block) {
  const s={...defaultBlockSettings(block.source),...block.settings};
  return s.palette==='custom'?s.customColors:BLOCK_PALETTES[s.palette].colors;

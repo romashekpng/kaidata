@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=metric-defaults-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=metric-defaults-20261102';
-import { createSiteView } from './site-view.js?v=metric-defaults-20261102';
-import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=metric-defaults-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=metric-defaults-20261102';
-import { renderBlockTable } from './block-view.js?v=metric-defaults-20261102';
-import { validateBundle } from './data.js?v=metric-defaults-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=feature-card-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=feature-card-20261102';
+import { createSiteView } from './site-view.js?v=feature-card-20261102';
+import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=feature-card-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=feature-card-20261102';
+import { renderBlockTable } from './block-view.js?v=feature-card-20261102';
+import { validateBundle } from './data.js?v=feature-card-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=metric-defaults-20261102';
+import { icon } from './icons.js?v=feature-card-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -78,10 +78,11 @@ export function createCMS(options) {
     selectPage(id, false); redraw();
   }
   function blockFields(b) {
+    if(b.type==='feature')return featureContentFields(b,false);
     if (b.type === 'text') return blockText(b, 'text', 'Текст · абзаци розділяються порожнім рядком', 7);
     if (b.type === 'banner') return `${blockText(b, 'text', 'Текст банера')}<label>Оформлення<select data-block-id="${b.id}" data-block-field="tone">${[['green','Зелений'],['blue','Синій'],['amber','Теплий'],['dark','Темний']].map(([v,t])=>`<option value="${v}" ${b.tone===v?'selected':''}>${t}</option>`).join('')}</select></label>${blockInput(b,'linkLabel','Текст кнопки')}${blockInput(b,'linkUrl','Посилання · https://… або #page/slug')}`;
     if (b.type === 'list') return `${blockText(b,'items','Пункти · кожен із нового рядка',7,b.items.join('\n'))}<label class="checkbox-label"><input type="checkbox" data-block-id="${b.id}" data-block-field="ordered" ${b.ordered?'checked':''}>Нумерований список</label>`;
-    if (b.type === 'analytics') return `<label class="span-2">Джерело аналітики<select data-block-id="${b.id}" data-block-field="source">${Object.entries(ANALYTICS).map(([v,t])=>`<option value="${v}" ${b.source===v?'selected':''}>${t}</option>`).join('')}</select></label><p class="cms-field-help span-2">Використовує дані сайта за вибраний рік. Для зміни таблиць відкрийте «Імпорт даних аналітики». Увімкніть фільтр року в параметрах сторінки.</p>`;
+    if (b.type === 'analytics') return `<label class="span-2">Джерело аналітики<select data-block-id="${b.id}" data-block-field="source">${Object.entries(ANALYTICS).filter(([key])=>key!=='insight').map(([v,t])=>`<option value="${v}" ${b.source===v?'selected':''}>${t}</option>`).join('')}</select></label><p class="cms-field-help span-2">Використовує дані сайта за вибраний рік. Для зміни таблиць відкрийте «Імпорт даних аналітики». Увімкніть фільтр року в параметрах сторінки.</p>`;
     if (b.type === 'existing') return `<p class="cms-field-help span-2">Початкова сторінка «${e(CORE_PAGES[b.source])}» із графіками, фільтрами й каталогами. Її можна перемістити, приховати або видалити; додаткові блоки розміщуються поруч у порядку нижче.</p>`;
     if (b.type === 'table' || b.type === 'chart') {
       const offset = Math.min(b._editorPage || 0, Math.max(0, Math.ceil(b.rows.length / 20) - 1)) * 20;
@@ -145,6 +146,18 @@ export function createCMS(options) {
     if(kind==='edit')widgetState.table=isMetricBlock(block)?metricColorTable(editableTable(block)):editableTable(block);
     renderWidgetDialog();
   }
+  function featureContentFields(block, widget = true) {
+    const attr=key=>widget?`data-widget-text="${key}"`:`data-block-id="${block.id}" data-block-field="${key}"`;
+    const text=(key,label,rows=0)=>`<label class="${widget?'':'span-2'}">${label}${rows?`<textarea ${attr(key)} rows="${rows}">${e(block[key])}</textarea>`:`<input ${attr(key)} value="${e(block[key])}">`}</label>`;
+    const select=(key,label,values)=>`<label>${label}<select ${attr(key)}>${Object.entries(values).map(([value,name])=>`<option value="${value}" ${block[key]===value?'selected':''}>${name}</option>`).join('')}</select></label>`;
+    return `${text('eyebrow','Напис біля іконки')}${text('headline','Заголовок картки',2)}${text('text','Опис картки',4)}${text('linkLabel','Текст посилання')}${text('linkUrl','Адреса посилання · https://… або #page/slug')}${select('icon','Іконка біля напису',FEATURE_ICONS)}${select('linkIcon','Іконка посилання',FEATURE_LINK_ICONS)}<label class="checkbox-label"><input type="checkbox" ${attr('openInNewTab')} ${block.openInNewTab?'checked':''}>Відкривати посилання в новій вкладці</label><p class="cms-field-help ${widget?'':'span-2'}">Порожній текст приховує відповідний елемент. Для приховування посилання очистьте його адресу. Переноси рядків у заголовку й описі зберігаються.</p>`;
+  }
+  function featureAppearanceFields(block) {
+    const style=validateFeatureStyle(block.appearance);
+    const select=(key,label,values)=>`<label>${label}<select data-feature-style="${key}">${Object.entries(values).map(([value,name])=>`<option value="${value}" ${style[key]===value?'selected':''}>${name}</option>`).join('')}</select></label>`;
+    const field=(key,label,type,extra='')=>`<label>${label}<input type="${type}" data-feature-style="${key}" value="${style[key]}" ${extra}></label>`;
+    return `<fieldset><legend>Оформлення картки</legend><div class="form-grid">${select('background','Фон картки',TEXT_BACKGROUNDS)}${field('backgroundColor','Власний колір фону','color')}${select('align','Вирівнювання',{left:'Ліворуч',center:'По центру',right:'Праворуч'})}${[['eyebrowColor','Колір напису й іконки'],['headingColor','Колір заголовка'],['textColor','Колір опису'],['linkColor','Колір посилання'],['borderColor','Колір рамки']].map(([key,label])=>field(key,label,'color')).join('')}${[['minHeight','Мінімальна висота картки, px',0,1000],['padding','Внутрішні відступи, px',0,80],['radius','Заокруглення кутів, px',0,80],['borderWidth','Товщина рамки, px',0,10],['eyebrowSize','Розмір напису біля іконки, px',10,36],['headingSize','Розмір заголовка, px',12,64],['textSize','Розмір опису, px',10,36],['linkSize','Розмір посилання, px',10,36]].map(([key,label,min,max])=>field(key,label,'number',`min="${min}" max="${max}" step="1"`)).join('')}</div><p class="cms-field-help">Власний колір фону застосовується, коли вибрано фон «Власний колір». Висота може збільшуватися, щоб умістити весь текст.</p></fieldset>`;
+  }
   function metricBackgroundEditor(table,row,index){
     const background=row[table.headers.indexOf('background')]||'default',color=row[table.headers.indexOf('backgroundColor')]||'#25395d';
     return `<div class="cms-metric-background-editor"><label>Фон картки ${index+1}<select data-metric-background-row="${index}" aria-label="Фон картки ${index+1}">${Object.entries(TEXT_BACKGROUNDS).map(([key,label])=>`<option value="${key}" ${background===key?'selected':''}>${label}</option>`).join('')}</select></label><div class="cms-metric-background-colors"><i class="cms-metric-background-swatch cms-text-bg-${background}" ${background==='custom'?`style="--text-block-bg:${color}"`:''} aria-hidden="true"></i><label>Власний колір<input type="color" data-metric-color-row="${index}" value="${color}" aria-label="Власний колір картки ${index+1}"></label></div></div>`;
@@ -175,6 +188,7 @@ export function createCMS(options) {
       const chart=block.type==='chart'||(block.type==='analytics'&&CHART_SOURCES.includes(block.source));
       const cards=metric;
       body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle??(block.type==='analytics'?defaultBlockSubtitle(block.source):''))}" maxlength="2000"></label></div>`;
+      if(block.type==='feature')body+=`<fieldset><legend>Вміст картки</legend>${featureContentFields(block)}</fieldset>${featureAppearanceFields(block)}`;
       if(block.type==='analytics')body+=`<label class="cms-field-help">Джерело даних<select data-widget-text="dataMode"><option value="live" ${block.dataMode!=='manual'?'selected':''}>Аналітика сайта — автоматичний розрахунок</option><option value="manual" ${block.dataMode==='manual'?'selected':''}>Власні дані цього блоку</option></select></label><p class="cms-field-help">${metric?'Зміна лише фону або порядку карток зберігає автоматичний розрахунок. Ручна зміна чисел і текстів створює власні дані блоку.':'Редагування та імпорт CSV/XLSX створюють власні дані лише для цього блоку.'} Для зміни вихідних записів усіх пов’язаних блоків використайте «Керування даними».</p>`;
       if(chart){
         body+=`<section class="cms-chart-libraries" aria-label="Бібліотеки діаграм"><div class="cms-library-row"><div><strong>Активна бібліотека для діаграм</strong><p>Налаштування зберігаються окремо під кожну бібліотеку</p></div><div class="cms-library-options" role="group" aria-label="Активна бібліотека для діаграм">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-active',label,`data-library="${key}" aria-pressed="${block.settings.chartLibrary===key}"`,block.settings.chartLibrary===key?'primary small':'secondary small')).join('')}</div></div><div class="cms-library-row cms-library-editor"><strong>Редагувати параметри для:</strong><div class="cms-library-options" role="group" aria-label="Бібліотека для редагування параметрів">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-edit',`${label}${block.settings.chartLibrary===key?' (активна)':''}`,`data-library="${key}" aria-pressed="${widgetState.editLibrary===key}"`,widgetState.editLibrary===key?'primary small':'secondary small')).join('')}</div></div></section>`;
@@ -189,8 +203,10 @@ export function createCMS(options) {
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
-      if(block.type!=='analytics'||block.dataMode==='manual')body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
+      if(block.type!=='feature'&&(block.type!=='analytics'||block.dataMode==='manual'))body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
+    } else if(block.type==='feature') {
+      body=featureContentFields(block);
     } else {
       const table=widgetState.table,offset=widgetState.page*20,free=['table','chart','analytics'].includes(block.type);
       const visibleColumns=table.headers.map((h,c)=>({h,c})).filter(({h})=>!metric||!['background','backgroundColor'].includes(h));
@@ -204,7 +220,7 @@ export function createCMS(options) {
   function applyWidget() {
     if(!widgetState)return;
     let next=widgetState.block;
-    if(widgetState.kind==='edit')next=tableToCMSBlock(widgetState.table,next);
+    if(widgetState.kind==='edit'&&next.type!=='feature')next=tableToCMSBlock(widgetState.table,next);
     if(next.type==='analytics'&&next.dataMode==='manual'&&!next.dataTable){next.dataTable=editableTable(currentBlock(next.id));next.dataPeriod=options.getBlockPeriod(currentBlock(next.id));}
     next=validateCMSBlock(next);
     validateCMSPage({...draft,blocks:draft.blocks.map(b=>b.id===next.id?next:b)});
@@ -216,6 +232,7 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
+    if(el.dataset.featureStyle){const key=el.dataset.featureStyle;state.block.appearance={...state.block.appearance,[key]:el.type==='number'?Number(el.value):el.value};if(key==='backgroundColor'){state.block.appearance.background='custom';$('#cms-widget-dialog [data-feature-style="background"]').value='custom';}}
     if(el.dataset.metricBackgroundRow!==undefined||el.dataset.metricColorRow!==undefined){
       const table=state.table,row=table.rows[+(el.dataset.metricBackgroundRow??el.dataset.metricColorRow)],b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
       if(el.dataset.metricColorRow!==undefined){row[c]=el.value;row[b]='custom';}else{row[b]=el.value;if(!row[c])row[c]='#25395d';}

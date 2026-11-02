@@ -345,3 +345,14 @@ dialog{background:var(--surface)}
 
 /* Automatic metric rows follow the available block width, without a fixed column count. */
 .cms-widget.cms-metric-auto-columns .stats-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}
+
+/* Reusable informational card: content and appearance belong to each block. */
+.cms-feature-card{min-width:0;min-height:var(--feature-minHeight);padding:var(--feature-padding);border:var(--feature-borderWidth) solid var(--feature-borderColor);border-radius:var(--feature-radius);background:var(--text-block-bg);text-align:left;overflow-wrap:anywhere}
+.cms-feature-card[data-align="center"]{text-align:center}.cms-feature-card[data-align="right"]{text-align:right}
+.cms-feature-eyebrow{display:flex;align-items:center;gap:8px;color:var(--feature-eyebrowColor);font-size:var(--feature-eyebrowSize);letter-spacing:1.6px;line-height:1.5;margin-bottom:28px;white-space:pre-line}
+.cms-feature-eyebrow .icon{width:16px;height:16px;flex-shrink:0}
+.cms-widget .cms-feature-card .cms-feature-headline{font-size:var(--feature-headingSize);font-weight:650;line-height:1.3;letter-spacing:-.3px;color:var(--feature-headingColor);margin:0;white-space:pre-line}
+.cms-widget .cms-feature-card .cms-feature-description{font-size:var(--feature-textSize);line-height:1.15;color:var(--feature-textColor);margin:16px 0 0;white-space:pre-line}
+.cms-feature-card .cms-feature-link{display:flex;align-items:center;gap:12px;font-size:var(--feature-linkSize);font-weight:650;line-height:1.5;color:var(--feature-linkColor);margin-top:22px;white-space:normal}
+.cms-feature-card .cms-feature-link .icon{width:16px;height:16px;flex-shrink:0}.cms-feature-link:hover span{text-decoration:underline}
+.cms-feature-card[data-align="center"] :is(.cms-feature-eyebrow,.cms-feature-link){justify-content:center}.cms-feature-card[data-align="right"] :is(.cms-feature-eyebrow,.cms-feature-link){justify-content:flex-end}

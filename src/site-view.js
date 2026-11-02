@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=metric-defaults-20261102';
-import { createChartRenderer } from './chart-runtime.js?v=metric-defaults-20261102';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-defaults-20261102';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=metric-defaults-20261102';
-import { icon } from './icons.js?v=metric-defaults-20261102';
+import { reportDate, currentReportingYear } from './data.js?v=feature-card-20261102';
+import { createChartRenderer } from './chart-runtime.js?v=feature-card-20261102';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=feature-card-20261102';
+import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=feature-card-20261102';
+import { icon } from './icons.js?v=feature-card-20261102';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
@@ -72,12 +72,13 @@ export function createSiteView(options){
       }
       else if(b.type==='existing')body=options.renderExisting(b.source);
       else if(b.type==='banner')body=`<div class="cms-banner ${b.tone}"><p>${e(b.text).replaceAll('\n','<br>')}</p>${b.linkUrl?`<a class="button primary" href="${e(b.linkUrl)}" ${b.linkUrl.startsWith('http')?'target="_blank" rel="noopener noreferrer"':''}>${e(b.linkLabel)} ${icon('arrow')}</a>`:''}</div>`;
+      else if(b.type==='feature')body=renderFeatureCard(b);
       else if(b.type==='text')body=`<div class="cms-prose">${b.text.split(/\n\s*\n/).filter(Boolean).map(p=>`<p>${e(p).replaceAll('\n','<br>')}</p>`).join('')}</div>`;
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
-      const period=options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const period=b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
     }).join('');

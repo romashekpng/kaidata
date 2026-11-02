@@ -1,6 +1,6 @@
-import { parseCSV, validateBundle } from './data.js?v=metric-defaults-20261102';
-import { readXLSXWorkbook } from './spreadsheet.js?v=metric-defaults-20261102';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-defaults-20261102';
+import { parseCSV, validateBundle } from './data.js?v=feature-card-20261102';
+import { readXLSXWorkbook } from './spreadsheet.js?v=feature-card-20261102';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=feature-card-20261102';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
@@ -23,6 +23,11 @@ export function tableToCMSBlock(table, current) {
     if (out.type === 'list') out.items = records.map(x => x.item);
     if (out.type === 'metrics') out.items = records;
     if (out.type === 'text' || out.type === 'banner') { if (records.length !== 1) fail('Для тексту або банера потрібен один рядок.'); Object.assign(out, records[0]); }
+    if(out.type==='feature'){
+      if(records.length!==1)fail('Для інформаційної картки потрібен один рядок.');
+      const record=records[0];if(!['true','false'].includes(record.openInNewTab))fail('openInNewTab: вкажіть true або false.');
+      Object.assign(out,record,{openInNewTab:record.openInNewTab==='true'});
+    }
   }
   return validateCMSBlock(out);
 }

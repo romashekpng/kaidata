@@ -1,7 +1,18 @@
-import { convertMoneyBlock } from './money.js?v=metric-defaults-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-defaults-20261102';
+import { convertMoneyBlock } from './money.js?v=feature-card-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=feature-card-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
-export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
+export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрілка', external:'Зовнішнє посилання', chevron:'Шеврон' };
+export function defaultFeatureContent() { return {eyebrow:'ВІДКРИТА НАУКА',headline:'Знання мають бути доступними.',text:'Публікації, дослідження та винаходи університету — в одному просторі даних.',linkLabel:'Дослідити публікації',linkUrl:'#publications',icon:'globe',linkIcon:'arrow',openInNewTab:false}; }
+export function validateFeatureStyle(input = {}) {
+ if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Некоректне оформлення інформаційної картки.');
+ const out={background:'menu',backgroundColor:'#25395d',eyebrowColor:'#d9e7f8',headingColor:'#ffffff',textColor:'#d9e7f8',linkColor:'#e2efff',borderColor:'#304971',align:'left',minHeight:290,padding:26,radius:10,borderWidth:1,eyebrowSize:12,headingSize:18,textSize:15,linkSize:14,...input};
+ if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||!['left','center','right'].includes(out.align))throw new Error('Некоректний фон або вирівнювання картки.');
+ for(const key of ['backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor'])if(typeof out[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(out[key]))throw new Error('Кольори картки: використайте формат #RRGGBB.');
+ for(const [key,min,max]of [['minHeight',0,1000],['padding',0,80],['radius',0,80],['borderWidth',0,10],['eyebrowSize',10,36],['headingSize',12,64],['textSize',10,36],['linkSize',10,36]])if(!Number.isInteger(out[key])||out[key]<min||out[key]>max)throw new Error(`${key}: від ${min} до ${max}.`);
+ return Object.fromEntries(['background','backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor','align','minHeight','padding','radius','borderWidth','eyebrowSize','headingSize','textSize','linkSize'].map(key=>[key,out[key]]));
+}
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
 export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', horizontalStacked: 'Горизонтальні накопичувальні стовпчики', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
@@ -183,9 +194,20 @@ export function safeCMSLink(value) {
 export function newCMSId(prefix = 'block') { return `${prefix}-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`; }
 export function validateCMSBlock(input) {
   input=convertMoneyBlock(input);
+  if(input?.type==='analytics'&&input.source==='insight'){
+    const manual=input.dataMode==='manual'?validateBlockTable(input.dataTable):null;
+    input={...defaultFeatureContent(),...input,type:'feature',...(manual?{eyebrow:'',headline:'',text:manual.rows.map(r=>r.join(' · ')).join('\n'),icon:'none',linkLabel:'',linkUrl:''}:{})};
+  }
   if (!obj(input) || !Object.hasOwn(BLOCK_TYPES, input.type)) fail('Невідомий тип блоку.');
   const out = { id: id(input.id, 'ID блоку'), type: input.type, title: str(input.title, 'Заголовок блоку', 240), visible: bool(input.visible, 'Видимість блоку') };
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
+  if (input.type === 'feature') {
+    for(const [key,label,max]of [['eyebrow','Напис біля іконки',240],['headline','Заголовок картки',2000],['text','Опис картки',50000],['linkLabel','Текст посилання',240]])out[key]=str(input[key],label,max);
+    out.linkUrl=safeCMSLink(input.linkUrl);
+    if(out.linkUrl&&!out.linkLabel)fail('Для посилання картки потрібен текст.');
+    if(!Object.hasOwn(FEATURE_ICONS,input.icon)||!Object.hasOwn(FEATURE_LINK_ICONS,input.linkIcon))fail('Невідома іконка інформаційної картки.');
+    out.icon=input.icon;out.linkIcon=input.linkIcon;out.openInNewTab=bool(input.openInNewTab,'Нова вкладка');out.appearance=validateFeatureStyle(input.appearance);
+  }
   if (input.type === 'banner') {
     if (!['green', 'blue', 'amber', 'dark'].includes(input.tone)) fail('Некоректний колір банера.');
     Object.assign(out, { text: str(input.text, 'Текст банера', 10000), tone: input.tone, linkLabel: str(input.linkLabel, 'Текст кнопки', 100), linkUrl: safeCMSLink(input.linkUrl) });
@@ -310,6 +332,7 @@ export function defaultCMSBlock(type) {
   const block = { id: newCMSId(), type, title: BLOCK_TYPES[type], visible: true };
   if (type === 'text') block.text = 'Додайте текст вашого університету.';
   if (type === 'banner') Object.assign(block, { text: 'Важливе повідомлення або запрошення до співпраці.', tone: 'green', linkLabel: '', linkUrl: '' });
+  if (type === 'feature') Object.assign(block,{title:'Відкрита наука',...defaultFeatureContent(),appearance:validateFeatureStyle(),settings:{...defaultBlockSettings(),width:34}});
   if (type === 'list') Object.assign(block, { items: ['Перший пункт', 'Другий пункт'], ordered: false });
   if (type === 'table') Object.assign(block, { columns: ['Назва', 'Значення'], rows: [['Приклад', '0']], caption: '' });
   if (type === 'chart') Object.assign(block, { columns:['Рік','Серія 1','Серія 2'], rows:[['2024','80','40'],['2025','100','55'],['2026','120','65']], settings:{...defaultBlockSettings(),allYears:true} });
@@ -353,6 +376,7 @@ export function expandSiteBlocks(input, defaults = null) {
 }
 
 export function blockTableData(block) {
+  if(block.type==='feature'){const headers=['title','eyebrow','headline','text','linkLabel','linkUrl','icon','linkIcon','openInNewTab'];return {headers,rows:[headers.map(key=>String(block[key]))]};}
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
   if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);
   if (block.type === 'list') return { headers: ['item'], rows: block.items.map(x => [x]) };
