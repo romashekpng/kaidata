@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=feature-card-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=feature-card-20261102';
-import { createSiteView } from './site-view.js?v=feature-card-20261102';
-import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=feature-card-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=feature-card-20261102';
-import { renderBlockTable } from './block-view.js?v=feature-card-20261102';
-import { validateBundle } from './data.js?v=feature-card-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=auto-height-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=auto-height-20261102';
+import { createSiteView } from './site-view.js?v=auto-height-20261102';
+import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=auto-height-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=auto-height-20261102';
+import { renderBlockTable } from './block-view.js?v=auto-height-20261102';
+import { validateBundle } from './data.js?v=auto-height-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=feature-card-20261102';
+import { icon } from './icons.js?v=auto-height-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -156,7 +156,7 @@ export function createCMS(options) {
     const style=validateFeatureStyle(block.appearance);
     const select=(key,label,values)=>`<label>${label}<select data-feature-style="${key}">${Object.entries(values).map(([value,name])=>`<option value="${value}" ${style[key]===value?'selected':''}>${name}</option>`).join('')}</select></label>`;
     const field=(key,label,type,extra='')=>`<label>${label}<input type="${type}" data-feature-style="${key}" value="${style[key]}" ${extra}></label>`;
-    return `<fieldset><legend>Оформлення картки</legend><div class="form-grid">${select('background','Фон картки',TEXT_BACKGROUNDS)}${field('backgroundColor','Власний колір фону','color')}${select('align','Вирівнювання',{left:'Ліворуч',center:'По центру',right:'Праворуч'})}${[['eyebrowColor','Колір напису й іконки'],['headingColor','Колір заголовка'],['textColor','Колір опису'],['linkColor','Колір посилання'],['borderColor','Колір рамки']].map(([key,label])=>field(key,label,'color')).join('')}${[['minHeight','Мінімальна висота картки, px',0,1000],['padding','Внутрішні відступи, px',0,80],['radius','Заокруглення кутів, px',0,80],['borderWidth','Товщина рамки, px',0,10],['eyebrowSize','Розмір напису біля іконки, px',10,36],['headingSize','Розмір заголовка, px',12,64],['textSize','Розмір опису, px',10,36],['linkSize','Розмір посилання, px',10,36]].map(([key,label,min,max])=>field(key,label,'number',`min="${min}" max="${max}" step="1"`)).join('')}</div><p class="cms-field-help">Власний колір фону застосовується, коли вибрано фон «Власний колір». Висота може збільшуватися, щоб умістити весь текст.</p></fieldset>`;
+    return `<fieldset><legend>Оформлення картки</legend><label class="checkbox-label cms-setting-check"><input type="checkbox" data-feature-style="autoHeight" ${style.autoHeight?'checked':''}><span><strong>Висота по тексту</strong><small>Висота картки та блоку підлаштовується під вміст. Мінімальна висота не застосовується.</small></span></label><div class="form-grid">${select('background','Фон картки',TEXT_BACKGROUNDS)}${field('backgroundColor','Власний колір фону','color')}${select('align','Вирівнювання',{left:'Ліворуч',center:'По центру',right:'Праворуч'})}${[['eyebrowColor','Колір напису й іконки'],['headingColor','Колір заголовка'],['textColor','Колір опису'],['linkColor','Колір посилання'],['borderColor','Колір рамки']].map(([key,label])=>field(key,label,'color')).join('')}${[['minHeight','Мінімальна висота картки, px',0,1000],['padding','Внутрішні відступи, px',0,80],['radius','Заокруглення кутів, px',0,80],['borderWidth','Товщина рамки, px',0,10],['eyebrowSize','Розмір напису біля іконки, px',10,36],['headingSize','Розмір заголовка, px',12,64],['textSize','Розмір опису, px',10,36],['linkSize','Розмір посилання, px',10,36]].map(([key,label,min,max])=>field(key,label,'number',`min="${min}" max="${max}" step="1" ${key==='minHeight'&&style.autoHeight?'disabled':''}`)).join('')}</div><p class="cms-field-help">Власний колір фону застосовується, коли вибрано фон «Власний колір». Висота може збільшуватися, щоб умістити весь текст.</p></fieldset>`;
   }
   function metricBackgroundEditor(table,row,index){
     const background=row[table.headers.indexOf('background')]||'default',color=row[table.headers.indexOf('backgroundColor')]||'#25395d';
@@ -232,7 +232,7 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
-    if(el.dataset.featureStyle){const key=el.dataset.featureStyle;state.block.appearance={...state.block.appearance,[key]:el.type==='number'?Number(el.value):el.value};if(key==='backgroundColor'){state.block.appearance.background='custom';$('#cms-widget-dialog [data-feature-style="background"]').value='custom';}}
+    if(el.dataset.featureStyle){const key=el.dataset.featureStyle;state.block.appearance={...state.block.appearance,[key]:el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value};if(key==='autoHeight')$('#cms-widget-dialog [data-feature-style="minHeight"]').disabled=el.checked;if(key==='backgroundColor'){state.block.appearance.background='custom';$('#cms-widget-dialog [data-feature-style="background"]').value='custom';}}
     if(el.dataset.metricBackgroundRow!==undefined||el.dataset.metricColorRow!==undefined){
       const table=state.table,row=table.rows[+(el.dataset.metricBackgroundRow??el.dataset.metricColorRow)],b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
       if(el.dataset.metricColorRow!==undefined){row[c]=el.value;row[b]='custom';}else{row[b]=el.value;if(!row[c])row[c]='#25395d';}

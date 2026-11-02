@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=feature-card-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=feature-card-20261102';
+import { convertMoneyBlock } from './money.js?v=auto-height-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=auto-height-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
@@ -7,11 +7,12 @@ export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрі�
 export function defaultFeatureContent() { return {eyebrow:'ВІДКРИТА НАУКА',headline:'Знання мають бути доступними.',text:'Публікації, дослідження та винаходи університету — в одному просторі даних.',linkLabel:'Дослідити публікації',linkUrl:'#publications',icon:'globe',linkIcon:'arrow',openInNewTab:false}; }
 export function validateFeatureStyle(input = {}) {
  if(!input||typeof input!=='object'||Array.isArray(input))throw new Error('Некоректне оформлення інформаційної картки.');
- const out={background:'menu',backgroundColor:'#25395d',eyebrowColor:'#d9e7f8',headingColor:'#ffffff',textColor:'#d9e7f8',linkColor:'#e2efff',borderColor:'#304971',align:'left',minHeight:290,padding:26,radius:10,borderWidth:1,eyebrowSize:12,headingSize:18,textSize:15,linkSize:14,...input};
+ const out={background:'menu',backgroundColor:'#25395d',eyebrowColor:'#d9e7f8',headingColor:'#ffffff',textColor:'#d9e7f8',linkColor:'#e2efff',borderColor:'#304971',align:'left',autoHeight:false,minHeight:290,padding:26,radius:10,borderWidth:1,eyebrowSize:12,headingSize:18,textSize:15,linkSize:14,...input};
+ if(typeof out.autoHeight!=='boolean')throw new Error('Висота по тексту: потрібне true або false.');
  if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||!['left','center','right'].includes(out.align))throw new Error('Некоректний фон або вирівнювання картки.');
  for(const key of ['backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor'])if(typeof out[key]!=='string'||!/^#[0-9a-f]{6}$/i.test(out[key]))throw new Error('Кольори картки: використайте формат #RRGGBB.');
  for(const [key,min,max]of [['minHeight',0,1000],['padding',0,80],['radius',0,80],['borderWidth',0,10],['eyebrowSize',10,36],['headingSize',12,64],['textSize',10,36],['linkSize',10,36]])if(!Number.isInteger(out[key])||out[key]<min||out[key]>max)throw new Error(`${key}: від ${min} до ${max}.`);
- return Object.fromEntries(['background','backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor','align','minHeight','padding','radius','borderWidth','eyebrowSize','headingSize','textSize','linkSize'].map(key=>[key,out[key]]));
+ return Object.fromEntries(['background','backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor','align','autoHeight','minHeight','padding','radius','borderWidth','eyebrowSize','headingSize','textSize','linkSize'].map(key=>[key,out[key]]));
 }
 export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];

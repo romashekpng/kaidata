@@ -358,3 +358,5 @@ dialog{background:var(--surface)}
 .cms-feature-card[data-align="center"] :is(.cms-feature-eyebrow,.cms-feature-link){justify-content:center}.cms-feature-card[data-align="right"] :is(.cms-feature-eyebrow,.cms-feature-link){justify-content:flex-end}
 
 #cms-widget-dialog textarea{resize:vertical}
+
+.cms-widget.cms-feature-auto-height{align-self:flex-start}
