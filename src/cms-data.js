@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=grant-legends-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=grant-legends-20261102';
+import { convertMoneyBlock } from './money.js?v=compact-one-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=compact-one-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };

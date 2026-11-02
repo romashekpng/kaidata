@@ -1,13 +1,13 @@
-import { sidebarTextSections } from './sidebar-view.js?v=grant-legends-20261102';
-import { formatMoney } from './money.js?v=grant-legends-20261102';
-import { createAnalytics } from './analytics.js?v=grant-legends-20261102';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=grant-legends-20261102';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=grant-legends-20261102';
-import { icon } from './icons.js?v=grant-legends-20261102';
+import { sidebarTextSections } from './sidebar-view.js?v=compact-one-20261102';
+import { formatMoney } from './money.js?v=compact-one-20261102';
+import { createAnalytics } from './analytics.js?v=compact-one-20261102';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=compact-one-20261102';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=compact-one-20261102';
+import { icon } from './icons.js?v=compact-one-20261102';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=grant-legends-20261102';
-import { createCMS } from './cms.js?v=grant-legends-20261102';
-import { cmsRoute } from './cms-data.js?v=grant-legends-20261102';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=compact-one-20261102';
+import { createCMS } from './cms.js?v=compact-one-20261102';
+import { cmsRoute } from './cms-data.js?v=compact-one-20261102';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -49,7 +49,7 @@ function themeSettings() {
   const descriptions = {standard:'Світлий фон і прохолодні кольори',dark:'Темний фон і світлий контрастний текст',warm:'Кремовий фон і м’які теплі кольори',blue:'Темно-синє меню, сині акценти та зелено-червоні індикатори'};
   return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається для цього браузера.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
 }
-function applySiteStyles(settings) {
+function applySiteStyles(settings = defaultSiteStyles()) {
   const roots=[document.documentElement,document.querySelector('#cms-live-frame')?.contentDocument?.documentElement].filter(Boolean);
   const variables=settings?siteStyleVariables(settings):{};
   for(const root of roots){

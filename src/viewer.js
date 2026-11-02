@@ -1,10 +1,10 @@
-import { sidebarTextSections } from './sidebar-view.js?v=grant-legends-20261102';
-import { createAnalytics } from './analytics.js?v=grant-legends-20261102';
-import { createSiteView } from './site-view.js?v=grant-legends-20261102';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=grant-legends-20261102';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=grant-legends-20261102';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=grant-legends-20261102';
-import { icon } from './icons.js?v=grant-legends-20261102';
+import { sidebarTextSections } from './sidebar-view.js?v=compact-one-20261102';
+import { createAnalytics } from './analytics.js?v=compact-one-20261102';
+import { createSiteView } from './site-view.js?v=compact-one-20261102';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=compact-one-20261102';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=compact-one-20261102';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=compact-one-20261102';
+import { icon } from './icons.js?v=compact-one-20261102';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
@@ -21,8 +21,9 @@ function applyTheme(value){
 function renderShell(){
  applyTheme(theme);document.documentElement.style.setProperty('--accent',data.institution.accent);
  for(const key of [...Object.keys(STYLE_FIELDS).map(key=>'--site-'+key.replace(/[A-Z]/g,c=>'-'+c.toLowerCase())),'--site-focus-width','--site-focus-color'])document.documentElement.style.removeProperty(key);
- document.documentElement.toggleAttribute('data-site-style',!!data.institution.styles);
- if(data.institution.styles)for(const [key,value]of Object.entries(siteStyleVariables(data.institution.styles)))document.documentElement.style.setProperty(key,value);
+ const styles=data.institution.styles||defaultSiteStyles();
+ document.documentElement.toggleAttribute('data-site-style',true);
+ for(const [key,value]of Object.entries(siteStyleVariables(styles)))document.documentElement.style.setProperty(key,value);
  const i=data.institution;document.title=`${i.shortName} · Наукова діяльність`;
  const sidebar=sidebarTextSections(i);
  $('#sidebar').innerHTML=`<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button><a class="brand" href="#overview" aria-label="На головну"><span class="brand-mark">${icon('layers')}</span><span>${e(i.shortName)}<small>SCIENCE & INSIGHTS</small></span></a><div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${cms.pages().map(p=>`<a class="nav-item ${cmsRoute(p)===route?'active':''}" href="#${cmsRoute(p)}" ${cmsRoute(p)===route?'aria-current="page"':''}>${icon(navIcons[p.id]||'file')}<span>${e(p.title)}</span>${cmsRoute(p)===route?'<span class="active-dot"></span>':''}</a>`).join('')}</nav><div class="sidebar-bottom">${sidebar.note}${sidebar.details}</div>`;

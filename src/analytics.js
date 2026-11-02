@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=grant-legends-20261102';
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=grant-legends-20261102';
-import { icon } from './icons.js?v=grant-legends-20261102';
-import { renderProjectCard } from './block-view.js?v=grant-legends-20261102';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=grant-legends-20261102';
+import { formatMoney } from './money.js?v=compact-one-20261102';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=compact-one-20261102';
+import { icon } from './icons.js?v=compact-one-20261102';
+import { renderProjectCard } from './block-view.js?v=compact-one-20261102';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=compact-one-20261102';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;

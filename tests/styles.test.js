@@ -12,7 +12,7 @@ test('стилі зберігають власні пресети, типови�
  const updated=importCSV(toCSV(data,'revenues'),'revenues',data);assert.deepEqual(updated.institution.styles,data.institution.styles);
  assert.equal(siteStyleVariables(data.institution.styles)['--site-body-size'],'17px');
  assert.equal(siteStyleVariables(data.institution.styles)['--site-line-height'],'1.25');
- assert.equal(validateBundle(demo).institution.styles,undefined);
+ const legacy=structuredClone(demo);delete legacy.institution.styles;assert.equal(validateBundle(legacy).institution.styles,undefined);
 });
 test('стилі відхиляють відсутній типовий пресет, повтори ID, порожні назви, надмірні розміри та CSS замість чисел',()=>{
  const invalid=[];let s=defaultSiteStyles();s.defaultPreset='missing';invalid.push(s);
@@ -21,7 +21,7 @@ test('стилі відхиляють відсутній типовий прес
  for(const value of [0,1000,NaN,Infinity,'16px;display:none']){s=defaultSiteStyles();s.presets[0].values.bodySize=value;invalid.push(s);}
  s=defaultSiteStyles();s.presets=Array.from({length:21},(_,i)=>({...s.presets[0],id:'s'+i}));invalid.push(s);
  for(const styles of invalid)assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,styles}}));
- assert.equal(validateSiteStyles(defaultSiteStyles()).defaultPreset,'standard');
+ assert.equal(validateSiteStyles(defaultSiteStyles()).defaultPreset,'compact-1');
 });
 test('повна XLSX-книга переносить стилі, старі книги без стилів підтримуються, некоректний JSON стилів відхиляється',async()=>{
  const data=configured();for(const key of ['publications','projects','patents','revenues'])data[key]=data[key].slice(0,1);
@@ -30,4 +30,11 @@ test('повна XLSX-книга переносить стилі, старі к�
  assert.deepEqual(await importXLSX(await toXLSX(legacy,'bundle',ExcelJS),'bundle',demo,ExcelJS),legacy);
  const book=new ExcelJS.Workbook();await book.xlsx.load(bytes);const sheet=book.getWorksheet(SHEET_NAMES.settings);sheet.getCell(sheet.rowCount,2).value='{bad json';
  const bad=await book.xlsx.writeBuffer();await assert.rejects(()=>importXLSX(bad,'bundle',demo,ExcelJS),/JSON стилів/);
+});
+
+test('Компактний 1 точно відповідає параметрам зі скрінів і є типовим в обох початкових наборах',async()=>{
+ const styles=validateSiteStyles(defaultSiteStyles()),preset=styles.presets.find(p=>p.id===styles.defaultPreset);
+ assert.equal(preset.name,'Компактний 1');assert.deepEqual(preset.values,{bodySize:14,headingSize:32,sectionSize:18,valueSize:30,menuSize:14,controlsSize:14,tableSize:12,chartSize:12,smallSize:12,lineHeight:1.1,paragraphGap:6,blockGap:12,blockPadding:14,rowPadding:6,radius:10});assert.equal(styles.focusHighlight.enabled,false);
+ for(const name of ['demo','empty']){const data=JSON.parse(await readFile(new URL('../data/'+name+'.json',import.meta.url),'utf8'));assert.deepEqual(validateBundle(data).institution.styles,styles);}
+ const configuredStyles=configured().institution.styles;assert.equal(validateSiteStyles(configuredStyles).defaultPreset,'my-style');
 });
