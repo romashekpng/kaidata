@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=sidebar-defaults-20261102';
-import { createChartRenderer } from './chart-runtime.js?v=sidebar-defaults-20261102';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sidebar-defaults-20261102';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sidebar-defaults-20261102';
-import { icon } from './icons.js?v=sidebar-defaults-20261102';
+import { reportDate, currentReportingYear } from './data.js?v=chart-defaults-20261102';
+import { createChartRenderer } from './chart-runtime.js?v=chart-defaults-20261102';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-defaults-20261102';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=chart-defaults-20261102';
+import { icon } from './icons.js?v=chart-defaults-20261102';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
@@ -58,7 +58,8 @@ export function createSiteView(options){
     const enabled=options.getData().institution.blocks;
     const content=page.blocks.filter(b=>b.visible&&!(b.type==='analytics'&&family[b.source]&&!enabled.includes(family[b.source]))).map(b=>{
       const s=resolvedSettings(b),isChart=b.type==='chart'||(b.type==='analytics'&&CHART_SOURCES.includes(b.source));
-      const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=b.subtitle?`<p class="cms-widget-subtitle">${e(b.subtitle)}</p>`:'';
+      const subtitleText=b.subtitle??(b.type==='analytics'?defaultBlockSubtitle(b.source):'');
+      const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=subtitleText?`<p class="cms-widget-subtitle">${e(subtitleText)}</p>`:'';
       let body='',displayedTable=null;
       if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){

@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=sidebar-defaults-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=sidebar-defaults-20261102';
-import { createSiteView } from './site-view.js?v=sidebar-defaults-20261102';
-import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, newCMSId, cmsRoute } from './cms-data.js?v=sidebar-defaults-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=sidebar-defaults-20261102';
-import { renderBlockTable } from './block-view.js?v=sidebar-defaults-20261102';
-import { validateBundle } from './data.js?v=sidebar-defaults-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=chart-defaults-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=chart-defaults-20261102';
+import { createSiteView } from './site-view.js?v=chart-defaults-20261102';
+import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=chart-defaults-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=chart-defaults-20261102';
+import { renderBlockTable } from './block-view.js?v=chart-defaults-20261102';
+import { validateBundle } from './data.js?v=chart-defaults-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=sidebar-defaults-20261102';
+import { icon } from './icons.js?v=chart-defaults-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -174,7 +174,7 @@ export function createCMS(options) {
     else if(kind==='settings'){
       const chart=block.type==='chart'||(block.type==='analytics'&&CHART_SOURCES.includes(block.source));
       const cards=metric;
-      body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle||'')}" maxlength="2000"></label></div>`;
+      body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle??(block.type==='analytics'?defaultBlockSubtitle(block.source):''))}" maxlength="2000"></label></div>`;
       if(block.type==='analytics')body+=`<label class="cms-field-help">Джерело даних<select data-widget-text="dataMode"><option value="live" ${block.dataMode!=='manual'?'selected':''}>Аналітика сайта — автоматичний розрахунок</option><option value="manual" ${block.dataMode==='manual'?'selected':''}>Власні дані цього блоку</option></select></label><p class="cms-field-help">${metric?'Зміна лише фону або порядку карток зберігає автоматичний розрахунок. Ручна зміна чисел і текстів створює власні дані блоку.':'Редагування та імпорт CSV/XLSX створюють власні дані лише для цього блоку.'} Для зміни вихідних записів усіх пов’язаних блоків використайте «Керування даними».</p>`;
       if(chart){
         body+=`<section class="cms-chart-libraries" aria-label="Бібліотеки діаграм"><div class="cms-library-row"><div><strong>Активна бібліотека для діаграм</strong><p>Налаштування зберігаються окремо під кожну бібліотеку</p></div><div class="cms-library-options" role="group" aria-label="Активна бібліотека для діаграм">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-active',label,`data-library="${key}" aria-pressed="${block.settings.chartLibrary===key}"`,block.settings.chartLibrary===key?'primary small':'secondary small')).join('')}</div></div><div class="cms-library-row cms-library-editor"><strong>Редагувати параметри для:</strong><div class="cms-library-options" role="group" aria-label="Бібліотека для редагування параметрів">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-edit',`${label}${block.settings.chartLibrary===key?' (активна)':''}`,`data-library="${key}" aria-pressed="${widgetState.editLibrary===key}"`,widgetState.editLibrary===key?'primary small':'secondary small')).join('')}</div></div></section>`;
