@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=chart-percentages-20261102';
-import { createChartRenderer } from './chart-runtime.js?v=chart-percentages-20261102';
-import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-percentages-20261102';
-import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=chart-percentages-20261102';
-import { icon } from './icons.js?v=chart-percentages-20261102';
+import { reportDate, currentReportingYear } from './data.js?v=publication-links-20261102';
+import { createChartRenderer } from './chart-runtime.js?v=publication-links-20261102';
+import { chartSettingsForLibrary, defaultBlockSettings, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-links-20261102';
+import { renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=publication-links-20261102';
+import { icon } from './icons.js?v=publication-links-20261102';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());

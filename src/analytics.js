@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=chart-percentages-20261102';
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=chart-percentages-20261102';
-import { icon } from './icons.js?v=chart-percentages-20261102';
-import { renderProjectCard } from './block-view.js?v=chart-percentages-20261102';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=chart-percentages-20261102';
+import { formatMoney } from './money.js?v=publication-links-20261102';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=publication-links-20261102';
+import { icon } from './icons.js?v=publication-links-20261102';
+import { renderProjectCard } from './block-view.js?v=publication-links-20261102';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=publication-links-20261102';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
@@ -13,7 +13,7 @@ export function createAnalytics(options){
  const cms={getPage:route=>options.getPage(route)};
  function sync(){data=options.getData();year=options.getYear();route=options.getRoute();({query='',faculty='',quartile='',indexFilter='',projectStatus='all',page=1}=options.getFilters?.()||{});}
  function exportButton(dataset){return options.readOnly?'':`<button class="button secondary small" data-action="csv-export" data-dataset="${e(dataset)}">${icon('download')}CSV / XLSX</button>`;}
-function linkTitle(row) { return row.url ? `<a href="${e(row.url)}" target="_blank" rel="noopener noreferrer">${e(row.title)} ${icon('external')}</a>` : e(row.title); }
+function linkTitle(row, showExternalIcon = true) { return row.url ? `<a href="${e(row.url)}" target="_blank" rel="noopener noreferrer">${e(row.title)}${showExternalIcon?` ${icon('external')}`:''}</a>` : e(row.title); }
 function pill(text, color = '') { return `<span class="pill ${color}">${e(text)}</span>`; }
 function empty(text = 'За цими умовами даних немає', sub = options.readOnly?'Змініть фільтри або звітний рік.':'Змініть фільтри або імпортуйте новий набір даних.') { return `<div class="empty">${icon('layers')}<h3>${e(text)}</h3><p>${e(sub)}</p></div>`; }
 function sectionHead(title, subtitle='', action='') { return `<div class="section-head"><div><h2>${e(title)}</h2>${subtitle ? `<p>${e(subtitle)}</p>` : ''}</div>${action}</div>`; }
@@ -87,7 +87,7 @@ function filteredRows(kind) {
 function tableBody(kind, showAll = cms?.getPage(route)?.blocks.find(b=>b.type==='analytics'&&b.source===kind)?.settings?.showAll || false) {
   const rows = filteredRows(kind), pages = Math.max(1,Math.ceil(rows.length/10)); page = Math.min(page,pages);
   const pub = kind==='publications';
-  return `<div class="results-meta"><span>Знайдено <strong>${fmt(rows.length)}</strong> ${pub ? 'публікацій' : 'патентів'}</span>${query||faculty||quartile||indexFilter ? '<button class="text-link" data-action="clear-filters">Скинути фільтри</button>' : `<span>${year} рік</span>`}</div>${rows.length ? `<div class="table-scroll"><table><thead><tr><th>${pub?'Публікація та автори':'Патент та винахідники'}</th>${pub?'<th>Факультет</th><th>Індексація</th><th>Квартиль</th>':'<th>Номер</th><th>Дата реєстрації</th>'}</tr></thead><tbody>${(showAll?rows:rows.slice((page-1)*10,page*10)).map(r=>`<tr><td class="title-cell"><strong>${linkTitle(r)}</strong><span>${e(r.authors)}</span>${pub?`<small>${e(r.type)}</small>`:''}</td>${pub?`<td class="faculty-cell">${e(r.faculty)}</td><td>${r.indexes.length?r.indexes.map(i=>pill(i==='WoS'?'Web of Science':i,'blue')).join(' '):'<span class="muted">Без індексації</span>'}</td><td>${pill(r.quartile||'Без квартиля',['Q1','Q2'].includes(r.quartile)?'green':'neutral')}</td>`:`<td><span class="patent-number">${e(r.number)}</span></td><td class="nowrap">${date(r.date)}</td>`}</tr>`).join('')}</tbody></table></div>${showAll?'':`<div class="pagination"><span>${(page-1)*10+1}–${Math.min(page*10,rows.length)} із ${fmt(rows.length)}</span><div><button class="button secondary small" data-action="prev-page" ${page<=1?'disabled':''}>Назад</button><span>${page} / ${pages}</span><button class="button secondary small" data-action="next-page" ${page>=pages?'disabled':''}>Далі</button></div></div>`}`:empty()}`;
+  return `<div class="results-meta"><span>Знайдено <strong>${fmt(rows.length)}</strong> ${pub ? 'публікацій' : 'патентів'}</span>${query||faculty||quartile||indexFilter ? '<button class="text-link" data-action="clear-filters">Скинути фільтри</button>' : `<span>${year} рік</span>`}</div>${rows.length ? `<div class="table-scroll"><table${pub?' class="publication-table"':''}><thead><tr><th>${pub?'Публікація та автори':'Патент та винахідники'}</th>${pub?'<th>Факультет</th><th>Індексація</th><th>Квартиль</th>':'<th>Номер</th><th>Дата реєстрації</th>'}</tr></thead><tbody>${(showAll?rows:rows.slice((page-1)*10,page*10)).map(r=>`<tr><td class="title-cell"><strong>${linkTitle(r,!pub)}</strong><span>${e(r.authors)}</span>${pub?`<small>${e(r.type)}</small>`:''}</td>${pub?`<td class="faculty-cell">${e(r.faculty)}</td><td>${r.indexes.length?r.indexes.map(i=>pill(i==='WoS'?'Web of Science':i,'blue')).join(' '):'<span class="muted">Без індексації</span>'}</td><td>${pill(r.quartile||'Без квартиля',['Q1','Q2'].includes(r.quartile)?'green':'neutral')}</td>`:`<td><span class="patent-number">${e(r.number)}</span></td><td class="nowrap">${date(r.date)}</td>`}</tr>`).join('')}</tbody></table></div>${showAll?'':`<div class="pagination"><span>${(page-1)*10+1}–${Math.min(page*10,rows.length)} із ${fmt(rows.length)}</span><div><button class="button secondary small" data-action="prev-page" ${page<=1?'disabled':''}>Назад</button><span>${page} / ${pages}</span><button class="button secondary small" data-action="next-page" ${page>=pages?'disabled':''}>Далі</button></div></div>`}`:empty()}`;
 }
 function recordsPage(kind) {
   const pub=kind==='publications', s=summarize(data,year);

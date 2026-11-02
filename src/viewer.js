@@ -1,9 +1,9 @@
-import { createAnalytics } from './analytics.js?v=chart-percentages-20261102';
-import { createSiteView } from './site-view.js?v=chart-percentages-20261102';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=chart-percentages-20261102';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=chart-percentages-20261102';
-import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=chart-percentages-20261102';
-import { icon } from './icons.js?v=chart-percentages-20261102';
+import { createAnalytics } from './analytics.js?v=publication-links-20261102';
+import { createSiteView } from './site-view.js?v=publication-links-20261102';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=publication-links-20261102';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=publication-links-20261102';
+import { STYLE_FIELDS, siteStyleVariables } from './style-data.js?v=publication-links-20261102';
+import { icon } from './icons.js?v=publication-links-20261102';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
