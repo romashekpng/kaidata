@@ -342,3 +342,6 @@ dialog{background:var(--surface)}
 
 .sidebar-note p:first-child{margin-top:0}.sidebar-subtitle-only>span{margin-top:0}
 #settings-form fieldset>label:not(.checkbox-label){display:flex;flex-direction:column;gap:8px;margin:14px 0}#settings-form fieldset>label:not(.checkbox-label) input,#settings-form fieldset>label:not(.checkbox-label) textarea{width:100%;min-width:0;border:1px solid var(--line);border-radius:7px;padding:10px;background:var(--surface-field);color:var(--ink)}#settings-form fieldset>.checkbox-label{margin:12px 0}
+
+/* Automatic metric rows follow the available block width, without a fixed column count. */
+.cms-widget.cms-metric-auto-columns .stats-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr))}

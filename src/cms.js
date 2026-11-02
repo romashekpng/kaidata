@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=scopus-layout-20261102';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=scopus-layout-20261102';
-import { createSiteView } from './site-view.js?v=scopus-layout-20261102';
-import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=scopus-layout-20261102';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=scopus-layout-20261102';
-import { renderBlockTable } from './block-view.js?v=scopus-layout-20261102';
-import { validateBundle } from './data.js?v=scopus-layout-20261102';
+import { createProjectReportsEditor } from './project-reports.js?v=metric-layout-20261102';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=metric-layout-20261102';
+import { createSiteView } from './site-view.js?v=metric-layout-20261102';
+import { isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=metric-layout-20261102';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=metric-layout-20261102';
+import { renderBlockTable } from './block-view.js?v=metric-layout-20261102';
+import { validateBundle } from './data.js?v=metric-layout-20261102';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=scopus-layout-20261102';
+import { icon } from './icons.js?v=metric-layout-20261102';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -187,7 +187,7 @@ export function createCMS(options) {
       if(block.type==='analytics'&&block.source==='projects')body+=`<fieldset><legend>Картки грантових проєктів</legend>${check('showProjectGlobe','Показувати земну кулю для міжнародних проєктів')}${check('showProjectFlag','Показувати прапор України для українських проєктів')}<p class="cms-field-help">Вимкніть обидва пункти, щоб приховати позначення. Для ручних даних колонка «Міжнародний»: true — міжнародний, false — український; порожнє значення — тип не вказано. Смуга внизу картки показує часовий прогрес за датами виконання.</p></fieldset>`;
       if(block.type==='analytics'&&block.source==='publications')body+=`<fieldset><legend>Каталог публікацій</legend>${check('publicationTitleLinks','Посилання зробити активним для назви статті','Якщо в полі «Посилання» є http/https-адреса, назва відкриває статтю в новій вкладці. Без адреси або з вимкненим пунктом назва є звичайним текстом.')}<p class="cms-field-help">Пошук, фільтри й чотири стовпці каталогу однакові для обох джерел даних. Автори та тип показуються під назвою; рік і адреса посилання залишаються в даних. «Аналітика сайта» оновлює записи за вибраний рік. «Власні дані» — окрема копія за період на момент редагування; вона не змінює спільний набір і графіки. Перемикання на аналітику показує спільні записи замість ручної копії.</p></fieldset>`;
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
-      if(cards)body+=`<fieldset><legend>Картки показників</legend>${field('Кількість карток по ширині','columns','number','min="1" max="6" step="1"')}<p class="cms-field-help">Від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
+      if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
       if(block.type!=='analytics'||block.dataMode==='manual')body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
@@ -224,6 +224,7 @@ export function createCMS(options) {
       swatch.style.cssText=row[b]==='custom'?`--text-block-bg:${row[c]}`:'';
     }
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;storeWidgetSetting(key,el.type==='checkbox'?el.checked:el.type==='number'||key==='segmentPercentageDecimals'?Number(el.value):el.value);}
+    if(el.dataset.widgetSetting==='autoColumns')$('#cms-widget-dialog [data-widget-setting="columns"]').disabled=el.checked;
     if(['segmentPercentages','segmentPercentageDecimals'].includes(el.dataset.widgetSetting)){
       const settings=widgetSettings(),controls=$('#cms-widget-dialog [data-percentage-options]'),small=$('#cms-widget-dialog [data-small-percentage-option]');
       if(controls)controls.hidden=!settings.segmentPercentages;if(small)small.hidden=settings.segmentPercentageDecimals!==0;
