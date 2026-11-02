@@ -14,7 +14,13 @@
       "projects",
       "patents",
       "funding"
-    ]
+    ],
+    "sidebarStatus": "Відкриті дані. Нові можливості.",
+    "sidebarTagline": "Знання, що формують\nмайбутнє університету.",
+    "showSidebarStatus": true,
+    "showSidebarTagline": true,
+    "showSidebarName": true,
+    "showSidebarSubtitle": true
   },
   "publications": [
     {

@@ -1,7 +1,12 @@
-import { scaleMoney } from './money.js?v=list-focus-20261102';
-import { validateSiteStyles } from './style-data.js?v=list-focus-20261102';
+import { scaleMoney } from './money.js?v=sidebar-text-20261102';
+import { validateSiteStyles } from './style-data.js?v=sidebar-text-20261102';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
+export const SIDEBAR_DEFAULTS = Object.freeze({
+ sidebarStatus:'Відкриті дані. Нові можливості.',
+ sidebarTagline:'Знання, що формують\nмайбутнє університету.',
+ showSidebarStatus:true,showSidebarTagline:true,showSidebarName:true,showSidebarSubtitle:true
+});
 export const CSV_HEADERS = {
   publications: ['id', 'title', 'authors', 'year', 'faculty', 'department', 'indexes', 'quartile', 'type', 'url'],
   projects: ['id', 'title', 'program', 'startDate', 'endDate', 'role', 'international', 'faculty', 'funding', 'url', 'progressByYear'],
@@ -87,6 +92,11 @@ export function validateBundle(input) {
     subtitle: optional(i.subtitle, 'institution.subtitle'), accent: i.accent, website: url(i.website, 'institution.website'),
     sourceNote: optional(i.sourceNote, 'institution.sourceNote'), blocks: [...i.blocks],
   }};
+  for(const [key,fallback]of Object.entries(SIDEBAR_DEFAULTS)){
+    const value=i[key]===undefined?fallback:i[key];
+    if(typeof fallback==='boolean'){if(typeof value!=='boolean')fail(`institution.${key}: true або false.`);out.institution[key]=value;}
+    else {const max=key==='sidebarStatus'?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
+  }
   if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
   for (const key of DATASETS) {
     if (!Array.isArray(input[key]) || input[key].length > 25000) fail(`${key}: потрібен масив, не більше 25 000 записів.`);
