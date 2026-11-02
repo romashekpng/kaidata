@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=auto-height-20261102';
-import { createChartRenderer } from './chart-runtime.js?v=auto-height-20261102';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=auto-height-20261102';
-import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=auto-height-20261102';
-import { icon } from './icons.js?v=auto-height-20261102';
+import { reportDate, currentReportingYear } from './data.js?v=grant-legends-20261102';
+import { createChartRenderer } from './chart-runtime.js?v=grant-legends-20261102';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=grant-legends-20261102';
+import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=grant-legends-20261102';
+import { icon } from './icons.js?v=grant-legends-20261102';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());

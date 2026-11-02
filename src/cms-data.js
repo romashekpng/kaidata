@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=auto-height-20261102';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=auto-height-20261102';
+import { convertMoneyBlock } from './money.js?v=grant-legends-20261102';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=grant-legends-20261102';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
@@ -100,9 +100,10 @@ export function selectChartLibrary(settings, library, source = '') {
 }
 export function isHorizontalChartType(type) { return type==='horizontal'||type==='horizontalStacked'; }
 export function defaultBlockSettings(source = '') {
- return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:source==='faculties'?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:['faculties','projectChart','programs'].includes(source)?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function defaultBlockSubtitle(source) {
+ if(source==='projectChart')return 'Кількість проєктів за роками';
  if(source==='programs')return 'Надходження коштів, тис. грн';
  if(source==='faculties')return 'За кількістю записів у вибраному році';
  return '';
@@ -267,7 +268,16 @@ export function validateCMSBlock(input) {
     }
     out.chartDefaultsVersion=1;
   }
-  if(input.type==='analytics'&&input.source==='programs'&&input.subtitle===undefined)out.subtitle=defaultBlockSubtitle(input.source);
+  if(input.grantChartDefaultsVersion!==undefined){if(input.grantChartDefaultsVersion!==1)fail('Невідома версія типових налаштувань діаграм проєктів.');out.grantChartDefaultsVersion=1;}
+  if(input.type==='analytics'&&['projectChart','programs'].includes(input.source)){
+    if(input.grantChartDefaultsVersion!==1){
+      const settings={...(out.settings||defaultBlockSettings(input.source)),legend:'none'};
+      if(settings.librarySettings)settings.librarySettings=Object.fromEntries(Object.entries(settings.librarySettings).map(([library,profile])=>[library,{...profile,legend:'none'}]));
+      out.settings=validateBlockSettings(settings,input.source);
+    }
+    out.grantChartDefaultsVersion=1;
+    if(input.subtitle===undefined)out.subtitle=defaultBlockSubtitle(input.source);
+  }
   if(input.type==='analytics'&&input.source==='faculties'){
     const negativeLegacy=Array.isArray(input.dataTable?.rows)&&input.dataTable.rows.some(row=>Array.isArray(row)&&row.slice(1).some(c=>Number(String(c).replace(',','.'))<0));
     if(input.settings?.chartType==='stacked'&&!Object.hasOwn(input.settings,'numbering')&&!negativeLegacy){
@@ -339,7 +349,7 @@ export function defaultCMSBlock(type) {
   if (type === 'chart') Object.assign(block, { columns:['Рік','Серія 1','Серія 2'], rows:[['2024','80','40'],['2025','100','55'],['2026','120','65']], settings:{...defaultBlockSettings(),allYears:true} });
   if (type === 'metrics') block.metricLayoutVersion=1;
   if (type === 'metrics') block.items = [{ label: 'Показник', value: '0', unit: '', note: '' }];
-  if (type === 'analytics') Object.assign(block,{source:'stats',listDisplayVersion:1,chartDefaultsVersion:1,metricLayoutVersion:1});
+  if (type === 'analytics') Object.assign(block,{source:'stats',listDisplayVersion:1,chartDefaultsVersion:1,metricLayoutVersion:1,grantChartDefaultsVersion:1});
   if (type === 'existing') block.source = 'overview';
   return block;
 }

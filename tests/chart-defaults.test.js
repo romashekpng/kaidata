@@ -9,7 +9,7 @@ test('обидві діаграми публікацій типово мають
 });
 test('старі початкові параметри оновлюються для активного й збережених профілів без зміни даних, кольорів і ширини',()=>{
  for(const source of['publicationChart','quartiles','programs']){const old=block(source);old.settings.width=66;old.settings.palette='purple';old.settings.librarySettings={echarts:{legend:'top',legendCentered:false,chartType:old.settings.chartType,segmentPercentages:false},chartjs:{legend:'right',legendCentered:false,chartType:'line',segmentPercentages:false}};const copy=structuredClone(old),next=validateCMSBlock(old);assert.equal(next.chartDefaultsVersion,1);assert.equal(next.settings.width,66);assert.equal(next.settings.palette,'purple');assert.equal(next.title,old.title);assert.deepEqual(old,copy);
-  const alternate=chartSettingsForLibrary(next.settings,'chartjs',source);assert.equal(alternate.legend,'right');assert.equal(alternate.chartType,'line');
+  const alternate=chartSettingsForLibrary(next.settings,'chartjs',source);assert.equal(alternate.legend,source==='programs'?'none':'right');assert.equal(alternate.chartType,'line');
   if(source==='programs'){assert.equal(next.settings.chartType,'horizontal');assert.equal(next.subtitle,'Надходження коштів, тис. грн');}else{assert.equal(next.settings.legend,'bottom');assert.equal(next.settings.legendCentered,true);}
   if(source==='quartiles')assert.equal(next.settings.segmentPercentages,true);assert.deepEqual(validateCMSBlock(next),next);
  }
@@ -22,4 +22,13 @@ test('подальші ручні зміни та власний або поро
 test('версія типових параметрів і вибір користувача переносяться разом із JSON, CSV та XLSX блока',async()=>{
  const b=validateCMSBlock({...block('programs'),dataMode:'manual',dataTable:{headers:['Програма','Надходження, тис. грн'],rows:[['Horizon','1130']]}});assert.equal(b.settings.chartType,'horizontal');
  assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),b);assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),b);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS),b);
+});
+
+test('діаграми проєктів типово приховують легенду та мають відповідні підзаголовки',()=>{
+ const expanded=expandSiteBlocks(site);for(const [source,subtitle] of [['projectChart','Кількість проєктів за роками'],['programs','Надходження коштів, тис. грн']]){
+  assert.equal(defaultBlockSettings(source).legend,'none');const b=expanded.pages.flatMap(p=>p.blocks).find(b=>b.source===source);assert.equal(b.settings.legend,'none');assert.equal(b.subtitle,subtitle);assert.equal(b.grantChartDefaultsVersion,1);
+  const old=block(source);old.chartDefaultsVersion=1;old.settings.librarySettings=Object.fromEntries(['echarts','chartjs','plotly'].map(library=>[library,{legend:'right',chartType:'line'}]));const next=validateCMSBlock(old);assert.equal(next.settings.legend,'none');for(const profile of Object.values(next.settings.librarySettings)){assert.equal(profile.legend,'none');assert.equal(profile.chartType,'line');}assert.equal(next.subtitle,subtitle);assert.equal(old.settings.legend,'top');
+  const chosen=validateCMSBlock({...next,subtitle:'Власний текст',settings:{...next.settings,legend:'bottom',librarySettings:{}}});assert.equal(chosen.settings.legend,'bottom');assert.equal(chosen.subtitle,'Власний текст');assert.deepEqual(validateCMSBlock(chosen),chosen);
+  const fresh=validateCMSBlock({...defaultCMSBlock('analytics'),source,settings:{...defaultBlockSettings(source),legend:'top'}});assert.equal(fresh.settings.legend,'top');
+ }
 });
