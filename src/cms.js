@@ -1,12 +1,13 @@
-import { createProjectReportsEditor } from './project-reports.js?v=compact-thirteen-20261103';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=compact-thirteen-20261103';
-import { createSiteView } from './site-view.js?v=compact-thirteen-20261103';
-import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=compact-thirteen-20261103';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=compact-thirteen-20261103';
-import { renderBlockTable } from './block-view.js?v=compact-thirteen-20261103';
-import { validateBundle } from './data.js?v=compact-thirteen-20261103';
+import { createProjectReportsEditor } from './project-reports.js?v=local-save-20261103';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=local-save-20261103';
+import { createSiteView } from './site-view.js?v=local-save-20261103';
+import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=local-save-20261103';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=local-save-20261103';
+import { renderBlockTable } from './block-view.js?v=local-save-20261103';
+import { validateBundle } from './data.js?v=local-save-20261103';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=compact-thirteen-20261103';
+import { icon } from './icons.js?v=local-save-20261103';
+import { buildLocalHTML } from './local-html.js?v=local-save-20261103';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -14,7 +15,7 @@ export function createCMS(options) {
   const e = escapeCMS;
   const projectReports=createProjectReportsEditor({getData:options.getData,save:next=>{options.replaceData(next);options.rerender();},notify:options.notify});
   let site, draft, selected, dirty = false, temporary = false, pendingDataRestore = false, history = [], transfer = null, importValue = null, importToken = 0;
-  let widgetState=null,dragItem=null,publicationTicket=0;
+  let widgetState=null,dragItem=null,publicationTicket=0,saving=false,localFileSaved=false;
 
   const $ = selector => document.querySelector(selector);
   const button = (action, label, extra = '', cls = 'secondary') => `<button type="button" class="button ${cls}" data-cms-action="${action}" ${extra}>${label}</button>`;
@@ -28,8 +29,9 @@ export function createCMS(options) {
   function activePages() { return site.pages.filter(p => p.visible && (p.kind === 'custom' || p.id === 'overview' || options.getData().institution.blocks.includes(p.id))); }
   function findPage(route) { return site.pages.find(p => cmsRoute(p) === route); }
   function currentBlock(id) { return (options.isAdmin() ? draft?.blocks.find(b => b.id === id) : null) || site.pages.flatMap(p => p.blocks).find(b => b.id === id); }
+  const saveStatus=()=>dirty?'Є незбережені зміни':localFileSaved?'Збережено в HTML-файлі':temporary?'Збережено лише до закриття сторінки':'Збережено в цьому браузері';
   function status() {
-    const el = $('#cms-save-status'); if (el) el.textContent = dirty ? 'Є незбережені зміни' : temporary ? 'Збережено лише до закриття сторінки' : 'Збережено в цьому браузері';
+    const el = $('#cms-save-status'); if (el) el.textContent = saveStatus();
     document.querySelectorAll('[data-cms-action="publish-zip"]').forEach(el => { el.disabled = dirty; });
   }
   function change(mutator) {
@@ -42,6 +44,7 @@ export function createCMS(options) {
     selected = id; draft = structuredClone(site.pages.find(p => p.id === id)); dirty = false; history = []; return true;
   }
   function writeLocal(next, dataOverride = null) {
+    localFileSaved=false;
     const nextData=dataOverride||(pendingDataRestore?options.getData():null);
     let original=null,changed=false;temporary=false;
     try {
@@ -60,10 +63,19 @@ export function createCMS(options) {
     writeLocal(valid);
     options.notify(temporary ? 'Сховище браузера недоступне. Експортуйте резервну копію перед закриттям сторінки.' : message);
   }
-  function savePage() {
-    const page = validateCMSPage(draft);
-    saveSite({ ...site, pages: site.pages.map(p => p.id === selected ? page : p) });
-    selectPage(selected, false); redraw();
+  async function savePage() {
+    if(saving)return;
+    saving=true;const control=$('[data-cms-action="save-page"]'),content=$('#content'),sidebar=$('#sidebar');if(control){control.disabled=true;control.textContent='Збереження…';}
+    if(content)content.inert=true;if(sidebar)sidebar.inert=true;
+    try{
+      const page=validateCMSPage(draft),next=validateSite({...site,updatedAt:new Date().toISOString(),pages:site.pages.map(p=>p.id===selected?page:p)});
+      const local=globalThis.KAI_LOCAL_PREVIEW===true;
+      const html=local?await buildLocalHTML(globalThis.KAI_PUBLIC_ASSETS,structuredClone(options.getData()),next,{theme:options.getTheme(),startRoute:cmsRoute(page),snapshotId:globalThis.crypto?.randomUUID?.()||newCMSId('saved')}):null;
+      writeLocal(next);
+      if(local){options.download('index.html',html,'text/html;charset=utf-8');localFileSaved=true;}
+      selectPage(selected,false);redraw();
+      options.notify(local?'Сторінку збережено. Завантажений index.html містить зміни як початкові налаштування.':temporary?'Сховище браузера недоступне. Експортуйте резервну копію перед закриттям сторінки.':'Сторінку збережено в цьому браузері.');
+    }finally{saving=false;if(content)content.inert=false;if(sidebar)sidebar.inert=false;if(control?.isConnected){control.disabled=false;control.innerHTML=icon('check')+' Зберегти сторінку';}}
   }
   function uniqueSlug(base = 'nova-storinka') {
     let slug = base.slice(0, 54), n = 1;
@@ -131,7 +143,7 @@ export function createCMS(options) {
   function renderAdmin() {
     if (!draft) selectPage(site.pages[0].id, false);
     schedulePreview();
-    return `<div class="page-heading"><div><div class="eyebrow">КЕРУВАННЯ ВМІСТОМ</div><h1>Адмінка сайта</h1><p>Сторінки, блоки та дані вашого університету.</p></div><div class="heading-actions">${button('new-page',`${icon('file')} Нова сторінка`,'','primary')}${button('publish-zip',`${icon('download')} Сайт для публікації`,dirty?'disabled':'')}</div></div><div class="notice cms-local-note">${icon('info')}<span><strong>Локальна адмінка без серверної авторизації.</strong> Редагування змінює лише цей браузер. Щоб опублікувати зміни для всіх, завантажте ZIP і замініть файли в GitHub. Чужі відвідувачі не можуть змінити серверні файли через цей редактор.</span></div><div class="cms-admin-tools">${button('project-reports','Надходження грантів за роками')}${button('site-export','Резервна копія сайта · JSON')}${button('site-import','Відновити сайт із JSON')}${button('page-import','Імпортувати сторінку · JSON')}</div><div class="cms-layout"><aside class="cms-page-list"><div class="section-head"><h2>Сторінки</h2><span class="pill">${site.pages.length}</span></div>${site.pages.map((p,n)=>`<div class="cms-page-row ${p.id===selected?'selected':''}"><button type="button" data-cms-action="select-page" data-page-id="${p.id}"><strong>${e(p.title)}</strong><span>${p.kind==='builtin'?'Вбудована':`#page/${e(p.slug)}`} ${p.visible?'':'· прихована'}</span></button><div>${button('page-up','↑',`data-page-id="${p.id}" ${n===0?'disabled':''} aria-label="Сторінка вгору"`,'secondary small')}${button('page-down','↓',`data-page-id="${p.id}" ${n===site.pages.length-1?'disabled':''} aria-label="Сторінка вниз"`,'secondary small')}</div></div>`).join('')}</aside><div class="cms-workbench"><section class="cms-live-pane" aria-label="Візуалізація сторінки"><div class="cms-live-heading"><div><h2>Вигляд сторінки</h2><p>Оновлюється автоматично · чернетка</p></div><span class="pill green">Наживо</span></div><iframe id="cms-live-frame" title="Візуалізація поточної сторінки" sandbox="allow-same-origin"></iframe></section><div class="cms-editor"><form id="cms-page-form"><section class="panel"><div class="section-head"><h2>Параметри сторінки</h2><span class="pill ${dirty?'amber':'green'}" id="cms-save-status">${dirty?'Є незбережені зміни':temporary?'Тимчасова копія':'Збережено в цьому браузері'}</span></div><div class="form-grid">${input('Назва в меню','title',draft.title,'required maxlength="120"')}${input('Адреса · латиницею','slug',draft.slug,`required pattern="[a-z0-9][a-z0-9-]{0,63}" ${draft.kind==='builtin'?'readonly':''}`)}${input('Заголовок сторінки','heading',draft.heading,'required maxlength="200"')}<label>Опис<input data-cms-field="description" value="${e(draft.description)}"></label><label class="checkbox-label"><input type="checkbox" data-cms-field="visible" ${draft.visible?'checked':''}>Показувати в меню</label><label class="checkbox-label"><input type="checkbox" data-cms-field="showYear" ${draft.showYear?'checked':''}>Показувати фільтр року</label></div><div class="cms-page-actions">${button('page-export','Експорт сторінки · JSON')}${button('duplicate-page','Копіювати сторінку')}${draft.kind==='custom'?button('delete-page','Видалити сторінку','','secondary danger'):''}</div></section><div class="section-head"><div><h2>Блоки сторінки</h2><p>Редагуйте вміст та змінюйте порядок стрілками.</p></div>${button('undo','Скасувати зміну',history.length?'':'disabled','secondary small')}</div>${draft.blocks.map(blockEditor).join('')}<section class="cms-block-palette"><h3>Додати блок</h3><div>${Object.entries(BLOCK_TYPES).filter(([key])=>key!=='existing').map(([key,title])=>button('add-block',`+ ${title}`,`data-block-type="${key}"`)).join('')}</div></section><div class="cms-save-bar"><span>Зміни застосуються до локальної копії сайта</span><button class="button primary" type="submit">${icon('check')} Зберегти сторінку</button></div><div class="form-error" id="cms-editor-error" role="alert"></div></form></div></div></div>`;
+    return `<div class="page-heading"><div><div class="eyebrow">КЕРУВАННЯ ВМІСТОМ</div><h1>Адмінка сайта</h1><p>Сторінки, блоки та дані вашого університету.</p></div><div class="heading-actions">${button('new-page',`${icon('file')} Нова сторінка`,'','primary')}${button('publish-zip',`${icon('download')} Сайт для публікації`,dirty?'disabled':'')}</div></div><div class="notice cms-local-note">${icon('info')}<span><strong>Локальна адмінка без серверної авторизації.</strong> ${globalThis.KAI_LOCAL_PREVIEW?'Кнопка «Зберегти сторінку» завантажує index.html зі зміненими сторінками, даними й стилями. Відкрийте завантажений файл, щоб користуватися збереженою версією. Для публікації використайте ZIP.':'Редагування змінює лише цей браузер. Щоб опублікувати зміни для всіх, завантажте ZIP і замініть файли в GitHub.'} Чужі відвідувачі не можуть змінити серверні файли через цей редактор.</span></div><div class="cms-admin-tools">${button('project-reports','Надходження грантів за роками')}${button('site-export','Резервна копія сайта · JSON')}${button('site-import','Відновити сайт із JSON')}${button('page-import','Імпортувати сторінку · JSON')}</div><div class="cms-layout"><aside class="cms-page-list"><div class="section-head"><h2>Сторінки</h2><span class="pill">${site.pages.length}</span></div>${site.pages.map((p,n)=>`<div class="cms-page-row ${p.id===selected?'selected':''}"><button type="button" data-cms-action="select-page" data-page-id="${p.id}"><strong>${e(p.title)}</strong><span>${p.kind==='builtin'?'Вбудована':`#page/${e(p.slug)}`} ${p.visible?'':'· прихована'}</span></button><div>${button('page-up','↑',`data-page-id="${p.id}" ${n===0?'disabled':''} aria-label="Сторінка вгору"`,'secondary small')}${button('page-down','↓',`data-page-id="${p.id}" ${n===site.pages.length-1?'disabled':''} aria-label="Сторінка вниз"`,'secondary small')}</div></div>`).join('')}</aside><div class="cms-workbench"><section class="cms-live-pane" aria-label="Візуалізація сторінки"><div class="cms-live-heading"><div><h2>Вигляд сторінки</h2><p>Оновлюється автоматично · чернетка</p></div><span class="pill green">Наживо</span></div><iframe id="cms-live-frame" title="Візуалізація поточної сторінки" sandbox="allow-same-origin"></iframe></section><div class="cms-editor"><form id="cms-page-form"><section class="panel"><div class="section-head"><h2>Параметри сторінки</h2><span class="pill ${dirty?'amber':'green'}" id="cms-save-status">${saveStatus()}</span></div><div class="form-grid">${input('Назва в меню','title',draft.title,'required maxlength="120"')}${input('Адреса · латиницею','slug',draft.slug,`required pattern="[a-z0-9][a-z0-9-]{0,63}" ${draft.kind==='builtin'?'readonly':''}`)}${input('Заголовок сторінки','heading',draft.heading,'required maxlength="200"')}<label>Опис<input data-cms-field="description" value="${e(draft.description)}"></label><label class="checkbox-label"><input type="checkbox" data-cms-field="visible" ${draft.visible?'checked':''}>Показувати в меню</label><label class="checkbox-label"><input type="checkbox" data-cms-field="showYear" ${draft.showYear?'checked':''}>Показувати фільтр року</label></div><div class="cms-page-actions">${button('page-export','Експорт сторінки · JSON')}${button('duplicate-page','Копіювати сторінку')}${draft.kind==='custom'?button('delete-page','Видалити сторінку','','secondary danger'):''}</div></section><div class="section-head"><div><h2>Блоки сторінки</h2><p>Редагуйте вміст та змінюйте порядок стрілками.</p></div>${button('undo','Скасувати зміну',history.length?'':'disabled','secondary small')}</div>${draft.blocks.map(blockEditor).join('')}<section class="cms-block-palette"><h3>Додати блок</h3><div>${Object.entries(BLOCK_TYPES).filter(([key])=>key!=='existing').map(([key,title])=>button('add-block',`+ ${title}`,`data-block-type="${key}"`)).join('')}</div></section><div class="cms-save-bar"><span>${globalThis.KAI_LOCAL_PREVIEW?'Завантажує HTML зі змінами як початковими налаштуваннями':'Зміни застосуються до локальної копії сайта'}</span><button class="button primary" type="button" data-cms-action="save-page">${icon('check')} Зберегти сторінку</button></div><div class="form-error" id="cms-editor-error" role="alert"></div></form></div></div></div>`;
   }
   function transferBlock(block) { return block.type==='analytics'?{...block,dataTable:editableTable(block),...(block.dataMode!=='manual'?{dataPeriod:options.getBlockPeriod(block)}:{})}:block; }
   function widgetTools(block) {
@@ -355,6 +367,7 @@ export function createCMS(options) {
   async function action(name, el) {
     const id=el.dataset.blockId, b=id?currentBlock(id):null;
     if(view.handleAction(name,el))return;
+    if(name==='save-page'){await savePage();return;}
     if(name==='project-reports'){projectReports.open();return;}
     if(name==='widget-settings'||name==='widget-edit'||name==='widget-width'){widgetDialog(b,name.slice(7));return;}
     if(name==='widget-library-active'&&widgetState){widgetState.block.settings=selectChartLibrary(widgetState.block.settings,el.dataset.library,widgetState.block.source);widgetState.editLibrary=el.dataset.library;renderWidgetDialog();return;}
@@ -443,8 +456,8 @@ export function createCMS(options) {
     if(event.target.id==='cms-transfer-format'){importToken++;importValue=null;$('#cms-transfer-result').innerHTML='';const input=$('#cms-file-input');if(input){input.accept='.'+event.target.value;input.value='';}}
     if(event.target.id==='cms-file-input')readTransfer(event.target.files[0]);
   });
-  document.addEventListener('submit',event=>{if(event.target.id==='cms-page-form'){event.preventDefault();try{savePage();}catch(err){showError(err);}}});
-  window.addEventListener('beforeunload',event=>{if(dirty||temporary){event.preventDefault();event.returnValue='';}});
+  document.addEventListener('submit',event=>{if(event.target.id==='cms-page-form'){event.preventDefault();savePage().catch(showError);}});
+  window.addEventListener('beforeunload',event=>{if(dirty||(temporary&&!localFileSaved)){event.preventDefault();event.returnValue='';}});
   return {
     init(initial){site=expandSiteBlocks(initial);let saved=null;try{saved=localStorage.getItem(CMS_KEY);if(saved)site=expandSiteBlocks(JSON.parse(saved),site);}catch{saved=null;options.notify('Локальні сторінки недоступні або пошкоджені. Завантажено серверну версію.');}repairMetricSnapshots();if(saved&&JSON.stringify(site)!==saved)writeLocal(site);},
     pages:()=>activePages(),getPage:findPage,renderAdmin,renderBlocks,
