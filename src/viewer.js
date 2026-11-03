@@ -1,10 +1,10 @@
-import { sidebarTextSections } from './sidebar-view.js?v=compact-one-20261102';
-import { createAnalytics } from './analytics.js?v=compact-one-20261102';
-import { createSiteView } from './site-view.js?v=compact-one-20261102';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=compact-one-20261102';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=compact-one-20261102';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=compact-one-20261102';
-import { icon } from './icons.js?v=compact-one-20261102';
+import { sidebarTextSections } from './sidebar-view.js?v=compact-thirteen-20261103';
+import { createAnalytics } from './analytics.js?v=compact-thirteen-20261103';
+import { createSiteView } from './site-view.js?v=compact-thirteen-20261103';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=compact-thirteen-20261103';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=compact-thirteen-20261103';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=compact-thirteen-20261103';
+import { icon } from './icons.js?v=compact-thirteen-20261103';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

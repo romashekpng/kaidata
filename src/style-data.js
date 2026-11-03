@@ -21,7 +21,7 @@ export function defaultSiteStyles(){
   {id:'standard',name:'Стандартний',values:standard},
   {id:'compact',name:'Компактний',values:{...standard,bodySize:14,headingSize:32,sectionSize:19,valueSize:30,menuSize:14,controlsSize:14,tableSize:13,chartSize:11,smallSize:12,lineHeight:1.25,paragraphGap:8,blockGap:12,blockPadding:14,rowPadding:6,radius:10}},
   {id:'comfortable',name:'Комфортний',values:{...standard,bodySize:18,headingSize:44,sectionSize:24,valueSize:42,menuSize:18,controlsSize:18,tableSize:16,chartSize:14,smallSize:15,lineHeight:1.75,paragraphGap:20,blockGap:28,blockPadding:26,rowPadding:16}},
-  {id:'compact-1',name:'Компактний 1',values:{bodySize:14,headingSize:32,sectionSize:18,valueSize:30,menuSize:14,controlsSize:14,tableSize:12,chartSize:12,smallSize:12,lineHeight:1.1,paragraphGap:6,blockGap:12,blockPadding:14,rowPadding:6,radius:10}}
+  {id:'compact-1',name:'Компактний 1',values:{bodySize:14,headingSize:32,sectionSize:18,valueSize:30,menuSize:14,controlsSize:14,tableSize:13,chartSize:13,smallSize:13,lineHeight:1.1,paragraphGap:6,blockGap:12,blockPadding:14,rowPadding:6,radius:10}}
  ]};
 }
 export function validateSiteStyles(input){

@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=compact-one-20261102';
-import { createChartRenderer } from './chart-runtime.js?v=compact-one-20261102';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-one-20261102';
-import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=compact-one-20261102';
-import { icon } from './icons.js?v=compact-one-20261102';
+import { reportDate, currentReportingYear } from './data.js?v=compact-thirteen-20261103';
+import { createChartRenderer } from './chart-runtime.js?v=compact-thirteen-20261103';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-thirteen-20261103';
+import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=compact-thirteen-20261103';
+import { icon } from './icons.js?v=compact-thirteen-20261103';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());

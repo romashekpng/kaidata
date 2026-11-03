@@ -34,7 +34,7 @@ test('повна XLSX-книга переносить стилі, старі к�
 
 test('Компактний 1 точно відповідає параметрам зі скрінів і є типовим в обох початкових наборах',async()=>{
  const styles=validateSiteStyles(defaultSiteStyles()),preset=styles.presets.find(p=>p.id===styles.defaultPreset);
- assert.equal(preset.name,'Компактний 1');assert.deepEqual(preset.values,{bodySize:14,headingSize:32,sectionSize:18,valueSize:30,menuSize:14,controlsSize:14,tableSize:12,chartSize:12,smallSize:12,lineHeight:1.1,paragraphGap:6,blockGap:12,blockPadding:14,rowPadding:6,radius:10});assert.equal(styles.focusHighlight.enabled,false);
+ assert.equal(preset.name,'Компактний 1');assert.deepEqual(preset.values,{bodySize:14,headingSize:32,sectionSize:18,valueSize:30,menuSize:14,controlsSize:14,tableSize:13,chartSize:13,smallSize:13,lineHeight:1.1,paragraphGap:6,blockGap:12,blockPadding:14,rowPadding:6,radius:10});assert.equal(styles.focusHighlight.enabled,false);
  for(const name of ['demo','empty']){const data=JSON.parse(await readFile(new URL('../data/'+name+'.json',import.meta.url),'utf8'));assert.deepEqual(validateBundle(data).institution.styles,styles);}
  const configuredStyles=configured().institution.styles;assert.equal(validateSiteStyles(configuredStyles).defaultPreset,'my-style');
 });

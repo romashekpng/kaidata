@@ -1,5 +1,5 @@
-import { currentReportingYear, reportDate, updateProjectReports, validateBundle } from './data.js?v=compact-one-20261102';
-import { icon } from './icons.js?v=compact-one-20261102';
+import { currentReportingYear, reportDate, updateProjectReports, validateBundle } from './data.js?v=compact-thirteen-20261103';
+import { icon } from './icons.js?v=compact-thirteen-20261103';
 const reportEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createProjectReportsEditor(options){
  let dialog,projects=[],selected='',drafts=new Map();
