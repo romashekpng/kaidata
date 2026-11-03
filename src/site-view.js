@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=compact-thirteen-20261103';
-import { createChartRenderer } from './chart-runtime.js?v=compact-thirteen-20261103';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-thirteen-20261103';
-import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=compact-thirteen-20261103';
-import { icon } from './icons.js?v=compact-thirteen-20261103';
+import { reportDate, currentReportingYear } from './data.js?v=block-width-20261103';
+import { createChartRenderer } from './chart-runtime.js?v=block-width-20261103';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=block-width-20261103';
+import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=block-width-20261103';
+import { icon } from './icons.js?v=block-width-20261103';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
@@ -54,6 +54,7 @@ export function createSiteView(options){
     return wrapper.innerHTML;
   }
   function renderBlocks(page, inPreview = false) {
+    let mixedRow=false;
     const family={publicationChart:'publications',quartiles:'publications',faculties:'publications',publications:'publications',insight:'publications',projects:'projects',projectChart:'projects',programs:'projects',patents:'patents',patentStats:'patents',patentFaculties:'patents',funding:'funding',fundingStats:'funding',fundingSources:'funding',fundingTable:'funding',revenueNotice:'funding'};
     const enabled=options.getData().institution.blocks;
     const content=page.blocks.filter(b=>b.visible&&!(b.type==='analytics'&&family[b.source]&&!enabled.includes(family[b.source]))).map(b=>{
@@ -80,8 +81,9 @@ export function createSiteView(options){
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
       const period=b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
-      return `<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
-    }).join('');
+      const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
+      return `${rowPrefix}<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" data-width-mode="${s.widthMode}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--widget-fixed-width:${s.widthPixels}px;--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
+    }).join('')+(mixedRow?'</div>':'');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
   }
   function updatePublicationFilter(catalog,field,value){

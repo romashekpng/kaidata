@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=compact-thirteen-20261103';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=compact-thirteen-20261103';
-import { createSiteView } from './site-view.js?v=compact-thirteen-20261103';
-import { FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=compact-thirteen-20261103';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=compact-thirteen-20261103';
-import { renderBlockTable } from './block-view.js?v=compact-thirteen-20261103';
-import { validateBundle } from './data.js?v=compact-thirteen-20261103';
+import { createProjectReportsEditor } from './project-reports.js?v=block-width-20261103';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=block-width-20261103';
+import { createSiteView } from './site-view.js?v=block-width-20261103';
+import { BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=block-width-20261103';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=block-width-20261103';
+import { renderBlockTable } from './block-view.js?v=block-width-20261103';
+import { validateBundle } from './data.js?v=block-width-20261103';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=compact-thirteen-20261103';
+import { icon } from './icons.js?v=block-width-20261103';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -137,7 +137,7 @@ export function createCMS(options) {
   function widgetTools(block) {
     const extra=`data-block-id="${block.id}"`;
     const tool=(action,label,ico)=>button(action,`${icon(ico)}<span>${label}</span>`,`${extra} title="${label}" aria-label="${label}: ${e(block.title||BLOCK_TYPES[block.type])}"`,'secondary small');
-    return `<div class="cms-widget-toolbar" role="group" aria-label="Керування блоком">${tool('widget-settings','Налаштування','settings')}${tool('widget-edit','Редагувати','edit')}${tool('block-export','Експорт','download')}${tool('block-import','Імпорт','upload')}${button('widget-width',`${icon('width')}<span>${resolvedSettings(block).width}%</span>`,`${extra} title="Ширина блоку" aria-label="Ширина блоку: ${e(block.title||BLOCK_TYPES[block.type])}"`,'secondary small')}</div>`;
+    return `<div class="cms-widget-toolbar" role="group" aria-label="Керування блоком">${tool('widget-settings','Налаштування','settings')}${tool('widget-edit','Редагувати','edit')}${tool('block-export','Експорт','download')}${tool('block-import','Імпорт','upload')}${button('widget-width',`${icon('width')}<span>${blockWidthLabel(resolvedSettings(block))}</span>`,`${extra} title="Ширина блоку" aria-label="Ширина блоку: ${e(block.title||BLOCK_TYPES[block.type])}"`,'secondary small')}</div>`;
   }
   function widgetDialog(block, kind) {
     if(block.type==='existing'&&kind==='edit'){options.openDataManager('import',block.source);return;}
@@ -181,7 +181,7 @@ export function createCMS(options) {
     const field=(label,key,type='text',extra='')=>`<label>${label}<input type="${type}" data-widget-setting="${key}" value="${e(s[key])}" ${extra}></label>`;
     const check=(key,label,detail='')=>`<label class="checkbox-label cms-setting-check"><input type="checkbox" data-widget-setting="${key}" ${s[key]?'checked':''}><span><strong>${label}</strong>${detail?`<small>${detail}</small>`:''}</span></label>`;
     const percentageOptions=`<div class="cms-percentage-options" data-percentage-options ${s.segmentPercentages?'':'hidden'}><label>Округлення відсотків<select data-widget-setting="segmentPercentageDecimals"><option value="1" ${s.segmentPercentageDecimals===1?'selected':''}>До десятих (12,3%)</option><option value="0" ${s.segmentPercentageDecimals===0?'selected':''}>До цілих (12%)</option></select></label><div data-small-percentage-option ${s.segmentPercentageDecimals===0?'':'hidden'}>${check('smallPercentagesAsDecimal','Якщо відсоток менше 1%, показувати з округленням до десятих','Наприклад: 0,4% замість 0%.')}</div></div>`;
-    const width=`<fieldset><legend>Ширина блоку</legend><div class="cms-width-options">${[33,50,66,75,100].map(w=>button('widget-width-preset',`${w}%`,`data-width="${w}" aria-pressed="${s.width===w}"`,s.width===w?'primary small':'secondary small')).join('')}</div>${field('Вказати свій %','width','number','min="1" max="100" step="0.1"')}</fieldset>`;
+    const width=`<fieldset><legend>Ширина блоку</legend><label>Спосіб визначення ширини<select data-widget-setting="widthMode">${Object.entries(BLOCK_WIDTH_MODES).map(([value,label])=>`<option value="${value}" ${s.widthMode===value?'selected':''}>${label}</option>`).join('')}</select></label><div data-width-percent ${s.widthMode==='percent'?'':'hidden'}><div class="cms-width-options">${[33,50,66,75,100].map(w=>button('widget-width-preset',`${w}%`,`data-width="${w}" aria-pressed="${s.width===w}"`,s.width===w?'primary small':'secondary small')).join('')}</div>${field('Вказати свій %','width','number','min="1" max="100" step="0.1"')}</div><div data-width-fixed ${s.widthMode==='fixed'?'':'hidden'}>${field('Ширина блоку, px','widthPixels','number','min="80" max="4000" step="1"')}<p class="cms-field-help">Сусідньому блоку виберіть «Підібрати автоматично», щоб він заповнив решту рядка.</p></div><p class="cms-field-help" data-width-auto ${s.widthMode==='auto'?'':'hidden'}>Заповнює вільну ширину поруч із фіксованими блоками. Кілька автоматичних блоків ділять залишок порівну.</p><p class="cms-field-help">На телефоні блоки розміщуються один під одним на всю ширину.</p></fieldset>`;
     let body='';
     if(kind==='width')body=width;
     else if(kind==='settings'){
@@ -241,6 +241,7 @@ export function createCMS(options) {
       swatch.style.cssText=row[b]==='custom'?`--text-block-bg:${row[c]}`:'';
     }
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;storeWidgetSetting(key,el.type==='checkbox'?el.checked:el.type==='number'||key==='segmentPercentageDecimals'?Number(el.value):el.value);}
+    if(el.dataset.widgetSetting==='widthMode'){for(const mode of ['percent','fixed','auto'])$('#cms-widget-dialog [data-width-'+mode+']').hidden=mode!==el.value;}
     if(el.dataset.widgetSetting==='autoColumns')$('#cms-widget-dialog [data-widget-setting="columns"]').disabled=el.checked;
     if(['segmentPercentages','segmentPercentageDecimals'].includes(el.dataset.widgetSetting)){
       const settings=widgetSettings(),controls=$('#cms-widget-dialog [data-percentage-options]'),small=$('#cms-widget-dialog [data-small-percentage-option]');
@@ -366,7 +367,7 @@ export function createCMS(options) {
     }
     if(name.startsWith('widget-')&&widgetState){
       const state=widgetState,table=state.table;
-      if(name==='widget-width-preset')state.block.settings.width=+el.dataset.width;
+      if(name==='widget-width-preset'){state.block.settings.width=+el.dataset.width;state.block.settings.widthMode='percent';}
       if(name==='widget-add-color'&&widgetSettings().customColors.length<12){storeWidgetSetting('customColors',[...widgetSettings().customColors,'#3479c6']);storeWidgetSetting('palette','custom');}
       if(name==='widget-remove-color'&&widgetSettings().customColors.length>1){storeWidgetSetting('customColors',widgetSettings().customColors.slice(0,-1));storeWidgetSetting('palette','custom');}
       if(name==='widget-add-row'){if(table.rows.length>=1000)throw new Error('До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}

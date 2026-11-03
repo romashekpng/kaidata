@@ -1,5 +1,5 @@
-import { scaleMoney } from './money.js?v=compact-thirteen-20261103';
-import { validateSiteStyles } from './style-data.js?v=compact-thirteen-20261103';
+import { scaleMoney } from './money.js?v=block-width-20261103';
+import { validateSiteStyles } from './style-data.js?v=block-width-20261103';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({

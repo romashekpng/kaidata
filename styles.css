@@ -360,3 +360,9 @@ dialog{background:var(--surface)}
 #cms-widget-dialog textarea{resize:vertical}
 
 .cms-widget.cms-feature-auto-height{align-self:flex-start}
+
+/* Adjacent fixed/automatic blocks share a row independently of percentage rows. */
+.cms-mixed-width-row{display:flex;flex-wrap:wrap;align-items:stretch;gap:inherit;flex:0 0 100%;min-width:0;max-width:100%}
+.cms-mixed-width-row>.cms-widget[data-width-mode="fixed"]{flex:0 0 var(--widget-fixed-width)}
+.cms-mixed-width-row>.cms-widget[data-width-mode="auto"]{flex:1 1 240px}
+@media(max-width:720px){.cms-mixed-width-row>.cms-widget[data-width-mode]{flex:0 0 100%}}

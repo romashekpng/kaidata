@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=compact-thirteen-20261103';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=compact-thirteen-20261103';
+import { convertMoneyBlock } from './money.js?v=block-width-20261103';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=block-width-20261103';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
@@ -99,8 +99,12 @@ export function selectChartLibrary(settings, library, source = '') {
  return {...next,librarySettings:saved.librarySettings};
 }
 export function isHorizontalChartType(type) { return type==='horizontal'||type==='horizontalStacked'; }
+export const BLOCK_WIDTH_MODES = {percent:'У відсотках',fixed:'Фіксована ширина, px',auto:'Підібрати автоматично'};
+export function blockWidthLabel(settings = {}) {
+ return settings.widthMode==='fixed'?`${settings.widthPixels??250} px`:settings.widthMode==='auto'?'Авто':`${settings.width??100}%`;
+}
 export function defaultBlockSettings(source = '') {
- return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:['faculties','projectChart','programs'].includes(source)?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { chartLibrary:'echarts', publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, widthMode:'percent', widthPixels:250, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:['faculties','projectChart','programs'].includes(source)?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function defaultBlockSubtitle(source) {
  if(source==='projectChart')return 'Кількість проєктів за роками';
@@ -140,6 +144,8 @@ export function inferTablePeriod(table) {
 function validateFlatBlockSettings(input = {}, source = '') {
  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Некоректні налаштування блоку.');
  const out = { ...defaultBlockSettings(source), ...input };
+ if(!Object.hasOwn(BLOCK_WIDTH_MODES,out.widthMode))throw new Error('Виберіть ширину у відсотках, фіксовану або автоматичну.');
+ if(!Number.isInteger(out.widthPixels)||out.widthPixels<80||out.widthPixels>4000)throw new Error('Фіксована ширина: від 80 до 4000 px.');
  if(!Object.hasOwn(CHART_LIBRARIES,out.chartLibrary))throw new Error('Невідома бібліотека для діаграм.');
  if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||typeof out.backgroundColor!=='string'||!/^#[0-9a-f]{6}$/i.test(out.backgroundColor))throw new Error('Фон блоку: виберіть колір теми або колір у форматі #RRGGBB.');
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
