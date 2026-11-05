@@ -402,3 +402,7 @@ dialog{background:var(--surface)}
 .sidebar-brand-preview{width:244px;max-width:100%;padding:22px;background:var(--nav);border-radius:10px;margin-bottom:18px}.sidebar-brand-preview .brand{padding:0}
 .sidebar-logo-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 20px}
 @media(max-width:720px){.sidebar-no-scroll{position:fixed;inset:0 auto 0 0;min-height:0;overflow:auto}.sidebar-no-scroll.open{position:absolute;inset:var(--sidebar-open-top,0px) auto auto 0;min-height:100dvh;overflow:visible}}
+
+/* Continue the sidebar color below its content when it scrolls with the page. */
+@media(min-width:721px){body:has(>.sidebar-no-scroll){--sidebar-fill-width:244px;background-image:linear-gradient(to right,var(--nav) 0 var(--sidebar-fill-width),var(--bg) var(--sidebar-fill-width) 100%)}}
+@media(min-width:721px) and (max-width:1250px){body:has(>.sidebar-no-scroll){--sidebar-fill-width:215px}}
