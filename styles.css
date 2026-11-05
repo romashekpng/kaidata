@@ -366,3 +366,13 @@ dialog{background:var(--surface)}
 .cms-mixed-width-row>.cms-widget[data-width-mode="fixed"]{flex:0 0 var(--widget-fixed-width)}
 .cms-mixed-width-row>.cms-widget[data-width-mode="auto"]{flex:1 1 240px}
 @media(max-width:720px){.cms-mixed-width-row>.cms-widget[data-width-mode]{flex:0 0 100%}}
+
+/* Full progress captions sit above their bars and grow with wrapped names. */
+.cms-progress-labels{position:absolute;left:0;right:0;display:grid;pointer-events:none;color:var(--text-secondary)}
+.cms-progress-label-row{position:relative;min-width:0}
+.cms-progress-label-caption{position:absolute;left:4px;right:8px;bottom:calc(50% + 9px);display:flex;align-items:flex-start;gap:8px;min-width:0}
+.cms-progress-label-name{flex:1;min-width:0;white-space:pre-line;overflow-wrap:anywhere}
+.cms-progress-label-number,.cms-progress-label-value{flex:none;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums}
+.cms-progress-label-value{color:var(--ink)}
+.cms-library-tooltip{white-space:normal;overflow-wrap:anywhere;word-break:normal}
+@media(max-width:720px){.cms-horizontal-label{white-space:normal;overflow:visible;overflow-wrap:anywhere}}
