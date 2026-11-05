@@ -1,7 +1,21 @@
-import { convertMoneyBlock } from './money.js?v=metric-color-defaults-20261105';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-color-defaults-20261105';
+import { convertMoneyBlock } from './money.js?v=data-note-20261105';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=data-note-20261105';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
-export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Якість публікацій',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
+export const NOTE_OPERATIONS = {sum:'Сума значень',avg:'Середнє значення',min:'Найменше значення',max:'Найбільше значення',count:'Кількість рядків',distinct:'Кількість різних назв',value:'Значення одного рядка'};
+export function defaultNoteBinding(){return {kind:'builtin',source:'funding',blockId:'',periodMode:'year',period:'',column:'',row:'',operation:'sum',unit:'тис. грн',decimals:2,manualValue:''};}
+export function defaultDataNoteContent(){return {lead:'{source} {periodLabel}:',text:'{value} {unit}. Грантові кошти обліковуються окремо; ці суми не додаються автоматично.',emptyText:'дані не завантажено',icon:'info',binding:defaultNoteBinding()};}
+export function validateNoteBinding(input={}){
+ if(!obj(input))fail('Некоректне джерело примітки.');const out={...defaultNoteBinding(),...input};
+ if(!['builtin','block','manual'].includes(out.kind)||!Object.hasOwn(NOTE_SOURCES,out.source)||!['year','fixed'].includes(out.periodMode)||!Object.hasOwn(NOTE_OPERATIONS,out.operation))fail('Перевірте джерело, режим періоду та розрахунок примітки.');
+ out.blockId=str(out.blockId,'ID джерела',80);if(out.kind==='block')id(out.blockId,'Оберіть блок-джерело');
+ out.period=normalizeBlockPeriod(out.period);if(out.periodMode==='fixed'&&!out.period)fail('Вкажіть фіксований рік або період.');
+ const years=out.period.split('-').map(Number);if(years.length===2&&years[1]-years[0]>=100)fail('Період примітки: не більше 100 років.');
+ for(const [key,max]of [['column',160],['row',4000],['unit',100],['manualValue',4000]])out[key]=str(out[key],key,max);
+ if(!Number.isInteger(out.decimals)||out.decimals<0||out.decimals>6)fail('Точність числа: від 0 до 6 знаків після коми.');
+ return Object.fromEntries(Object.keys(defaultNoteBinding()).map(key=>[key,out[key]]));
+}
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
 export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрілка', external:'Зовнішнє посилання', chevron:'Шеврон' };
 export function defaultFeatureContent() { return {eyebrow:'ВІДКРИТА НАУКА',headline:'Знання мають бути доступними.',text:'Публікації, дослідження та винаходи університету — в одному просторі даних.',linkLabel:'Дослідити публікації',linkUrl:'#publications',icon:'globe',linkIcon:'arrow',openInNewTab:false}; }
@@ -210,9 +224,18 @@ export function validateCMSBlock(input) {
     const manual=input.dataMode==='manual'?validateBlockTable(input.dataTable):null;
     input={...defaultFeatureContent(),...input,type:'feature',...(manual?{eyebrow:'',headline:'',text:manual.rows.map(r=>r.join(' · ')).join('\n'),icon:'none',linkLabel:'',linkUrl:''}:{})};
   }
+  if(input?.type==='analytics'&&input.source==='revenueNotice'){
+    const manual=input.dataMode==='manual'?validateBlockTable(input.dataTable):null;
+    input={...defaultDataNoteContent(),...input,type:'dataNote',settings:{...defaultBlockSettings(),...input.settings,background:!input.settings?.background||input.settings.background==='default'?'green':input.settings.background},...(manual?{lead:'',text:manual.rows.map(r=>r.join(' · ')).join('\n'),binding:{...defaultNoteBinding(),kind:'manual',manualValue:'',periodMode:input.dataPeriod?'fixed':'year',period:input.dataPeriod||''}}:{})};
+  }
   if (!obj(input) || !Object.hasOwn(BLOCK_TYPES, input.type)) fail('Невідомий тип блоку.');
   const out = { id: id(input.id, 'ID блоку'), type: input.type, title: str(input.title, 'Заголовок блоку', 240), visible: bool(input.visible, 'Видимість блоку') };
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
+  if(input.type==='dataNote'){
+    out.lead=str(input.lead,'Вступ примітки',2000);out.text=str(input.text,'Текст примітки',50000);out.emptyText=str(input.emptyText,'Текст за відсутності даних',1000);out.binding=validateNoteBinding(input.binding);
+    if(!Object.hasOwn(FEATURE_ICONS,input.icon))fail('Невідома іконка примітки.');out.icon=input.icon;
+    for(const text of[out.lead,out.text])for(const match of text.matchAll(/\{([a-zA-Z]+)\}/g))if(!['value','period','periodLabel','unit','source'].includes(match[1]))fail(`Невідома підстановка {${match[1]}}. Використайте {value}, {period}, {periodLabel}, {unit} або {source}.`);
+  }
   if (input.type === 'feature') {
     for(const [key,label,max]of [['eyebrow','Напис біля іконки',240],['headline','Заголовок картки',2000],['text','Опис картки',50000],['linkLabel','Текст посилання',240]])out[key]=str(input[key],label,max);
     out.linkUrl=safeCMSLink(input.linkUrl);
@@ -355,6 +378,7 @@ export function defaultCMSBlock(type) {
   if (type === 'text') block.text = 'Додайте текст вашого університету.';
   if (type === 'banner') Object.assign(block, { text: 'Важливе повідомлення або запрошення до співпраці.', tone: 'green', linkLabel: '', linkUrl: '' });
   if (type === 'feature') Object.assign(block,{title:'Відкрита наука',...defaultFeatureContent(),appearance:validateFeatureStyle(),settings:{...defaultBlockSettings(),width:34}});
+  if(type==='dataNote')Object.assign(block,{title:'Примітка про фінансування',...defaultDataNoteContent(),settings:{...defaultBlockSettings(),background:'green'}});
   if (type === 'list') Object.assign(block, { items: ['Перший пункт', 'Другий пункт'], ordered: false });
   if (type === 'table') Object.assign(block, { columns: ['Назва', 'Значення'], rows: [['Приклад', '0']], caption: '' });
   if (type === 'chart') Object.assign(block, { columns:['Рік','Серія 1','Серія 2'], rows:[['2024','80','40'],['2025','100','55'],['2026','120','65']], settings:{...defaultBlockSettings(),allYears:true} });
@@ -398,6 +422,7 @@ export function expandSiteBlocks(input, defaults = null) {
 }
 
 export function blockTableData(block) {
+  if(block.type==='dataNote'){const headers=['title','lead','text','emptyText','icon'];return{headers,rows:[headers.map(key=>block[key])]};}
   if(block.type==='feature'){const headers=['title','eyebrow','headline','text','linkLabel','linkUrl','icon','linkIcon','openInNewTab'];return {headers,rows:[headers.map(key=>String(block[key]))]};}
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
   if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);

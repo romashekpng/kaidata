@@ -1,8 +1,9 @@
-import { reportDate, currentReportingYear } from './data.js?v=metric-color-defaults-20261105';
-import { createChartRenderer } from './chart-runtime.js?v=metric-color-defaults-20261105';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-color-defaults-20261105';
-import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=metric-color-defaults-20261105';
-import { icon } from './icons.js?v=metric-color-defaults-20261105';
+import { reportDate, currentReportingYear } from './data.js?v=data-note-20261105';
+import { createChartRenderer } from './chart-runtime.js?v=data-note-20261105';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=data-note-20261105';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=data-note-20261105';
+import { icon } from './icons.js?v=data-note-20261105';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=data-note-20261105';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
@@ -18,6 +19,8 @@ export function createSiteView(options){
     }
     return blockTableData(block);
   }
+  const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
+  function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
     return {...site,pages:site.pages.map(page=>({...page,blocks:page.blocks.map(block=>{
       if(block.type!=='analytics'||!isMetricBlock(block)||block.dataMode!=='manual'||block.metricEditingVersion===1)return block;
@@ -61,7 +64,7 @@ export function createSiteView(options){
       const s=resolvedSettings(b),isChart=b.type==='chart'||(b.type==='analytics'&&CHART_SOURCES.includes(b.source));
       const subtitleText=b.subtitle??(b.type==='analytics'?defaultBlockSubtitle(b.source):'');
       const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=subtitleText?`<p class="cms-widget-subtitle">${e(subtitleText)}</p>`:'';
-      let body='',displayedTable=null;
+      let body='',displayedTable=null,note=null;
       if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
@@ -74,12 +77,13 @@ export function createSiteView(options){
       else if(b.type==='existing')body=options.renderExisting(b.source);
       else if(b.type==='banner')body=`<div class="cms-banner ${b.tone}"><p>${e(b.text).replaceAll('\n','<br>')}</p>${b.linkUrl?`<a class="button primary" href="${e(b.linkUrl)}" ${b.linkUrl.startsWith('http')?'target="_blank" rel="noopener noreferrer"':''}>${e(b.linkLabel)} ${icon('arrow')}</a>`:''}</div>`;
       else if(b.type==='feature')body=renderFeatureCard(b);
+      else if(b.type==='dataNote'){note=noteResult(b);body=renderDataNote(b,note);}
       else if(b.type==='text')body=`<div class="cms-prose">${b.text.split(/\n\s*\n/).filter(Boolean).map(p=>`<p>${e(p).replaceAll('\n','<br>')}</p>`).join('')}</div>`;
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
-      const period=b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const period=b.type==='dataNote'?note.period:b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
       return `${rowPrefix}<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" data-width-mode="${s.widthMode}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--widget-fixed-width:${s.widthPixels}px;--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
@@ -141,5 +145,5 @@ export function createSiteView(options){
   root.addEventListener('input',event=>{if(event.target.matches('[data-publication-query]'))updatePublicationFilter(event.target.closest('.publication-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{for(const key of ['faculty','index','quartile'])if(event.target.matches(`[data-publication-${key}]`))updatePublicationFilter(event.target.closest('.publication-catalog'),key,event.target.value);});
  }
- return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
+ return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,noteResult,noteTable,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

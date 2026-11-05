@@ -1,9 +1,13 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=metric-color-defaults-20261105';
-import { icon } from './icons.js?v=metric-color-defaults-20261105';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock } from './cms-data.js?v=metric-color-defaults-20261105';
+import { formatMoney, convertMoneyTable } from './money.js?v=data-note-20261105';
+import { icon } from './icons.js?v=data-note-20261105';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock } from './cms-data.js?v=data-note-20261105';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
+export function renderDataNote(block,result){
+ const s={...defaultBlockSettings(),...block.settings},color=s.background==='custom'?customBackgroundStyle(s.backgroundColor):'';
+ return `<div class="cms-data-note cms-text-bg-${s.background}" ${color?`style="${color}"`:''} ${result.error?'role="status"':''}>${block.icon==='none'?'':icon(block.icon)}<div>${result.lead?`<strong>${esc(result.lead)}</strong> `:''}<span>${esc(result.text).replaceAll('\n','<br>')}</span></div></div>`;
+}
 export function renderFeatureCard(input) {
  const b=validateCMSBlock(input),s=b.appearance;
  const variables=Object.entries(s).filter(([key])=>!['background','align','autoHeight'].includes(key)).map(([key,value])=>`--feature-${key}:${typeof value==='number'?(key==='minHeight'&&s.autoHeight?0:value)+'px':value}`).join(';');
