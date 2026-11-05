@@ -1,8 +1,8 @@
 import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';import ExcelJS from 'exceljs';
-import {SIDEBAR_DEFAULTS,validateBundle,importCSV} from '../src/data.js';import {sidebarTextSections} from '../src/sidebar-view.js';import {toXLSX,importXLSX} from '../src/spreadsheet.js';
+import {SIDEBAR_DEFAULTS,validateBundle,importCSV} from '../src/data.js';import {sidebarTextSections,sidebarBrand} from '../src/sidebar-view.js';import {toXLSX,importXLSX} from '../src/spreadsheet.js';
 const demo=JSON.parse(await readFile(new URL('../data/demo.json',import.meta.url),'utf8'));
 const small=()=>{const data=structuredClone(demo);for(const key of ['publications','projects','patents','revenues'])data[key]=data[key].slice(0,1);return validateBundle(data);};
-const configured=()=>{const data=small();Object.assign(data.institution,{sidebarStatus:'Наші відкриті дані',sidebarTagline:'Дослідження\nдля майбутнього',showSidebarStatus:false,showSidebarTagline:true,showSidebarName:false,showSidebarSubtitle:true});return data;};
+const configured=()=>{const data=small();Object.assign(data.institution,{sidebarStatus:'Наші відкриті дані',sidebarTagline:'Дослідження\nдля майбутнього',showSidebarStatus:false,showSidebarTagline:true,showSidebarName:false,showSidebarSubtitle:true,sidebarBrandText:'Наука\nі дослідження',sidebarLogo:'',showSidebarScroll:false});return data;};
 test('старі JSON отримують попередні тексти й видимість; нові налаштування не губляться при частковому імпорті',()=>{
  const legacy=small();for(const key of Object.keys(SIDEBAR_DEFAULTS))delete legacy.institution[key];const restored=validateBundle(legacy);for(const [key,value]of Object.entries(SIDEBAR_DEFAULTS))assert.equal(restored.institution[key],value);
  const data=configured();assert.deepEqual(validateBundle(JSON.parse(JSON.stringify(data))),data);assert.deepEqual(importCSV('year;source;amountThousandUAH\n2026;Джерело;10','revenues',data).institution,data.institution);
@@ -31,4 +31,15 @@ test('старі книги без нових рядків підтримуют�
  const legacy=await importXLSX(await book.xlsx.writeBuffer(),'bundle',demo,ExcelJS);for(const [key,value]of Object.entries(SIDEBAR_DEFAULTS))assert.equal(legacy.institution[key],value);assert.equal(legacy.institution.name,data.institution.name);
  await book.xlsx.load(await toXLSX(data,'bundle',ExcelJS));const current=book.getWorksheet('Університет');let flagRow;current.eachRow(row=>{if(row.getCell(1).value==='institution.showSidebarStatus')flagRow=row;});flagRow.getCell(2).value='yes';await assert.rejects(async()=>importXLSX(await book.xlsx.writeBuffer(),'bundle',demo,ExcelJS),/showSidebarStatus/);
  flagRow.getCell(2).value=true;let textRow;current.eachRow(row=>{if(row.getCell(1).value==='institution.sidebarTagline')textRow=row;});textRow.getCell(1).value='institution.sidebarStatus';await assert.rejects(async()=>importXLSX(await book.xlsx.writeBuffer(),'bundle',demo,ExcelJS),/повторюваний/);
+});
+
+test('логотип і підпис підтримують зображення, текстовий варіант і порожній підпис; HTML екранується',async()=>{
+ const i=small().institution,branded=sidebarBrand(i);assert(branded.includes('class="brand-logo"'));assert(branded.includes('data:image/svg+xml,'));assert(branded.includes('SCIENCE &amp; INSIGHTS'));
+ const custom=validateBundle({...demo,institution:{...i,sidebarLogo:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+iF9kAAAAASUVORK5CYII=',sidebarBrandText:'<img src=x>\nДругий рядок',showSidebarScroll:false}});
+ assert.deepEqual(validateBundle(JSON.parse(JSON.stringify(custom))),custom);assert.deepEqual(await importXLSX(await toXLSX(custom,'bundle',ExcelJS),'bundle',demo,ExcelJS),custom);const rendered=sidebarBrand(custom.institution);assert(rendered.includes('&lt;img src=x&gt;<br>Другий рядок'));assert(!rendered.includes('<img src=x>'));
+ const fallback=sidebarBrand({...i,sidebarLogo:'',sidebarBrandText:''});assert(fallback.includes('brand-mark'));assert(!fallback.includes('brand-logo'));assert(!fallback.includes('<small'));
+});
+test('небезпечні адреси, сторонні SVG, пошкоджені дані й надмірні зображення відхиляються',()=>{
+ for(const sidebarLogo of ['https://example.org/logo.png','javascript:alert(1)','data:image/svg+xml,<svg onload="alert(1)"/>','data:image/png;base64,bm90IGFuIGltYWdl',null,'a'.repeat(32001)])assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,sidebarLogo}}));
+ assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,sidebarBrandText:'a'.repeat(241)}}));assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,showSidebarScroll:'false'}}));
 });

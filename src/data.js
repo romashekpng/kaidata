@@ -1,8 +1,10 @@
-import { scaleMoney } from './money.js?v=page-eyebrow-20261106';
-import { validateSiteStyles } from './style-data.js?v=page-eyebrow-20261106';
+import { scaleMoney } from './money.js?v=sidebar-brand-20261106';
+import { validateSiteStyles } from './style-data.js?v=sidebar-brand-20261106';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=sidebar-brand-20261106';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
+ sidebarLogo:DEFAULT_SIDEBAR_LOGO,sidebarBrandText:'SCIENCE & INSIGHTS',showSidebarScroll:true,
  sidebarStatus:'Відкриті дані. Нові можливості.',
  sidebarTagline:'Знання, що формують\nмайбутнє університету.',
  showSidebarStatus:false,showSidebarTagline:false,showSidebarName:true,showSidebarSubtitle:false
@@ -94,8 +96,9 @@ export function validateBundle(input) {
   }};
   for(const [key,fallback]of Object.entries(SIDEBAR_DEFAULTS)){
     const value=i[key]===undefined?fallback:i[key];
-    if(typeof fallback==='boolean'){if(typeof value!=='boolean')fail(`institution.${key}: true або false.`);out.institution[key]=value;}
-    else {const max=key==='sidebarStatus'?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
+    if(key==='sidebarLogo')out.institution[key]=validateSidebarLogo(value);
+    else if(typeof fallback==='boolean'){if(typeof value!=='boolean')fail(`institution.${key}: true або false.`);out.institution[key]=value;}
+    else {const max=['sidebarStatus','sidebarBrandText'].includes(key)?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
   }
   if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
   for (const key of DATASETS) {

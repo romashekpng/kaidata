@@ -391,3 +391,14 @@ dialog{background:var(--surface)}
 
 /* Long page overlines wrap within the heading on narrow screens. */
 .page-heading>div:first-child{min-width:0}.page-heading .eyebrow{overflow-wrap:anywhere}.page-heading .eyebrow>span{flex-shrink:0}
+
+/* Configurable logo and caption at the top of the sidebar. */
+.brand.brand-image{flex-direction:column;align-items:flex-start;gap:9px}
+.brand-logo{display:block;width:100%;height:auto;max-height:74px;object-fit:contain;object-position:left center}
+.brand .brand-caption{max-width:100%;margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:10px;line-height:1.5;letter-spacing:1px}
+.brand.brand-fallback{display:grid;grid-template-columns:42px minmax(0,1fr);gap:7px 12px}.brand.brand-fallback .brand-caption{grid-column:1/-1}
+.brand .brand-word{font-size:29px;font-weight:750;letter-spacing:1px;white-space:normal;overflow-wrap:anywhere}
+.sidebar>*{flex-shrink:0}.sidebar-no-scroll{position:absolute;inset:0 auto auto 0;min-height:100dvh;overflow:visible}
+.sidebar-brand-preview{width:244px;max-width:100%;padding:22px;background:var(--nav);border-radius:10px;margin-bottom:18px}.sidebar-brand-preview .brand{padding:0}
+.sidebar-logo-actions{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 20px}
+@media(max-width:720px){.sidebar-no-scroll{position:fixed;inset:0 auto 0 0;min-height:0;overflow:auto}.sidebar-no-scroll.open{position:absolute;inset:var(--sidebar-open-top,0px) auto auto 0;min-height:100dvh;overflow:visible}}

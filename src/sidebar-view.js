@@ -1,6 +1,11 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=page-eyebrow-20261106';
-import { icon } from './icons.js?v=page-eyebrow-20261106';
+import { SIDEBAR_DEFAULTS } from './data.js?v=sidebar-brand-20261106';
+import { icon } from './icons.js?v=sidebar-brand-20261106';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function sidebarBrand(institution){
+ const i={...SIDEBAR_DEFAULTS,...institution},e=sidebarEscape;
+ const caption=i.sidebarBrandText?`<small class="brand-caption">${e(i.sidebarBrandText).replaceAll('\n','<br>')}</small>`:'';
+ return `<a class="brand ${i.sidebarLogo?'brand-image':'brand-fallback'}" href="#overview" aria-label="На головну">${i.sidebarLogo?`<img class="brand-logo" src="${e(i.sidebarLogo)}" alt="${e(i.shortName)}">`:`<span class="brand-mark">${icon('layers')}</span><span class="brand-word">${e(i.shortName)}</span>`}${caption}</a>`;
+}
 export function sidebarTextSections(institution){
  const i={...SIDEBAR_DEFAULTS,...institution},e=sidebarEscape,multiline=text=>e(text).replaceAll('\n','<br>');
  const status=i.showSidebarStatus&&i.sidebarStatus?`<span class="sidebar-status"><span class="live-dot"></span>${multiline(i.sidebarStatus)}</span>`:'';

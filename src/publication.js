@@ -1,8 +1,8 @@
-import { validateBundle } from './data.js?v=page-eyebrow-20261106';
-import { validateSite } from './cms-data.js?v=page-eyebrow-20261106';
+import { validateBundle } from './data.js?v=sidebar-brand-20261106';
+import { validateSite } from './cms-data.js?v=sidebar-brand-20261106';
 export const CHART_ASSETS=['src/chart-runtime.js','src/vendor/echarts.min.js','src/vendor/echarts.LICENSE.txt','src/vendor/echarts.NOTICE.txt','src/vendor/chart.min.js','src/vendor/chart.LICENSE.txt','src/vendor/plotly.min.js','src/vendor/plotly.LICENSE.txt'];
-export const PUBLICATION_ASSETS=['index.html','styles.css','src/app.js','src/viewer.js','src/analytics.js','src/site-view.js','src/publication.js','src/style-data.js','src/data.js','src/money.js','src/icons.js','src/sidebar-view.js','src/spreadsheet.js','src/cms-data.js','src/data-note.js','src/block-view.js','src/cms-io.js','src/cms.js','src/project-reports.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt',...CHART_ASSETS];
-export const VISITOR_ASSETS=['index.html','styles.css','src/viewer.js','src/analytics.js','src/site-view.js','src/style-data.js','src/data.js','src/money.js','src/icons.js','src/sidebar-view.js','src/cms-data.js','src/data-note.js','src/block-view.js',...CHART_ASSETS];
+export const PUBLICATION_ASSETS=['index.html','styles.css','src/app.js','src/viewer.js','src/analytics.js','src/site-view.js','src/publication.js','src/style-data.js','src/data.js','src/money.js','src/icons.js','src/sidebar-view.js','src/branding-data.js','src/spreadsheet.js','src/cms-data.js','src/data-note.js','src/block-view.js','src/cms-io.js','src/cms.js','src/project-reports.js','src/zip.js','src/vendor/exceljs.min.js','src/vendor/exceljs.LICENSE.txt',...CHART_ASSETS];
+export const VISITOR_ASSETS=['index.html','styles.css','src/viewer.js','src/analytics.js','src/site-view.js','src/style-data.js','src/data.js','src/money.js','src/icons.js','src/sidebar-view.js','src/branding-data.js','src/cms-data.js','src/data-note.js','src/block-view.js',...CHART_ASSETS];
 export function buildPublicationFiles(assets,data,site,mode){
  if(!['editor','visitor'].includes(mode))throw new Error('Виберіть варіант сайта для публікації.');
  const cleanData=validateBundle(data),cleanSite=validateSite(site),names=mode==='editor'?PUBLICATION_ASSETS:VISITOR_ASSETS;
@@ -11,7 +11,7 @@ export function buildPublicationFiles(assets,data,site,mode){
   const index=files.find(file=>file.name==='index.html');
   const entry=/<script type="module" src="\.\/src\/app\.js(?:\?[^"<>]*)?"><\/script>/;
   if(!entry.test(index.data))throw new Error('Не вдалося знайти файл запуску сайта для підготовки версії відвідувачів.');
-  index.data=index.data.replace(entry,'<script type="module" src="./src/viewer.js?v=page-eyebrow-20261106"><\/script>').replace(/\s*<dialog\b[^>]*id="manager"[^>]*>[\s\S]*?<\/dialog>/,'').replace('<html lang="uk"','<html data-publication="visitor" lang="uk"');
+  index.data=index.data.replace(entry,'<script type="module" src="./src/viewer.js?v=sidebar-brand-20261106"><\/script>').replace(/\s*<dialog\b[^>]*id="manager"[^>]*>[\s\S]*?<\/dialog>/,'').replace('<html lang="uk"','<html data-publication="visitor" lang="uk"');
   const referenced=new Set(cleanSite.pages.filter(p=>p.visible).flatMap(p=>p.blocks.filter(b=>b.visible&&b.type==='dataNote'&&b.binding.kind==='block').map(b=>b.binding.blockId)));
   cleanSite.pages=cleanSite.pages.filter(p=>p.visible||p.kind==='builtin'||p.blocks.some(b=>referenced.has(b.id))).map(p=>({...p,blocks:p.blocks.filter(b=>(p.visible&&b.visible)||referenced.has(b.id)).map(b=>{const block={...b,visible:p.visible&&b.visible};delete block.metricManualBackup;if(block.type==='analytics'&&block.dataMode!=='manual'){delete block.dataTable;delete block.dataPeriod;}return block;})}));
  }

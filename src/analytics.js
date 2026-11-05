@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=page-eyebrow-20261106';
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=page-eyebrow-20261106';
-import { icon } from './icons.js?v=page-eyebrow-20261106';
-import { renderProjectCard } from './block-view.js?v=page-eyebrow-20261106';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=page-eyebrow-20261106';
+import { formatMoney } from './money.js?v=sidebar-brand-20261106';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=sidebar-brand-20261106';
+import { icon } from './icons.js?v=sidebar-brand-20261106';
+import { renderProjectCard } from './block-view.js?v=sidebar-brand-20261106';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=sidebar-brand-20261106';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
