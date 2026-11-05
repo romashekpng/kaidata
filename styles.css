@@ -388,3 +388,6 @@ dialog{background:var(--surface)}
 .cms-data-note{display:flex;align-items:flex-start;gap:10px;min-width:0;padding:13px 16px;border:1px solid color-mix(in srgb,var(--text-block-ink) 18%,var(--text-block-bg));border-radius:7px;background:var(--text-block-bg);color:var(--text-block-ink);font-size:var(--site-body-size,14px);line-height:1.5}
 .cms-data-note>.icon{width:16px;height:16px;flex-shrink:0;margin-top:2px}.cms-data-note>div{min-width:0;overflow-wrap:anywhere}
 #cms-note-preview{margin-top:12px}.cms-note-tokens{display:flex;flex-wrap:wrap;gap:6px}
+
+/* Long page overlines wrap within the heading on narrow screens. */
+.page-heading>div:first-child{min-width:0}.page-heading .eyebrow{overflow-wrap:anywhere}.page-heading .eyebrow>span{flex-shrink:0}

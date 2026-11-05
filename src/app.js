@@ -1,13 +1,13 @@
-import { sidebarTextSections } from './sidebar-view.js?v=data-note-20261105';
-import { formatMoney } from './money.js?v=data-note-20261105';
-import { createAnalytics } from './analytics.js?v=data-note-20261105';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=data-note-20261105';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=data-note-20261105';
-import { icon } from './icons.js?v=data-note-20261105';
+import { sidebarTextSections } from './sidebar-view.js?v=page-eyebrow-20261106';
+import { formatMoney } from './money.js?v=page-eyebrow-20261106';
+import { createAnalytics } from './analytics.js?v=page-eyebrow-20261106';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=page-eyebrow-20261106';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=page-eyebrow-20261106';
+import { icon } from './icons.js?v=page-eyebrow-20261106';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=data-note-20261105';
-import { createCMS } from './cms.js?v=data-note-20261105';
-import { cmsRoute } from './cms-data.js?v=data-note-20261105';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=page-eyebrow-20261106';
+import { createCMS } from './cms.js?v=page-eyebrow-20261106';
+import { cmsRoute } from './cms-data.js?v=page-eyebrow-20261106';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -117,9 +117,9 @@ function renderShell() {
 function header(cmsPage = null) {
   cmsPage ||= cms?.getPage(route);
   const titles = { overview: ['НАУКОВА ДІЯЛЬНІСТЬ', 'Наука у цифрах', 'Від досліджень до впливу. Результати, що рухають нас уперед.'], publications: ['РЕЗУЛЬТАТИ ДОСЛІДЖЕНЬ', 'Наукові публікації', 'Динаміка публікацій, індексація та внесок наукових підрозділів.'], projects: ['ДОСЛІДЖЕННЯ ТА ПАРТНЕРСТВА', 'Грантові проєкти', 'Міжнародна співпраця та інвестиції в нові знання.'], patents: ['ІНТЕЛЕКТУАЛЬНА ВЛАСНІСТЬ', 'Патенти та винаходи', 'Ідеї, що стають технологіями. Результати винахідницької діяльності.'], funding: ['РЕСУРСИ ДЛЯ РОЗВИТКУ', 'Фінансування науки', 'Надходження на наукову діяльність за джерелами та роками.'] };
-  const [eyebrow, title, sub] = cmsPage ? ['НАУКОВА ДІЯЛЬНІСТЬ',cmsPage.heading,cmsPage.description] : titles[route];
+  const [eyebrow, title, sub] = cmsPage ? [cmsPage.eyebrow,cmsPage.heading,cmsPage.description] : titles[route];
   const years = reportingYears(data);
-  return `<div class="page-heading"><div><div class="eyebrow"><span></span>${eyebrow}</div><h1>${e(title)}</h1><p>${e(sub)}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
+  return `<div class="page-heading"><div>${eyebrow?`<div class="eyebrow"><span></span>${e(eyebrow)}</div>`:''}<h1>${e(title)}</h1><p>${e(sub)}</p></div><div class="heading-actions"><button class="button secondary" data-action="export">${icon('download')}<span>Експорт даних</span></button><button class="button primary" data-action="import">${icon('upload')}<span>Імпорт даних</span></button></div></div>
   ${!cmsPage || cmsPage.showYear ? `<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}${years.length > 8 ? `<select aria-label="Усі роки" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select>` : ''}</div></div>` : ''}
   ${route==='admin' && data.demo && (!cmsPage || cmsPage.blocks.some(b=>b.visible && ['analytics','existing'].includes(b.type))) ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
 }

@@ -1,9 +1,9 @@
-import { reportDate, currentReportingYear } from './data.js?v=data-note-20261105';
-import { createChartRenderer } from './chart-runtime.js?v=data-note-20261105';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=data-note-20261105';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=data-note-20261105';
-import { icon } from './icons.js?v=data-note-20261105';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=data-note-20261105';
+import { reportDate, currentReportingYear } from './data.js?v=page-eyebrow-20261106';
+import { createChartRenderer } from './chart-runtime.js?v=page-eyebrow-20261106';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=page-eyebrow-20261106';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=page-eyebrow-20261106';
+import { icon } from './icons.js?v=page-eyebrow-20261106';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=page-eyebrow-20261106';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
