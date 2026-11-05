@@ -203,8 +203,8 @@ dialog{background:var(--surface)}
 .cms-text-background:not(.cms-text-bg-default) .cms-widget-subtitle{color:inherit}
 .cms-text-background:not(.cms-text-bg-default) .cms-widget-period{color:inherit;background:transparent;border-color:currentColor}
 .cms-text-background-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:16px}
-#cms-widget-dialog .cms-text-background-option{display:flex;flex-direction:row;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
-#cms-widget-dialog .cms-text-background-option:has(input:checked){outline:2px solid var(--primary-bg);outline-offset:-2px}
+:is(#cms-widget-dialog,#cms-metric-background-dialog) .cms-text-background-option{display:flex;flex-direction:row;align-items:center;gap:10px;padding:12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+:is(#cms-widget-dialog,#cms-metric-background-dialog) .cms-text-background-option:has(input:checked){outline:2px solid var(--primary-bg);outline-offset:-2px}
 .cms-text-background-option input{width:18px;height:18px;min-height:18px;margin:0;flex-shrink:0}
 .cms-text-background-option i{display:block;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:var(--text-block-bg);flex-shrink:0}
 
@@ -287,10 +287,7 @@ dialog{background:var(--surface)}
 .cms-metric-background-heading{min-width:200px}
 .cms-metric-background-editor{min-width:180px;display:grid;gap:8px}
 #cms-widget-dialog .cms-metric-background-editor label{font-size:12px;gap:4px}
-#cms-widget-dialog .cms-metric-background-editor select{margin:0;font-size:13px;min-height:36px;padding:6px 8px}
-.cms-metric-background-colors{display:flex;gap:10px;align-items:end}
 .cms-metric-background-swatch{display:block;width:40px;height:32px;border-radius:6px;border:1px solid var(--line);background:var(--text-block-bg);flex-shrink:0}
-#cms-widget-dialog .cms-metric-background-editor input[type=color]{width:60px;height:32px;min-height:32px;padding:2px;border:1px solid var(--line);border-radius:5px;background:var(--surface)}
 
 .cms-chart-legend.legend-centered{justify-content:center}
 .cms-legend-layout{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
@@ -376,3 +373,13 @@ dialog{background:var(--surface)}
 .cms-progress-label-value{color:var(--ink)}
 .cms-library-tooltip{white-space:normal;overflow-wrap:anywhere;word-break:normal}
 @media(max-width:720px){.cms-horizontal-label{white-space:normal;overflow:visible;overflow-wrap:anywhere}}
+
+/* Each metric row opens the same visual background palette as text blocks. */
+#cms-metric-background-dialog{width:min(1100px,calc(100vw - 24px));max-width:calc(100vw - 24px);color:var(--ink)}
+#cms-metric-background-dialog .cms-text-background-option{font-size:14px;color:var(--text-secondary);min-width:0}
+#cms-metric-background-dialog .cms-text-background-option span{min-width:0;overflow-wrap:anywhere}
+#cms-metric-background-dialog .cms-metric-palette-color{display:flex;flex-direction:column;gap:8px;margin-top:20px;font-size:13px;color:var(--text-secondary)}
+#cms-metric-background-dialog .cms-metric-palette-color input{width:65px;height:40px;padding:3px;border:1px solid var(--line);border-radius:5px;background:var(--surface-field)}
+#cms-widget-dialog .cms-metric-background-trigger{display:flex;align-items:center;justify-content:flex-start;gap:9px;white-space:normal;min-height:42px;width:100%;padding:6px 8px;text-align:left;font-size:13px}
+.cms-metric-background-trigger .cms-metric-background-swatch{width:28px;height:28px}
+.cms-metric-background-trigger span{flex:1;min-width:0;overflow-wrap:anywhere}.cms-metric-background-trigger>.icon{width:13px;height:13px;flex-shrink:0}

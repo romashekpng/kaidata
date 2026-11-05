@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=mobile-chart-text-20261105';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=mobile-chart-text-20261105';
+import { convertMoneyBlock } from './money.js?v=metric-palette-20261105';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-palette-20261105';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };

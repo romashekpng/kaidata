@@ -1,12 +1,12 @@
-import { createProjectReportsEditor } from './project-reports.js?v=mobile-chart-text-20261105';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=mobile-chart-text-20261105';
-import { createSiteView } from './site-view.js?v=mobile-chart-text-20261105';
-import { BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=mobile-chart-text-20261105';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=mobile-chart-text-20261105';
-import { renderBlockTable } from './block-view.js?v=mobile-chart-text-20261105';
-import { validateBundle } from './data.js?v=mobile-chart-text-20261105';
+import { createProjectReportsEditor } from './project-reports.js?v=metric-palette-20261105';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=metric-palette-20261105';
+import { createSiteView } from './site-view.js?v=metric-palette-20261105';
+import { BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=metric-palette-20261105';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=metric-palette-20261105';
+import { renderBlockTable } from './block-view.js?v=metric-palette-20261105';
+import { validateBundle } from './data.js?v=metric-palette-20261105';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=mobile-chart-text-20261105';
+import { icon } from './icons.js?v=metric-palette-20261105';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -14,7 +14,7 @@ export function createCMS(options) {
   const e = escapeCMS;
   const projectReports=createProjectReportsEditor({getData:options.getData,save:next=>{options.replaceData(next);options.rerender();},notify:options.notify});
   let site, draft, selected, dirty = false, temporary = false, pendingDataRestore = false, history = [], transfer = null, importValue = null, importToken = 0;
-  let widgetState=null,dragItem=null,publicationTicket=0;
+  let widgetState=null,dragItem=null,publicationTicket=0,metricPalette=null;
 
   const $ = selector => document.querySelector(selector);
   const button = (action, label, extra = '', cls = 'secondary') => `<button type="button" class="button ${cls}" data-cms-action="${action}" ${extra}>${label}</button>`;
@@ -160,7 +160,28 @@ export function createCMS(options) {
   }
   function metricBackgroundEditor(table,row,index){
     const background=row[table.headers.indexOf('background')]||'default',color=row[table.headers.indexOf('backgroundColor')]||'#25395d';
-    return `<div class="cms-metric-background-editor"><label>Фон картки ${index+1}<select data-metric-background-row="${index}" aria-label="Фон картки ${index+1}">${Object.entries(TEXT_BACKGROUNDS).map(([key,label])=>`<option value="${key}" ${background===key?'selected':''}>${label}</option>`).join('')}</select></label><div class="cms-metric-background-colors"><i class="cms-metric-background-swatch cms-text-bg-${background}" ${background==='custom'?`style="--text-block-bg:${color}"`:''} aria-hidden="true"></i><label>Власний колір<input type="color" data-metric-color-row="${index}" value="${color}" aria-label="Власний колір картки ${index+1}"></label></div></div>`;
+    return `<div class="cms-metric-background-editor" data-metric-background-index="${index}"><label for="metric-background-${index}">Фон картки ${index+1}</label>${button('metric-background-open',`<i class="cms-metric-background-swatch cms-text-bg-${background}" ${background==='custom'?`style="--text-block-bg:${color}"`:''} aria-hidden="true"></i><span>${e(TEXT_BACKGROUNDS[background])}</span>${icon('chevron')}`,`id="metric-background-${index}" data-row="${index}" aria-label="Вибрати фон картки ${index+1}" aria-haspopup="dialog" aria-controls="cms-metric-background-dialog"`,'secondary cms-metric-background-trigger')}</div>`;
+  }
+  function openMetricBackground(index){
+    if(!widgetState||widgetState.kind!=='edit'||!isMetricBlock(widgetState.block)||!widgetState.table.rows[index])return;
+    const table=widgetState.table,row=table.rows[index];
+    metricPalette={index,background:row[table.headers.indexOf('background')]||'default',backgroundColor:row[table.headers.indexOf('backgroundColor')]||'#25395d'};
+    let dialog=$('#cms-metric-background-dialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='cms-metric-background-dialog';document.body.append(dialog);dialog.addEventListener('input',updateMetricBackground);dialog.addEventListener('change',updateMetricBackground);dialog.addEventListener('cancel',()=>{metricPalette=null;});}
+    const label=table.headers.indexOf('label'),name=label<0?'':row[label];
+    dialog.innerHTML=`<div class="dialog-heading"><h2 id="cms-metric-background-title">Фон картки ${index+1}</h2>${button('metric-background-cancel','×','aria-label="Закрити вибір фону"','secondary small')}</div><div class="dialog-body"><p class="cms-widget-name">${e(name)}</p><p class="cms-field-help">Кольори теми змінюються разом із темою сайта. Власний колір залишається вибраним; колір тексту підбирається автоматично.</p><div class="cms-text-background-options">${Object.entries(TEXT_BACKGROUNDS).map(([key,title])=>`<label class="cms-text-background-option"><input type="radio" name="metricBackgroundChoice" data-metric-palette-background value="${key}" ${metricPalette.background===key?'checked':''}><i class="cms-text-bg-${key}" ${key==='custom'?`style="--text-block-bg:${metricPalette.backgroundColor}"`:''} aria-hidden="true"></i><span>${e(title)}</span></label>`).join('')}</div><label class="cms-metric-palette-color">Вибрати колір із палітри<input type="color" data-metric-palette-color value="${metricPalette.backgroundColor}" aria-label="Власний колір фону картки ${index+1}"></label><div id="cms-metric-background-error" class="form-error" role="alert"></div><div class="dialog-actions">${button('metric-background-cancel','Скасувати')}${button('metric-background-apply','Застосувати','','primary')}</div></div>`;
+    dialog.setAttribute('aria-labelledby','cms-metric-background-title');dialog.showModal();
+  }
+  function updateMetricBackground(event){
+    if(!metricPalette)return;const el=event.target;
+    if(el.hasAttribute('data-metric-palette-background'))metricPalette.background=el.value;
+    if(el.hasAttribute('data-metric-palette-color')){metricPalette.backgroundColor=el.value;metricPalette.background='custom';$('#cms-metric-background-dialog input[value="custom"]').checked=true;$('#cms-metric-background-dialog .cms-text-bg-custom').style.setProperty('--text-block-bg',el.value);}
+  }
+  function closeMetricBackground(apply=false){
+    if(!metricPalette)return;
+    const {index,background,backgroundColor}=metricPalette;
+    if(apply){const table=widgetState.table,row=table.rows[index],valid=validateMetricBackground(background,backgroundColor);row[table.headers.indexOf('background')]=valid.background;row[table.headers.indexOf('backgroundColor')]=valid.backgroundColor;}
+    $('#cms-metric-background-dialog').close();metricPalette=null;
+    if(apply){const editor=$(`#cms-widget-dialog [data-metric-background-index="${index}"]`);editor.outerHTML=metricBackgroundEditor(widgetState.table,widgetState.table.rows[index],index);$(`#metric-background-${index}`).focus();}
   }
   function widgetSettings(){return chartSettingsForLibrary(widgetState.block.settings,widgetState.editLibrary,widgetState.block.source);}
   function storeWidgetSetting(key,value){
@@ -233,13 +254,6 @@ export function createCMS(options) {
     if(!widgetState)return;
     const state=widgetState;
     if(el.dataset.featureStyle){const key=el.dataset.featureStyle;state.block.appearance={...state.block.appearance,[key]:el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value};if(key==='autoHeight')$('#cms-widget-dialog [data-feature-style="minHeight"]').disabled=el.checked;if(key==='backgroundColor'){state.block.appearance.background='custom';$('#cms-widget-dialog [data-feature-style="background"]').value='custom';}}
-    if(el.dataset.metricBackgroundRow!==undefined||el.dataset.metricColorRow!==undefined){
-      const table=state.table,row=table.rows[+(el.dataset.metricBackgroundRow??el.dataset.metricColorRow)],b=table.headers.indexOf('background'),c=table.headers.indexOf('backgroundColor');
-      if(el.dataset.metricColorRow!==undefined){row[c]=el.value;row[b]='custom';}else{row[b]=el.value;if(!row[c])row[c]='#25395d';}
-      const editor=el.closest('.cms-metric-background-editor'),swatch=editor.querySelector('.cms-metric-background-swatch');
-      editor.querySelector('select').value=row[b];swatch.className=`cms-metric-background-swatch cms-text-bg-${row[b]}`;
-      swatch.style.cssText=row[b]==='custom'?`--text-block-bg:${row[c]}`:'';
-    }
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;storeWidgetSetting(key,el.type==='checkbox'?el.checked:el.type==='number'||key==='segmentPercentageDecimals'?Number(el.value):el.value);}
     if(el.dataset.widgetSetting==='widthMode'){for(const mode of ['percent','fixed','auto'])$('#cms-widget-dialog [data-width-'+mode+']').hidden=mode!==el.value;}
     if(el.dataset.widgetSetting==='autoColumns')$('#cms-widget-dialog [data-widget-setting="columns"]').disabled=el.checked;
@@ -348,6 +362,7 @@ export function createCMS(options) {
     finally{target.disabled=false;}
   }
   function showError(err) {
+    if($('#cms-metric-background-dialog')?.open)$('#cms-metric-background-error').textContent=err.message;
     const widgetError=$('#cms-widget-error');if($('#cms-widget-dialog')?.open&&widgetError)widgetError.textContent=err.message;
     const el=$('#cms-editor-error');if(el)el.textContent=err.message;
     const result=$('#cms-transfer-result');if($('#cms-dialog')?.open&&result)result.innerHTML=`<div class="form-error error-box" role="alert">${e(err.message)}</div>`;
@@ -356,6 +371,8 @@ export function createCMS(options) {
   async function action(name, el) {
     const id=el.dataset.blockId, b=id?currentBlock(id):null;
     if(view.handleAction(name,el))return;
+    if(name==='metric-background-open'){openMetricBackground(+el.dataset.row);return;}
+    if(name==='metric-background-apply'||name==='metric-background-cancel'){closeMetricBackground(name==='metric-background-apply');return;}
     if(name==='project-reports'){projectReports.open();return;}
     if(name==='widget-settings'||name==='widget-edit'||name==='widget-width'){widgetDialog(b,name.slice(7));return;}
     if(name==='widget-library-active'&&widgetState){widgetState.block.settings=selectChartLibrary(widgetState.block.settings,el.dataset.library,widgetState.block.source);widgetState.editLibrary=el.dataset.library;renderWidgetDialog();return;}
