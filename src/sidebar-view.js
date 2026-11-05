@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=metric-palette-20261105';
-import { icon } from './icons.js?v=metric-palette-20261105';
+import { SIDEBAR_DEFAULTS } from './data.js?v=metric-color-defaults-20261105';
+import { icon } from './icons.js?v=metric-color-defaults-20261105';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarTextSections(institution){
  const i={...SIDEBAR_DEFAULTS,...institution},e=sidebarEscape,multiline=text=>e(text).replaceAll('\n','<br>');

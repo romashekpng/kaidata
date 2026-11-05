@@ -1,8 +1,8 @@
-import { reportDate, currentReportingYear } from './data.js?v=metric-palette-20261105';
-import { createChartRenderer } from './chart-runtime.js?v=metric-palette-20261105';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-palette-20261105';
-import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=metric-palette-20261105';
-import { icon } from './icons.js?v=metric-palette-20261105';
+import { reportDate, currentReportingYear } from './data.js?v=metric-color-defaults-20261105';
+import { createChartRenderer } from './chart-runtime.js?v=metric-color-defaults-20261105';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-color-defaults-20261105';
+import { renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=metric-color-defaults-20261105';
+import { icon } from './icons.js?v=metric-color-defaults-20261105';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
@@ -14,7 +14,7 @@ export function createSiteView(options){
     if(block.type==='analytics'){
       if(block.dataMode==='manual')return structuredClone(block.dataTable);
       const table=options.getBlockTable(block.source,resolvedSettings(block).allYears);
-      return isMetricBlock(block)?applyMetricAppearance(table,block.metricAppearance):table;
+      return isMetricBlock(block)?applyMetricAppearance(table,block.metricAppearance??defaultMetricAppearance(block.source)):table;
     }
     return blockTableData(block);
   }
@@ -38,7 +38,7 @@ export function createSiteView(options){
     const reference=document.createElement('div');reference.innerHTML=options.renderMetricHTML(block.source,settings,reportYear);
     const richCards=new Map([...reference.querySelectorAll('.stat-card')].map(card=>[card.dataset.metricKey,card]));
     if(!manual){
-      const appearance=new Map((block.metricAppearance||[]).map((entry,i)=>[entry.key,{...entry,index:i}]));
+      const appearance=new Map((block.metricAppearance??defaultMetricAppearance(block.source)).map((entry,i)=>[entry.key,{...entry,index:i}]));
       [...richCards.values()].map((card,i)=>({card,index:appearance.get(card.dataset.metricKey)?.index??appearance.size+i})).sort((a,b)=>a.index-b.index).forEach(({card})=>{applyCardColor(card,appearance.get(card.dataset.metricKey));card.parentElement.append(card);});
       return `<div class="cms-analytics-content ${settings.showAll?'show-all':''}">${reference.innerHTML}</div>`;
     }

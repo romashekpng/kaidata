@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=metric-palette-20261105';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-palette-20261105';
+import { convertMoneyBlock } from './money.js?v=metric-color-defaults-20261105';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-color-defaults-20261105';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
@@ -19,6 +19,10 @@ export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'proje
 export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', horizontalStacked: 'Горизонтальні накопичувальні стовпчики', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
 export const TEXT_BACKGROUNDS = { menu:'Колір меню', accent:'Основний акцент', blue:'Блакитний відтінок', green:'Зелений відтінок', amber:'Теплий відтінок', violet:'Фіолетовий відтінок', default:'Стандартний фон', custom:'Власний колір' };
 export const METRIC_SOURCES = ['stats','fundingStats','patentStats'];
+export function defaultMetricAppearance(source) {
+ if(source!=='stats')return [];
+ return [['Наукових публікацій','blue'],['Scopus / Web of Science','amber'],['Публікацій Q1–Q2','violet'],['Грантових проєктів','green'],['Надходження грантів','blue'],['Патентів отримано','amber']].map(([key,background])=>({key,background,backgroundColor:'#25395d'}));
+}
 export function isMetricBlock(block){return block.type==='metrics'||(block.type==='analytics'&&METRIC_SOURCES.includes(block.source));}
 export function validateMetricBackground(background='default',backgroundColor='#25395d'){
  if(typeof background!=='string'||typeof backgroundColor!=='string')throw new Error('Некоректний колір фону картки.');
@@ -294,6 +298,7 @@ export function validateCMSBlock(input) {
   }
   if(input.type==='analytics'){
     if(isMetricBlock(input)){
+      if(input.source==='stats'&&input.dataMode!=='manual'&&input.metricAppearance===undefined)out.metricAppearance=defaultMetricAppearance(input.source);
       if(input.metricEditingVersion!==undefined){if(input.metricEditingVersion!==1)fail('Невідома версія редагування показників.');out.metricEditingVersion=1;}
       if(input.metricManualBackup!==undefined){if(!obj(input.metricManualBackup))fail('Некоректна ручна копія показників.');out.metricManualBackup={dataTable:validateMetricDataTable(input.metricManualBackup.dataTable),dataPeriod:normalizeBlockPeriod(input.metricManualBackup.dataPeriod||'')};}
       if(input.metricAppearance!==undefined){

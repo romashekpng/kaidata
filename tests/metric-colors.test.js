@@ -50,3 +50,13 @@ test('виправлення старих кольорових знімків п
  const explicit={...old,metricEditingVersion:1};assert.equal(restoreMetricSnapshot(explicit,table),explicit);
  const withBackup=validateCMSBlock({...restored,metricManualBackup:{dataTable:custom.dataTable,dataPeriod:'2026'}});assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:withBackup}),'block',withBackup).metricManualBackup.dataTable,custom.dataTable);
 });
+
+test('початкові основні показники мають кольори зі скріна, а власне оформлення і ручні дані зберігаються',async()=>{
+ const {defaultMetricAppearance,expandSiteBlocks}=await import('../src/cms-data.js'),{readFile}=await import('node:fs/promises');
+ const expected=defaultMetricAppearance('stats');assert.deepEqual(expected.map(p=>p.background),['blue','amber','violet','green','blue','amber']);assert.deepEqual(expected.map(p=>p.key),['Наукових публікацій','Scopus / Web of Science','Публікацій Q1–Q2','Грантових проєктів','Надходження грантів','Патентів отримано']);
+ const source={id:'default-stats',type:'analytics',source:'stats',title:'Показники',visible:true,dataMode:'live'},next=validateCMSBlock(source);assert.deepEqual(next.metricAppearance,expected);assert.equal(next.dataMode,'live');assert.equal(source.metricAppearance,undefined);
+ for(const metricAppearance of[[],[{key:'Наукових публікацій',background:'custom',backgroundColor:'#112233'}]])assert.deepEqual(validateCMSBlock({...source,metricAppearance}).metricAppearance,metricAppearance);
+ const manual=validateCMSBlock({...source,dataMode:'manual',dataTable:{headers:['label','value','unit','note'],rows:[['Власний показник','999','','Моя примітка']]}});assert.equal(manual.metricAppearance,undefined);assert.equal(manual.dataTable.rows[0][1],'999');assert.deepEqual(defaultMetricAppearance('fundingStats'),[]);
+ expected[0].background='menu';assert.equal(defaultMetricAppearance('stats')[0].background,'blue');
+ const site=expandSiteBlocks(JSON.parse(await readFile(new URL('../data/pages.json',import.meta.url),'utf8')));assert.deepEqual(site.pages[0].blocks.find(b=>b.source==='stats').metricAppearance,defaultMetricAppearance('stats'));
+});
