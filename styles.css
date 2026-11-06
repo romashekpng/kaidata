@@ -414,3 +414,4 @@ dialog{background:var(--surface)}
 .sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--nav) 40%,#d9e6f5);border:2px solid var(--nav);border-radius:8px}
 .sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-thumb:hover{background:#d9e6f5}
 @supports not selector(::-webkit-scrollbar){.sidebar:not(.sidebar-no-scroll){scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--nav) 40%,#d9e6f5) color-mix(in srgb,var(--nav) 85%,white)}}
+.sidebar.sidebar-auto-hide-scroll:not(.sidebar-no-scroll){overflow-y:auto;scrollbar-gutter:auto;background-image:none}

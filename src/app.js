@@ -1,14 +1,14 @@
-import { sidebarTextSections, sidebarBrand } from './sidebar-view.js?v=sidebar-brand-20261106';
-import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=sidebar-brand-20261106';
-import { formatMoney } from './money.js?v=sidebar-brand-20261106';
-import { createAnalytics } from './analytics.js?v=sidebar-brand-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=sidebar-brand-20261106';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=sidebar-brand-20261106';
-import { icon } from './icons.js?v=sidebar-brand-20261106';
+import { sidebarTextSections, sidebarBrand } from './sidebar-view.js?v=sidebar-autohide-20261106';
+import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=sidebar-autohide-20261106';
+import { formatMoney } from './money.js?v=sidebar-autohide-20261106';
+import { createAnalytics } from './analytics.js?v=sidebar-autohide-20261106';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=sidebar-autohide-20261106';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=sidebar-autohide-20261106';
+import { icon } from './icons.js?v=sidebar-autohide-20261106';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=sidebar-brand-20261106';
-import { createCMS } from './cms.js?v=sidebar-brand-20261106';
-import { cmsRoute } from './cms-data.js?v=sidebar-brand-20261106';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=sidebar-autohide-20261106';
+import { createCMS } from './cms.js?v=sidebar-autohide-20261106';
+import { cmsRoute } from './cms-data.js?v=sidebar-autohide-20261106';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -111,6 +111,7 @@ function renderShell() {
   document.title = `${i.shortName} · Наукова діяльність`;
   const sidebar=sidebarTextSections(i);
  $('#sidebar').classList.toggle('sidebar-no-scroll',!i.showSidebarScroll);
+ $('#sidebar').classList.toggle('sidebar-auto-hide-scroll',i.showSidebarScroll&&i.autoHideSidebarScroll);
   $('#sidebar').innerHTML = `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button>${sidebarBrand(i)}
   <div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${cms.pages().map(p => `<a class="nav-item ${route === cmsRoute(p) ? 'active' : ''}" href="#${cmsRoute(p)}" ${route === cmsRoute(p) ? 'aria-current="page"' : ''}>${icon(navIcons[p.id] || 'file')}<span>${e(p.title)}</span>${route === cmsRoute(p) ? '<span class="active-dot"></span>' : ''}</a>`).join('')}</nav>
   <div class="sidebar-bottom"><a class="nav-item ${route==='admin'?'active':''}" href="#admin">${icon('settings')}<span>Адмінка</span></a>${sidebar.note}<button class="nav-item" data-action="import">${icon('upload')} Керування даними</button><button class="nav-item" data-action="settings">${icon('settings')} Налаштування</button>${sidebar.details}</div>`;
@@ -184,7 +185,7 @@ async function performExport(form) {
   finally{button.disabled=false;}
 }
 function brandingSettings(i){
- return `<fieldset><legend>Логотип і верхня частина меню</legend><div class="sidebar-brand-preview" id="sidebar-brand-preview" inert aria-hidden="true">${sidebarBrand(i)}</div><input type="hidden" name="sidebarLogo" value="${e(i.sidebarLogo)}"><label>Завантажити логотип<input type="file" id="sidebar-logo-input" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"></label><p class="cms-field-help">PNG, SVG, WebP або JPEG до 2 МБ. Прозоре тло зберігається; для темного меню підходить білий логотип.</p><div class="sidebar-logo-actions"><button type="button" class="button secondary small" data-action="brand-logo-default">Логотип КАІ</button><button type="button" class="button secondary small" data-action="brand-logo-remove">Стандартна іконка і назва</button></div><label>Текст під логотипом<textarea name="sidebarBrandText" rows="2" maxlength="240" placeholder="Порожнє поле приховує текст">${e(i.sidebarBrandText)}</textarea></label><p id="sidebar-logo-status" class="cms-field-help" aria-live="polite"></p><label class="checkbox-label"><input type="checkbox" name="showSidebarScroll" ${i.showSidebarScroll?'checked':''}>Дозволити окрему прокрутку меню</label><p class="cms-field-help">Після збереження ввімкнене меню має постійну смугу прокрутки. Прокручування потрібне, коли вміст не вміщується за висотою. Якщо вимкнено, меню прокручується разом зі сторінкою без власної смуги.</p></fieldset>`;
+ return `<fieldset><legend>Логотип і верхня частина меню</legend><div class="sidebar-brand-preview" id="sidebar-brand-preview" inert aria-hidden="true">${sidebarBrand(i)}</div><input type="hidden" name="sidebarLogo" value="${e(i.sidebarLogo)}"><label>Завантажити логотип<input type="file" id="sidebar-logo-input" accept=".png,.jpg,.jpeg,.webp,.svg,image/png,image/jpeg,image/webp,image/svg+xml"></label><p class="cms-field-help">PNG, SVG, WebP або JPEG до 2 МБ. Прозоре тло зберігається; для темного меню підходить білий логотип.</p><div class="sidebar-logo-actions"><button type="button" class="button secondary small" data-action="brand-logo-default">Логотип КАІ</button><button type="button" class="button secondary small" data-action="brand-logo-remove">Стандартна іконка і назва</button></div><label>Текст під логотипом<textarea name="sidebarBrandText" rows="2" maxlength="240" placeholder="Порожнє поле приховує текст">${e(i.sidebarBrandText)}</textarea></label><p id="sidebar-logo-status" class="cms-field-help" aria-live="polite"></p><label class="checkbox-label"><input type="checkbox" name="showSidebarScroll" ${i.showSidebarScroll?'checked':''}>Дозволити окрему прокрутку меню</label><div id="sidebar-auto-hide-option" ${i.showSidebarScroll?'':'hidden'}><label class="checkbox-label"><input type="checkbox" name="autoHideSidebarScroll" ${i.autoHideSidebarScroll?'checked':''}>Автоматично приховувати прокрутку, коли меню вміщується за висотою</label><p class="cms-field-help">Якщо ввімкнено, смуга з’являється лише за потреби й автоматично реагує на висоту екрана та вміст меню. Якщо вимкнено, смуга видима постійно.</p></div><p class="cms-field-help">Налаштування застосовуються після збереження. Якщо окрему прокрутку вимкнено, меню прокручується разом зі сторінкою без власної смуги.</p></fieldset>`;
 }
 function refreshBrandPreview(){
  const form=$('#settings-form');if(!form)return;
@@ -290,6 +291,7 @@ document.addEventListener('change',ev=>{
   if(el.id==='theme-select'||el.name==='displayTheme')applyTheme(el.value);
   if(el.id==='all-years'){year=+el.value;resetFilters();render();}
   if(el.id==='faculty-filter'||el.id==='quartile-filter'||el.id==='index-filter'){if(el.id==='faculty-filter')faculty=el.value;if(el.id==='quartile-filter')quartile=el.value;if(el.id==='index-filter')indexFilter=el.value;page=1;$('#records-body').innerHTML=tableBody(route);}
+  if(el.name==='showSidebarScroll'&&el.closest('#settings-form'))$('#sidebar-auto-hide-option').hidden=!el.checked;
   if(el.id==='sidebar-logo-input')readSidebarLogo(el.files[0]);
   if(el.id==='file-input')readImport(el.files[0]);
   if(el.id==='import-type'||el.id==='import-format')updateImportControls();
@@ -320,7 +322,7 @@ document.addEventListener('submit',ev=>{
   }
   if(ev.target.id==='export-form'){ev.preventDefault();performExport(ev.target);return;}
   if(ev.target.id!=='settings-form')return;ev.preventDefault();
-  try{const form=new FormData(ev.target);const next=validateBundle({...data,institution:{...data.institution,...Object.fromEntries(['shortName','name','subtitle','accent','website','sourceNote','sidebarStatus','sidebarTagline','sidebarLogo','sidebarBrandText'].map(k=>[k,form.get(k)])),...Object.fromEntries(['showSidebarStatus','showSidebarTagline','showSidebarName','showSidebarSubtitle','showSidebarScroll'].map(key=>[key,form.has(key)])),blocks:form.getAll('blocks')}});persist(next);render();$('#manager').close();toast(storageAvailable?'Налаштування збережено.':'Налаштування застосовано. Експортуйте JSON для збереження.');}
+  try{const form=new FormData(ev.target);const next=validateBundle({...data,institution:{...data.institution,...Object.fromEntries(['shortName','name','subtitle','accent','website','sourceNote','sidebarStatus','sidebarTagline','sidebarLogo','sidebarBrandText'].map(k=>[k,form.get(k)])),...Object.fromEntries(['showSidebarStatus','showSidebarTagline','showSidebarName','showSidebarSubtitle','showSidebarScroll','autoHideSidebarScroll'].map(key=>[key,form.has(key)])),blocks:form.getAll('blocks')}});persist(next);render();$('#manager').close();toast(storageAvailable?'Налаштування збережено.':'Налаштування застосовано. Експортуйте JSON для збереження.');}
   catch(err){$('#form-error').textContent=err.message;}
 });
 document.addEventListener('dragover',ev=>{if(ev.target.closest('#dropzone')){ev.preventDefault();$('#dropzone').classList.add('dragging');}});

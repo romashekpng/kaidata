@@ -1,9 +1,9 @@
-import { reportDate, currentReportingYear } from './data.js?v=sidebar-brand-20261106';
-import { createChartRenderer } from './chart-runtime.js?v=sidebar-brand-20261106';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sidebar-brand-20261106';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sidebar-brand-20261106';
-import { icon } from './icons.js?v=sidebar-brand-20261106';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=sidebar-brand-20261106';
+import { reportDate, currentReportingYear } from './data.js?v=sidebar-autohide-20261106';
+import { createChartRenderer } from './chart-runtime.js?v=sidebar-autohide-20261106';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sidebar-autohide-20261106';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sidebar-autohide-20261106';
+import { icon } from './icons.js?v=sidebar-autohide-20261106';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=sidebar-autohide-20261106';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());

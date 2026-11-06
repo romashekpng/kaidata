@@ -2,13 +2,13 @@ import test from 'node:test';import assert from 'node:assert/strict';import {rea
 import {SIDEBAR_DEFAULTS,validateBundle,importCSV} from '../src/data.js';import {sidebarTextSections,sidebarBrand} from '../src/sidebar-view.js';import {toXLSX,importXLSX} from '../src/spreadsheet.js';
 const demo=JSON.parse(await readFile(new URL('../data/demo.json',import.meta.url),'utf8'));
 const small=()=>{const data=structuredClone(demo);for(const key of ['publications','projects','patents','revenues'])data[key]=data[key].slice(0,1);return validateBundle(data);};
-const configured=()=>{const data=small();Object.assign(data.institution,{sidebarStatus:'Наші відкриті дані',sidebarTagline:'Дослідження\nдля майбутнього',showSidebarStatus:false,showSidebarTagline:true,showSidebarName:false,showSidebarSubtitle:true,sidebarBrandText:'Наука\nі дослідження',sidebarLogo:'',showSidebarScroll:false});return data;};
+const configured=()=>{const data=small();Object.assign(data.institution,{sidebarStatus:'Наші відкриті дані',sidebarTagline:'Дослідження\nдля майбутнього',showSidebarStatus:false,showSidebarTagline:true,showSidebarName:false,showSidebarSubtitle:true,sidebarBrandText:'Наука\nі дослідження',sidebarLogo:'',showSidebarScroll:false,autoHideSidebarScroll:true});return data;};
 test('старі JSON отримують попередні тексти й видимість; нові налаштування не губляться при частковому імпорті',()=>{
  const legacy=small();for(const key of Object.keys(SIDEBAR_DEFAULTS))delete legacy.institution[key];const restored=validateBundle(legacy);for(const [key,value]of Object.entries(SIDEBAR_DEFAULTS))assert.equal(restored.institution[key],value);
  const data=configured();assert.deepEqual(validateBundle(JSON.parse(JSON.stringify(data))),data);assert.deepEqual(importCSV('year;source;amountThousandUAH\n2026;Джерело;10','revenues',data).institution,data.institution);
 });
 test('прапорці повинні бути boolean, тексти можуть бути порожніми; некоректні типи й надмірна довжина відхиляються',()=>{
- for(const change of [{showSidebarStatus:'false'},{showSidebarSubtitle:0},{sidebarStatus:null},{sidebarTagline:[]},{sidebarStatus:'a'.repeat(241)},{sidebarTagline:'a'.repeat(1001)}])assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,...change}}));
+ for(const change of [{autoHideSidebarScroll:'true'},{showSidebarStatus:'false'},{showSidebarSubtitle:0},{sidebarStatus:null},{sidebarTagline:[]},{sidebarStatus:'a'.repeat(241)},{sidebarTagline:'a'.repeat(1001)}])assert.throws(()=>validateBundle({...demo,institution:{...demo.institution,...change}}));
  const data=validateBundle({...demo,institution:{...demo.institution,sidebarStatus:'',sidebarTagline:'',subtitle:''}});assert.equal(sidebarTextSections(data.institution).note,'');assert(!sidebarTextSections(data.institution).details.includes('Платформа наукової аналітики'));
 });
 test('кожен текст ховається незалежно; без усіх текстів немає порожніх контейнерів',()=>{

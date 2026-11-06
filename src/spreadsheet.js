@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, importTable, validateBundle } from './data.js?v=sidebar-brand-20261106';
+import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, importTable, validateBundle } from './data.js?v=sidebar-autohide-20261106';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const OPTIONAL_SETTINGS=Object.keys(SIDEBAR_DEFAULTS).map(key=>'institution.'+key);
@@ -66,7 +66,7 @@ function readSettings(sheet) {
   if (!['true', 'false'].includes(entries.get('demo')) || !['1','2'].includes(entries.get('schemaVersion'))) fail('XLSX: schemaVersion має бути 1 або 2, demo — true або false.');
   const institution = Object.fromEntries([...SETTINGS,...OPTIONAL_SETTINGS].filter(k => k.startsWith('institution.')&&entries.has(k)).map(k => [k.slice(12), entries.get(k)]));
   institution.blocks = institution.blocks ? institution.blocks.split('|') : [];
-  for(const key of Object.keys(SIDEBAR_DEFAULTS).filter(key=>key.startsWith('show'))){if(institution[key]===undefined)continue;if(!['true','false'].includes(institution[key]))fail(`institution.${key}: true або false.`);institution[key]=institution[key]==='true';}
+  for(const [key,fallback]of Object.entries(SIDEBAR_DEFAULTS)){if(typeof fallback!=='boolean'||institution[key]===undefined)continue;if(!['true','false'].includes(institution[key]))fail(`institution.${key}: true або false.`);institution[key]=institution[key]==='true';}
   if(entries.has('institution.styles')){try{institution.styles=JSON.parse(entries.get('institution.styles'));}catch{fail('XLSX: некоректний JSON стилів сайта.');}}
   return { schemaVersion: Number(entries.get('schemaVersion')), demo: entries.get('demo') === 'true', updatedAt: entries.get('updatedAt'), institution };
 }

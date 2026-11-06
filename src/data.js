@@ -1,10 +1,10 @@
-import { scaleMoney } from './money.js?v=sidebar-brand-20261106';
-import { validateSiteStyles } from './style-data.js?v=sidebar-brand-20261106';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=sidebar-brand-20261106';
+import { scaleMoney } from './money.js?v=sidebar-autohide-20261106';
+import { validateSiteStyles } from './style-data.js?v=sidebar-autohide-20261106';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=sidebar-autohide-20261106';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
- sidebarLogo:DEFAULT_SIDEBAR_LOGO,sidebarBrandText:'SCIENCE & INSIGHTS',showSidebarScroll:true,
+ sidebarLogo:DEFAULT_SIDEBAR_LOGO,sidebarBrandText:'SCIENCE & INSIGHTS',showSidebarScroll:true,autoHideSidebarScroll:false,
  sidebarStatus:'Відкриті дані. Нові можливості.',
  sidebarTagline:'Знання, що формують\nмайбутнє університету.',
  showSidebarStatus:false,showSidebarTagline:false,showSidebarName:true,showSidebarSubtitle:false

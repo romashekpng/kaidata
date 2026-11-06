@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=sidebar-brand-20261106';
-import { icon } from './icons.js?v=sidebar-brand-20261106';
+import { SIDEBAR_DEFAULTS } from './data.js?v=sidebar-autohide-20261106';
+import { icon } from './icons.js?v=sidebar-autohide-20261106';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarBrand(institution){
  const i={...SIDEBAR_DEFAULTS,...institution},e=sidebarEscape;
