@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-20261106';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-20261106';
-import {inferCatalogConfig} from './catalog-schema.js?v=catalog-20261106';
-import {renderCatalog} from './catalog-view.js?v=catalog-20261106';
-import { createProjectReportsEditor } from './project-reports.js?v=catalog-20261106';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-20261106';
-import { createSiteView } from './site-view.js?v=catalog-20261106';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-20261106';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-20261106';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=catalog-20261106';
-import { validateBundle } from './data.js?v=catalog-20261106';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-pagination-20261106';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-pagination-20261106';
+import {inferCatalogConfig} from './catalog-schema.js?v=catalog-pagination-20261106';
+import {renderCatalog} from './catalog-view.js?v=catalog-pagination-20261106';
+import { createProjectReportsEditor } from './project-reports.js?v=catalog-pagination-20261106';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-pagination-20261106';
+import { createSiteView } from './site-view.js?v=catalog-pagination-20261106';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-pagination-20261106';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-pagination-20261106';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=catalog-pagination-20261106';
+import { validateBundle } from './data.js?v=catalog-pagination-20261106';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=catalog-20261106';
+import { icon } from './icons.js?v=catalog-pagination-20261106';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -122,7 +122,7 @@ export function createCMS(options) {
       const page = frame.contentDocument?.querySelector('.cms-frame-page');
       if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
       frame.contentDocument?.addEventListener('click',event=>{
-        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar,.catalog-toolbar')&&!event.target.closest('[data-cms-action]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
+        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar,.catalog-toolbar,[data-catalog-page-size]')&&!event.target.closest('[data-cms-action]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
         if(el)action(el.dataset.cmsAction,el).catch(showError);
         const yearButton=event.target.closest('[data-year]');
         if(yearButton){options.selectPreviewYear(+yearButton.dataset.year);schedulePreview();}
@@ -154,7 +154,7 @@ export function createCMS(options) {
     renderWidgetDialog();
   }
   function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||''});}
-  function refreshCatalogPreview(){if(widgetState?.block.type==='catalog'&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog({...block,catalog:{...block.catalog,pageSize:5}},view.catalogTable(block));}}
+  function refreshCatalogPreview(){if(widgetState?.block.type==='catalog'&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog(block,view.catalogTable(block),{},5);}}
   function useCatalogTable(state,table){
     const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
   }
@@ -254,7 +254,7 @@ export function createCMS(options) {
       if(block.type==='analytics'&&block.source==='publications')body+=`<fieldset><legend>Каталог публікацій</legend>${check('publicationTitleLinks','Посилання зробити активним для назви статті','Якщо в полі «Посилання» є http/https-адреса, назва відкриває статтю в новій вкладці. Без адреси або з вимкненим пунктом назва є звичайним текстом.')}<p class="cms-field-help">Пошук, фільтри й чотири стовпці каталогу однакові для обох джерел даних. Автори та тип показуються під назвою; рік і адреса посилання залишаються в даних. «Аналітика сайта» оновлює записи за вибраний рік. «Власні дані» — окрема копія за період на момент редагування; вона не змінює спільний набір і графіки. Перемикання на аналітику показує спільні записи замість ручної копії.</p></fieldset>`;
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
-      if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
+      if(['table','list','metrics','chart','analytics','catalog'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
       if(!['feature','dataNote','catalog'].includes(block.type)&&(block.type!=='analytics'||block.dataMode==='manual'))body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
     } else if(block.type==='feature') {
@@ -276,6 +276,7 @@ export function createCMS(options) {
   function applyWidget() {
     if(!widgetState)return;
     if(widgetState.catalogLoading)throw new Error('Дочекайтесь завершення завантаження таблиці.');
+    const sizeInput=$('#cms-widget-dialog [data-catalog-page-sizes]');if(sizeInput&&!sizeInput.checkValidity())throw new Error(sizeInput.validationMessage);
     let next=widgetState.block;
     if(widgetState.kind==='edit'&&!['feature','dataNote','catalog'].includes(next.type))next=tableToCMSBlock(widgetState.table,next);
     if(next.type==='analytics'&&next.dataMode==='manual'&&!next.dataTable){next.dataTable=editableTable(currentBlock(next.id));next.dataPeriod=options.getBlockPeriod(currentBlock(next.id));}
@@ -289,9 +290,12 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
-    if(state.block.type==='catalog'&&(el.dataset.catalogEdit||el.dataset.catalogSearchField!==undefined)){
+    if(state.block.type==='catalog'&&(el.dataset.catalogEdit||el.dataset.catalogSearchField!==undefined||el.dataset.catalogPageSizes!==undefined)){
       if(el.dataset.catalogEdit==='binding.kind'&&el.value==='upload'&&!state.block.dataTable){const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.dataTable=table;}
-      const result=updateCatalogField(state.block,el);if(state.block.binding.periodMode==='fixed'&&!state.block.binding.period)state.block.binding.period=String(options.getYear());
+      const result=updateCatalogField(state.block,el);
+      if(result.error){$('#cms-widget-error').textContent=result.error;return;}
+      if(result.sizesChanged){$('#cms-widget-error').textContent='';const select=$('#cms-widget-dialog [data-catalog-edit="catalog.pageSize"]');select.innerHTML=state.block.catalog.pageSizes.map(n=>`<option value="${n}" ${n===state.block.catalog.pageSize?'selected':''}>${n===0?'Всі':n}</option>`).join('');}
+      if(state.block.binding.periodMode==='fixed'&&!state.block.binding.period)state.block.binding.period=String(options.getYear());
       if(result.source){state.block.binding.yearColumn='';const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.catalog=inferCatalogConfig(table.headers);}
       if(result.rerender)renderWidgetDialog();else refreshCatalogPreview();return;
     }

@@ -1,10 +1,10 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-20261106';
-import { reportDate, currentReportingYear } from './data.js?v=catalog-20261106';
-import { createChartRenderer } from './chart-runtime.js?v=catalog-20261106';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-20261106';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-20261106';
-import { icon } from './icons.js?v=catalog-20261106';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-20261106';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-pagination-20261106';
+import { reportDate, currentReportingYear } from './data.js?v=catalog-pagination-20261106';
+import { createChartRenderer } from './chart-runtime.js?v=catalog-pagination-20261106';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-pagination-20261106';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-pagination-20261106';
+import { icon } from './icons.js?v=catalog-pagination-20261106';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-pagination-20261106';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -139,9 +139,9 @@ export function createSiteView(options){
  function pageCatalogYears(page){const context={year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable};return [...new Set(page.blocks.filter(b=>b.visible&&b.type==='catalog'&&b.binding.periodMode==='year').flatMap(b=>catalogYears(b,context)))].filter(y=>y>=1900&&y<=currentReportingYear()).sort((a,b)=>a-b);}
  function updateCatalog(catalog,key,value){
   if(!catalog)return;const id=catalog.dataset.catalogId,block=currentBlock(id);if(!block||block.type!=='catalog')return;
-  const previous=catalogFilters.get(id)||{},state=key==='reset'?{}:{...previous,page:1};
-  if(key==='query')state.query=value;if(key==='page')state.page=value;if(key.startsWith('filter:'))state.filters={...previous.filters,[key.slice(7)]:value};catalogFilters.set(id,state);
-  const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderCatalog(block,catalogTable(block),state);const next=wrapper.querySelector('.data-catalog-results');if(!next)return;catalog.querySelector('.data-catalog-results')?.replaceWith(next);catalog.querySelectorAll('[data-catalog-filter]').forEach((select,i)=>select.value=wrapper.querySelectorAll('[data-catalog-filter]')[i]?.value||'');if(key==='reset'&&catalog.querySelector('[data-catalog-query]'))catalog.querySelector('[data-catalog-query]').value='';options.afterUpdate?.();
+  const previous=catalogFilters.get(id)||{},state=key==='reset'?{pageSize:previous.pageSize}:{...previous,page:1};
+  if(key==='pageSize'&&block.catalog.pageSizes.includes(value))state.pageSize=value;if(key==='query')state.query=value;if(key==='page')state.page=value;if(key.startsWith('filter:'))state.filters={...previous.filters,[key.slice(7)]:value};catalogFilters.set(id,state);
+  const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderCatalog(block,catalogTable(block),state);const next=wrapper.querySelector('.data-catalog-results');if(!next)return;catalog.querySelector('.data-catalog-results')?.replaceWith(next);catalog.querySelectorAll('[data-catalog-filter]').forEach((select,i)=>select.value=wrapper.querySelectorAll('[data-catalog-filter]')[i]?.value||'');if(key==='reset'&&catalog.querySelector('[data-catalog-query]'))catalog.querySelector('[data-catalog-query]').value='';if(key==='pageSize')catalog.querySelector('[data-catalog-page-size]')?.focus({preventScroll:true});options.afterUpdate?.();
  }
  function handleAction(name,el){
   if(['catalog-prev','catalog-next','catalog-reset'].includes(name)){const catalog=el.closest('.data-catalog');if(name==='catalog-reset')updateCatalog(catalog,'reset');else updateCatalog(catalog,'page',Number(catalog.querySelector('[data-catalog-page]').dataset.catalogPage)+(name==='catalog-next'?1:-1));return true;}
@@ -162,6 +162,7 @@ export function createSiteView(options){
  function bindInputs(root){
   charts.observe(root);
   root.addEventListener('input',event=>{if(event.target.matches('[data-catalog-query]'))updateCatalog(event.target.closest('.data-catalog'),'query',event.target.value);});
+  root.addEventListener('change',event=>{if(event.target.matches('[data-catalog-page-size]'))updateCatalog(event.target.closest('.data-catalog'),'pageSize',Number(event.target.value));});
   root.addEventListener('change',event=>{if(event.target.matches('[data-catalog-filter]'))updateCatalog(event.target.closest('.data-catalog'),'filter:'+event.target.dataset.catalogFilter,event.target.value);});
   root.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{if(event.target.matches('[data-project-role],[data-project-program-select]'))updateProjectFilter(event.target.closest('.project-catalog'),event.target.matches('[data-project-role]')?'role':'program',event.target.value);});

@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=catalog-20261106';
-import { createAnalytics } from './analytics.js?v=catalog-20261106';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=catalog-20261106';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=catalog-20261106';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=catalog-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=catalog-20261106';
-import { icon } from './icons.js?v=catalog-20261106';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=catalog-pagination-20261106';
+import { createAnalytics } from './analytics.js?v=catalog-pagination-20261106';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=catalog-pagination-20261106';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=catalog-pagination-20261106';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=catalog-pagination-20261106';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=catalog-pagination-20261106';
+import { icon } from './icons.js?v=catalog-pagination-20261106';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

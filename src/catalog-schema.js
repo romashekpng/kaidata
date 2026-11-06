@@ -1,11 +1,17 @@
 export const CATALOG_SOURCES={publications:'Публікації сайта',patents:'Патенти сайта'};
+export const DEFAULT_CATALOG_PAGE_SIZES=Object.freeze([20,50,100,0]);
+export function catalogPageSizes(value,legacySize=20){
+ const sizes=value===undefined?[...new Set([...DEFAULT_CATALOG_PAGE_SIZES,legacySize])]:value;
+ if(!Array.isArray(sizes)||!sizes.length||sizes.length>20||sizes.some(n=>!Number.isInteger(n)||(n!==0&&(n<5||n>1000)))||new Set(sizes).size!==sizes.length)throw new Error('Варіанти кількості: унікальні числа від 5 до 1000 або «Всі», до 20 варіантів.');
+ return [...sizes].sort((a,b)=>a===0?1:b===0?-1:a-b);
+}
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v),fail=t=>{throw new Error(t);};
 const text=(v,label,max=160)=>{if(typeof v!=='string'||v.length>max)fail(`${label}: текст до ${max} символів.`);return v.trim();};
 const flag=(v,label)=>{if(typeof v!=='boolean')fail(`${label}: потрібне true або false.`);return v;};
 export function defaultCatalogLine(field=''){return {field,label:'',format:'text',style:'text',linkField:'',fixedText:'',emptyText:'',tokenLinks:[]};}
 export function defaultCatalogBinding(){return {kind:'builtin',source:'publications',blockId:'',periodMode:'year',period:'',yearColumn:''};}
 export function defaultCatalogConfig(){return {
- searchEnabled:true,searchFields:['Назва','Автори'],searchPlaceholder:'Назва публікації або автор…',pageSize:20,
+ searchEnabled:true,searchFields:['Назва','Автори'],searchPlaceholder:'Назва публікації або автор…',pageSize:20,pageSizes:[...DEFAULT_CATALOG_PAGE_SIZES],
  columns:[{label:'Публікація',width:0,align:'left',lines:[{...defaultCatalogLine('Назва'),style:'title',linkField:'Посилання'},{...defaultCatalogLine('Автори'),style:'muted'}]},{label:'Тип',width:160,align:'left',lines:[defaultCatalogLine('Тип')]},{label:'Індексація',width:170,align:'left',lines:[{...defaultCatalogLine('Індексація'),format:'badges',emptyText:'Без індексації',tokenLinks:[{value:'Scopus',field:''},{value:'WoS',field:''}]}]},{label:'Квартиль',width:120,align:'left',lines:[{...defaultCatalogLine('Квартиль'),format:'quartile',emptyText:'Без квартиля'}]}],
  filters:[{label:'Тип',field:'Тип',multiple:false},{label:'Індексація',field:'Індексація',multiple:true},{label:'Квартиль',field:'Квартиль',multiple:false}]
 };}
@@ -25,7 +31,8 @@ export function validateCatalogTable(value){
 export function validateCatalogConfig(value){
  if(!object(value)||!Array.isArray(value.columns)||!value.columns.length||value.columns.length>20)fail('Каталог: від 1 до 20 стовпчиків відображення.');
  const out={searchEnabled:flag(value.searchEnabled,'Пошук'),searchPlaceholder:text(value.searchPlaceholder,'Підказка пошуку',240),pageSize:value.pageSize};
- if(!Number.isInteger(out.pageSize)||out.pageSize<5||out.pageSize>100)fail('На сторінці: від 5 до 100 записів.');
+ if(!Number.isInteger(out.pageSize)||(out.pageSize!==0&&(out.pageSize<5||out.pageSize>1000)))fail('На сторінці: від 5 до 1000 записів або «Всі».');
+ out.pageSizes=catalogPageSizes(value.pageSizes,out.pageSize);if(!out.pageSizes.includes(out.pageSize))fail('Кількість за замовчуванням має входити до варіантів для відвідувача.');
  if(!Array.isArray(value.searchFields)||value.searchFields.length>80)fail('Оберіть колонки для пошуку.');out.searchFields=[...new Set(value.searchFields.map(s=>text(s,'Колонка пошуку')).filter(Boolean))];
  if(out.searchEnabled&&!out.searchFields.length)fail('Для пошуку виберіть хоча б одну колонку або вимкніть пошук.');
  out.columns=value.columns.map(col=>{if(!object(col)||!Array.isArray(col.lines)||!col.lines.length||col.lines.length>20)fail('У стовпчику має бути від 1 до 20 рядків.');if(!['left','center','right'].includes(col.align)||!Number.isInteger(col.width)||col.width<0||col.width>1600)fail('Перевірте вирівнювання та ширину стовпчика (0–1600 px).');return {label:text(col.label,'Заголовок стовпчика',240),width:col.width,align:col.align,lines:col.lines.map(line=>{if(!object(line)||!['text','badges','quartile'].includes(line.format)||!['title','text','muted'].includes(line.style)||!Array.isArray(line.tokenLinks)||line.tokenLinks.length>20)fail('Перевірте формат рядка та посилання міток.');return {field:text(line.field,'Колонка даних'),label:text(line.label,'Підпис рядка',240),format:line.format,style:line.style,linkField:text(line.linkField,'Колонка посилання'),fixedText:text(line.fixedText,'Власний текст',240),emptyText:text(line.emptyText,'Текст порожнього значення',240),tokenLinks:line.tokenLinks.map(t=>({value:text(t.value,'Назва мітки',240),field:text(t.field,'Колонка посилання')}))};})};});
