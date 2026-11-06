@@ -1,12 +1,16 @@
-import { createProjectReportsEditor } from './project-reports.js?v=sticky-period-20261106';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=sticky-period-20261106';
-import { createSiteView } from './site-view.js?v=sticky-period-20261106';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=sticky-period-20261106';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=sticky-period-20261106';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=sticky-period-20261106';
-import { validateBundle } from './data.js?v=sticky-period-20261106';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-20261106';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-20261106';
+import {inferCatalogConfig} from './catalog-schema.js?v=catalog-20261106';
+import {renderCatalog} from './catalog-view.js?v=catalog-20261106';
+import { createProjectReportsEditor } from './project-reports.js?v=catalog-20261106';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-20261106';
+import { createSiteView } from './site-view.js?v=catalog-20261106';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-20261106';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-20261106';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=catalog-20261106';
+import { validateBundle } from './data.js?v=catalog-20261106';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=sticky-period-20261106';
+import { icon } from './icons.js?v=catalog-20261106';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -78,6 +82,7 @@ export function createCMS(options) {
     selectPage(id, false); redraw();
   }
   function blockFields(b) {
+    if(b.type==='catalog')return '<p class="cms-field-help span-2">Виберіть джерело, стовпчики, пошук і фільтри через «Налаштування» або «Редагувати».</p>';
     if(b.type==='dataNote')return noteContentFields(b,false);
     if(b.type==='feature')return featureContentFields(b,false);
     if (b.type === 'text') return blockText(b, 'text', 'Текст · абзаци розділяються порожнім рядком', 7);
@@ -117,12 +122,13 @@ export function createCMS(options) {
       const page = frame.contentDocument?.querySelector('.cms-frame-page');
       if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
       frame.contentDocument?.addEventListener('click',event=>{
-        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
+        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar,.catalog-toolbar')&&!event.target.closest('[data-cms-action]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
         if(el)action(el.dataset.cmsAction,el).catch(showError);
         const yearButton=event.target.closest('[data-year]');
         if(yearButton){options.selectPreviewYear(+yearButton.dataset.year);schedulePreview();}
       });
       if(frame.contentDocument)view.bindInputs(frame.contentDocument);
+      frame.contentDocument?.addEventListener('change',event=>{if(event.target.id==='all-years'){options.selectPreviewYear(+event.target.value);schedulePreview();}});
       frame.contentDocument?.addEventListener('toggle',()=>{if(page)frame.style.height=`${Math.ceil(page.getBoundingClientRect().height)}px`;},true);
     };
     frame.srcdoc = `<!doctype html><html lang="uk" data-theme="${e(root.dataset.theme || 'blue')}" ${root.hasAttribute('data-site-style')?'data-site-style':''} style="${e(root.getAttribute('style') || '')}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Вигляд сторінки</title><style>${css}html,body{margin:0;min-width:0}.cms-frame-page{display:flow-root;padding:0;--period-sticky-top:0px}</style></head><body>${content}</body></html>`;
@@ -134,7 +140,7 @@ export function createCMS(options) {
     schedulePreview();
     return `<div class="page-heading"><div><div class="eyebrow">КЕРУВАННЯ ВМІСТОМ</div><h1>Адмінка сайта</h1><p>Сторінки, блоки та дані вашого університету.</p></div><div class="heading-actions">${button('new-page',`${icon('file')} Нова сторінка`,'','primary')}${button('publish-zip',`${icon('download')} Сайт для публікації`,dirty?'disabled':'')}</div></div><div class="notice cms-local-note">${icon('info')}<span><strong>Локальна адмінка без серверної авторизації.</strong> Редагування змінює лише цей браузер. Щоб опублікувати зміни для всіх, завантажте ZIP і замініть файли в GitHub. Чужі відвідувачі не можуть змінити серверні файли через цей редактор.</span></div><div class="cms-admin-tools">${button('project-reports','Надходження грантів за роками')}${button('site-export','Резервна копія сайта · JSON')}${button('site-import','Відновити сайт із JSON')}${button('page-import','Імпортувати сторінку · JSON')}</div><div class="cms-layout"><aside class="cms-page-list"><div class="section-head"><h2>Сторінки</h2><span class="pill">${site.pages.length}</span></div>${site.pages.map((p,n)=>`<div class="cms-page-row ${p.id===selected?'selected':''}"><button type="button" data-cms-action="select-page" data-page-id="${p.id}"><strong>${e(p.title)}</strong><span>${p.kind==='builtin'?'Вбудована':`#page/${e(p.slug)}`} ${p.visible?'':'· прихована'}</span></button><div>${button('page-up','↑',`data-page-id="${p.id}" ${n===0?'disabled':''} aria-label="Сторінка вгору"`,'secondary small')}${button('page-down','↓',`data-page-id="${p.id}" ${n===site.pages.length-1?'disabled':''} aria-label="Сторінка вниз"`,'secondary small')}</div></div>`).join('')}</aside><div class="cms-workbench"><section class="cms-live-pane" aria-label="Візуалізація сторінки"><div class="cms-live-heading"><div><h2>Вигляд сторінки</h2><p>Оновлюється автоматично · чернетка</p></div><span class="pill green">Наживо</span></div><iframe id="cms-live-frame" title="Візуалізація поточної сторінки" sandbox="allow-same-origin"></iframe></section><div class="cms-editor"><form id="cms-page-form"><section class="panel"><div class="section-head"><h2>Параметри сторінки</h2><span class="pill ${dirty?'amber':'green'}" id="cms-save-status">${dirty?'Є незбережені зміни':temporary?'Тимчасова копія':'Збережено в цьому браузері'}</span></div><div class="form-grid">${input('Назва в меню','title',draft.title,'required maxlength="120"')}${input('Адреса · латиницею','slug',draft.slug,`required pattern="[a-z0-9][a-z0-9-]{0,63}" ${draft.kind==='builtin'?'readonly':''}`)}${input('Надзаголовок','eyebrow',draft.eyebrow,'maxlength="240" placeholder="Порожнє поле приховує надзаголовок"')}${input('Заголовок сторінки','heading',draft.heading,'required maxlength="200"')}<label>Опис<input data-cms-field="description" value="${e(draft.description)}"></label><label class="checkbox-label"><input type="checkbox" data-cms-field="visible" ${draft.visible?'checked':''}>Показувати в меню</label><label class="checkbox-label"><input type="checkbox" data-cms-field="showYear" ${draft.showYear?'checked':''}>Показувати фільтр року</label><label class="checkbox-label"><input type="checkbox" data-cms-field="stickyYear" ${draft.stickyYear?'checked':''} ${draft.showYear?'':'disabled'}>Закріпити «Звітний період» під час прокручування</label></div><div class="cms-page-actions">${button('page-export','Експорт сторінки · JSON')}${button('duplicate-page','Копіювати сторінку')}${draft.kind==='custom'?button('delete-page','Видалити сторінку','','secondary danger'):''}</div></section><div class="section-head"><div><h2>Блоки сторінки</h2><p>Редагуйте вміст та змінюйте порядок стрілками.</p></div>${button('undo','Скасувати зміну',history.length?'':'disabled','secondary small')}</div>${draft.blocks.map(blockEditor).join('')}<section class="cms-block-palette"><h3>Додати блок</h3><div>${Object.entries(BLOCK_TYPES).filter(([key])=>key!=='existing').map(([key,title])=>button('add-block',`+ ${title}`,`data-block-type="${key}"`)).join('')}</div></section><div class="cms-save-bar"><span>Зміни застосуються до локальної копії сайта</span><button class="button primary" type="submit">${icon('check')} Зберегти сторінку</button></div><div class="form-error" id="cms-editor-error" role="alert"></div></form></div></div></div>`;
   }
-  function transferBlock(block) { return block.type==='analytics'?{...block,dataTable:editableTable(block),...(block.dataMode!=='manual'?{dataPeriod:options.getBlockPeriod(block)}:{})}:block; }
+  function transferBlock(block) { if(block.type==='catalog')return {...block,dataTable:editableTable(block)};return block.type==='analytics'?{...block,dataTable:editableTable(block),...(block.dataMode!=='manual'?{dataPeriod:options.getBlockPeriod(block)}:{})}:block; }
   function widgetTools(block) {
     const extra=`data-block-id="${block.id}"`;
     const tool=(action,label,ico)=>button(action,`${icon(ico)}<span>${label}</span>`,`${extra} title="${label}" aria-label="${label}: ${e(block.title||BLOCK_TYPES[block.type])}"`,'secondary small');
@@ -146,6 +152,11 @@ export function createCMS(options) {
     widgetState.block.settings=resolvedSettings(block);
     if(kind==='edit')widgetState.table=isMetricBlock(block)?metricColorTable(editableTable(block)):editableTable(block);
     renderWidgetDialog();
+  }
+  function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||''});}
+  function refreshCatalogPreview(){if(widgetState?.block.type==='catalog'&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog({...block,catalog:{...block.catalog,pageSize:5}},view.catalogTable(block));}}
+  function useCatalogTable(state,table){
+    const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
   }
   function noteContentFields(block,widget=true){
     const attr=key=>widget?`data-widget-text="${key}"`:`data-block-id="${block.id}" data-block-field="${key}"`;
@@ -228,6 +239,7 @@ export function createCMS(options) {
       const cards=metric;
       body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle??(block.type==='analytics'?defaultBlockSubtitle(block.source):''))}" maxlength="2000"></label></div>`;
       if(block.type==='feature')body+=`<fieldset><legend>Вміст картки</legend>${featureContentFields(block)}</fieldset>${featureAppearanceFields(block)}`;
+      if(block.type==='catalog')body+=catalogFields(block);
       if(block.type==='dataNote')body+=`<fieldset><legend>Вміст примітки</legend>${noteContentFields(block)}</fieldset>${noteBindingFields(block)}`;
       if(block.type==='analytics')body+=`<label class="cms-field-help">Джерело даних<select data-widget-text="dataMode"><option value="live" ${block.dataMode!=='manual'?'selected':''}>Аналітика сайта — автоматичний розрахунок</option><option value="manual" ${block.dataMode==='manual'?'selected':''}>Власні дані цього блоку</option></select></label><p class="cms-field-help">${metric?'Зміна лише фону або порядку карток зберігає автоматичний розрахунок. Ручна зміна чисел і текстів створює власні дані блоку.':'Редагування та імпорт CSV/XLSX створюють власні дані лише для цього блоку.'} Для зміни вихідних записів усіх пов’язаних блоків використайте «Керування даними».</p>`;
       if(chart){
@@ -243,10 +255,12 @@ export function createCMS(options) {
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
-      if(!['feature','dataNote'].includes(block.type)&&(block.type!=='analytics'||block.dataMode==='manual'))body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
+      if(!['feature','dataNote','catalog'].includes(block.type)&&(block.type!=='analytics'||block.dataMode==='manual'))body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
     } else if(block.type==='feature') {
       body=featureContentFields(block);
+    } else if(block.type==='catalog') {
+      body=catalogFields(block);
     } else if(block.type==='dataNote') {
       body=noteContentFields(block)+noteBindingFields(block);
     } else {
@@ -261,8 +275,9 @@ export function createCMS(options) {
   }
   function applyWidget() {
     if(!widgetState)return;
+    if(widgetState.catalogLoading)throw new Error('Дочекайтесь завершення завантаження таблиці.');
     let next=widgetState.block;
-    if(widgetState.kind==='edit'&&!['feature','dataNote'].includes(next.type))next=tableToCMSBlock(widgetState.table,next);
+    if(widgetState.kind==='edit'&&!['feature','dataNote','catalog'].includes(next.type))next=tableToCMSBlock(widgetState.table,next);
     if(next.type==='analytics'&&next.dataMode==='manual'&&!next.dataTable){next.dataTable=editableTable(currentBlock(next.id));next.dataPeriod=options.getBlockPeriod(currentBlock(next.id));}
     next=validateCMSBlock(next);
     validateCMSPage({...draft,blocks:draft.blocks.map(b=>b.id===next.id?next:b)});
@@ -274,6 +289,12 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
+    if(state.block.type==='catalog'&&(el.dataset.catalogEdit||el.dataset.catalogSearchField!==undefined)){
+      if(el.dataset.catalogEdit==='binding.kind'&&el.value==='upload'&&!state.block.dataTable){const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.dataTable=table;}
+      const result=updateCatalogField(state.block,el);if(state.block.binding.periodMode==='fixed'&&!state.block.binding.period)state.block.binding.period=String(options.getYear());
+      if(result.source){state.block.binding.yearColumn='';const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.catalog=inferCatalogConfig(table.headers);}
+      if(result.rerender)renderWidgetDialog();else refreshCatalogPreview();return;
+    }
     if(el.dataset.noteBinding){
       const key=el.dataset.noteBinding;state.block.binding={...state.block.binding,[key]:key==='decimals'?Number(el.value):el.value};
       if(['kind','source','blockId'].includes(key)){state.block.binding.column='';state.block.binding.row='';if(state.block.binding.kind==='builtin')state.block.binding.unit=noteUnit(state.block.binding.source);}
@@ -307,7 +328,7 @@ export function createCMS(options) {
       state.block.metricEditingVersion=1;
     }
     if(el.dataset.widgetText)state.block[el.dataset.widgetText]=el.type==='checkbox'?el.checked:el.value;
-    refreshNotePreview();
+    refreshNotePreview();refreshCatalogPreview();
     if(el.dataset.widgetColor!==undefined){const colors=[...widgetSettings().customColors];colors[+el.dataset.widgetColor]=el.value;storeWidgetSetting('customColors',colors);storeWidgetSetting('palette','custom');$('#cms-widget-dialog input[value="custom"]').checked=true;}
     if(el.dataset.widgetHeader!==undefined)state.table.headers[+el.dataset.widgetHeader]=el.value;
     if(el.dataset.widgetRow!==undefined)state.table.rows[+el.dataset.widgetRow][+el.dataset.widgetCell]=el.value;
@@ -352,7 +373,7 @@ export function createCMS(options) {
   function importPage(value) {
     const clone=structuredClone(value);clone.id=newCMSId('page');clone.kind='custom';clone.slug=uniqueSlug(clone.slug);
     const copiedIds=new Map(clone.blocks.map(b=>[b.id,newCMSId()]));
-    clone.blocks=clone.blocks.map(b=>b.type==='existing'?{...defaultCMSBlock('analytics'),source:({overview:'stats',publications:'publications',projects:'projects',patents:'patents',funding:'funding'})[b.source]}:{...b,id:copiedIds.get(b.id),...(b.type==='dataNote'&&b.binding.kind==='block'&&copiedIds.has(b.binding.blockId)?{binding:{...b.binding,blockId:copiedIds.get(b.binding.blockId)}}:{})});
+    clone.blocks=clone.blocks.map(b=>b.type==='existing'?{...defaultCMSBlock('analytics'),source:({overview:'stats',publications:'publications',projects:'projects',patents:'patents',funding:'funding'})[b.source]}:{...b,id:copiedIds.get(b.id),...(['dataNote','catalog'].includes(b.type)&&b.binding.kind==='block'&&copiedIds.has(b.binding.blockId)?{binding:{...b.binding,blockId:copiedIds.get(b.binding.blockId)}}:{})});
     saveSite({...site,pages:[...site.pages,validateCMSPage(clone)]},'Сторінку імпортовано як нову копію.');selectPage(clone.id,false);
   }
   function applyTransfer() {
@@ -401,6 +422,7 @@ export function createCMS(options) {
   async function action(name, el) {
     const id=el.dataset.blockId, b=id?currentBlock(id):null;
     if(view.handleAction(name,el))return;
+    if(name.startsWith('catalog-')&&widgetState?.block.type==='catalog'){if(catalogEditorAction(widgetState.block,name.slice(8),el,view.catalogTable(widgetState.block,true).table.headers)){renderWidgetDialog();return;}}
     if(name==='metric-background-open'){openMetricBackground(+el.dataset.row);return;}
     if(name==='metric-background-apply'||name==='metric-background-cancel'){closeMetricBackground(name==='metric-background-apply');return;}
     if(name==='project-reports'){projectReports.open();return;}
@@ -475,6 +497,14 @@ export function createCMS(options) {
   }
   document.addEventListener('input',event=>{if(event.target.closest('#cms-page-form'))updateField(event.target);});
   document.addEventListener('input',event=>{if(event.target.closest('#cms-widget-dialog'))updateWidgetField(event.target);});
+  document.addEventListener('change',async event=>{
+    if(!widgetState||!['cms-catalog-file','cms-catalog-sheet'].includes(event.target.id))return;const state=widgetState;state.catalogError='';
+    try{
+      if(event.target.id==='cms-catalog-sheet'){state.catalogSheet=event.target.value;useCatalogTable(state,catalogSheetTable(state.catalogBook,state.catalogSheet));}
+      else {const file=event.target.files[0];if(!file)return;state.catalogLoading=true;const apply=$('#cms-widget-dialog [data-cms-action="widget-apply"]');apply.disabled=true;const upload=await readCatalogUpload(file);if(widgetState!==state)return;state.catalogBook=upload.book;state.catalogSheets=upload.sheets;state.catalogSheet=upload.sheets[0]||'';state.catalogError=upload.error;if(upload.table)useCatalogTable(state,upload.table);}
+    }catch(error){state.catalogError=error.message;}
+    finally{state.catalogLoading=false;if(widgetState===state)renderWidgetDialog();}
+  });
   document.addEventListener('dragstart',event=>{
     const handle=event.target.closest('[data-drag-axis]');if(!handle||!widgetState)return;
     dragItem={axis:handle.dataset.dragAxis,index:+handle.dataset.dragIndex};event.dataTransfer.effectAllowed='move';event.dataTransfer.setData('text/plain',String(dragItem.index));
@@ -495,7 +525,7 @@ export function createCMS(options) {
   window.addEventListener('beforeunload',event=>{if(dirty||temporary){event.preventDefault();event.returnValue='';}});
   return {
     init(initial){site=expandSiteBlocks(initial);let saved=null;try{saved=localStorage.getItem(CMS_KEY);if(saved)site=expandSiteBlocks(JSON.parse(saved),site);}catch{saved=null;options.notify('Локальні сторінки недоступні або пошкоджені. Завантажено серверну версію.');}repairMetricSnapshots();if(saved&&JSON.stringify(site)!==saved)writeLocal(site);},
-    pages:()=>activePages(),getPage:findPage,renderAdmin,renderBlocks,
+    pages:()=>activePages(),getPage:findPage,renderAdmin,renderBlocks,pageCatalogYears:view.pageCatalogYears,
     getSite:()=>structuredClone(site),isDirty:()=>dirty,
   };
 }

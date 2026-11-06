@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=sticky-period-20261106';
-import { icon } from './icons.js?v=sticky-period-20261106';
+import { SIDEBAR_DEFAULTS } from './data.js?v=catalog-20261106';
+import { icon } from './icons.js?v=catalog-20261106';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarMenuHeading(institution){
  const i={...SIDEBAR_DEFAULTS,...institution};

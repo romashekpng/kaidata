@@ -1,9 +1,11 @@
-import { parseCSV, validateBundle } from './data.js?v=sticky-period-20261106';
-import { readXLSXWorkbook } from './spreadsheet.js?v=sticky-period-20261106';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sticky-period-20261106';
+import { validateCatalogTable } from './catalog-schema.js?v=catalog-20261106';
+import { parseCSV, validateBundle } from './data.js?v=catalog-20261106';
+import { readXLSXWorkbook } from './spreadsheet.js?v=catalog-20261106';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-20261106';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
+  if(current.type==='catalog')return validateCMSBlock({...current,binding:{...current.binding,kind:'upload'},dataTable:validateCatalogTable(table)});
   const { headers, rows } = table;
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');
   if (!Array.isArray(rows) || rows.length > 1000) fail('Не більше 1000 рядків у блоці.');
@@ -59,7 +61,7 @@ export async function importCMSBlockXLSX(bytes, block, engine = globalThis.Excel
   if (book.worksheets.length !== 1) fail('Для даних блоку потрібна книга з одним аркушем.');
   const sheet = book.worksheets[0];
   const colorColumns=isMetricBlock(block)?['background','backgroundColor'].filter(key=>Array.from({length:sheet.columnCount},(_,i)=>sheet.getCell(1,i+1).value).includes(key)).length:0;
-  if (sheet.columnCount > 12+colorColumns || sheet.rowCount > 1001) fail('Не більше 12 колонок даних і 1000 рядків.');
+  if (sheet.columnCount > (block.type==='catalog'?80:12+colorColumns) || sheet.rowCount > (block.type==='catalog'?25001:1001)) fail('Не більше 12 колонок даних і 1000 рядків.');
   const text = cell => {
     const v = cell.value;
     if (v == null) return '';

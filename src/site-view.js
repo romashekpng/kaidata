@@ -1,9 +1,10 @@
-import { reportDate, currentReportingYear } from './data.js?v=sticky-period-20261106';
-import { createChartRenderer } from './chart-runtime.js?v=sticky-period-20261106';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sticky-period-20261106';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sticky-period-20261106';
-import { icon } from './icons.js?v=sticky-period-20261106';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=sticky-period-20261106';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-20261106';
+import { reportDate, currentReportingYear } from './data.js?v=catalog-20261106';
+import { createChartRenderer } from './chart-runtime.js?v=catalog-20261106';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-20261106';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-20261106';
+import { icon } from './icons.js?v=catalog-20261106';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-20261106';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -16,11 +17,12 @@ export function observePeriodHeader(){
 }
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
- const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map(),publicationFilters=new Map();
+ const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map(),publicationFilters=new Map(),catalogFilters=new Map();
  const currentBlock=id=>options.getBlock(id);
   function resolvedSettings(block) { return chartSettingsForLibrary(block.settings,block.settings?.chartLibrary||'echarts',block.source); }
   function projectAsOf(block){return reportDate(block.dataMode==='manual'&&/^\d{4}$/.test(block.dataPeriod||'')?+block.dataPeriod:resolvedSettings(block).allYears?currentReportingYear():options.getYear());}
   function editableTable(block) {
+    if(block.type==='catalog')return catalogTable(block,true).table;
     if(block.type==='analytics'){
       if(block.dataMode==='manual')return structuredClone(block.dataTable);
       const table=options.getBlockTable(block.source,resolvedSettings(block).allYears);
@@ -28,6 +30,7 @@ export function createSiteView(options){
     }
     return blockTableData(block);
   }
+  const catalogTable=(block,all=false)=>resolveCatalog(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
   const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
   function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
@@ -86,13 +89,14 @@ export function createSiteView(options){
       else if(b.type==='existing')body=options.renderExisting(b.source);
       else if(b.type==='banner')body=`<div class="cms-banner ${b.tone}"><p>${e(b.text).replaceAll('\n','<br>')}</p>${b.linkUrl?`<a class="button primary" href="${e(b.linkUrl)}" ${b.linkUrl.startsWith('http')?'target="_blank" rel="noopener noreferrer"':''}>${e(b.linkLabel)} ${icon('arrow')}</a>`:''}</div>`;
       else if(b.type==='feature')body=renderFeatureCard(b);
+      else if(b.type==='catalog'){note=catalogTable(b);body=renderCatalog(b,note,catalogFilters.get(b.id));}
       else if(b.type==='dataNote'){note=noteResult(b);body=renderDataNote(b,note);}
       else if(b.type==='text')body=`<div class="cms-prose">${b.text.split(/\n\s*\n/).filter(Boolean).map(p=>`<p>${e(p).replaceAll('\n','<br>')}</p>`).join('')}</div>`;
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
-      const period=b.type==='dataNote'?note.period:b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const period=['catalog','dataNote'].includes(b.type)?note.period:b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
       return `${rowPrefix}<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" data-width-mode="${s.widthMode}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--widget-fixed-width:${s.widthPixels}px;--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
@@ -132,7 +136,15 @@ export function createSiteView(options){
     options.afterUpdate?.();
   }
 
+ function pageCatalogYears(page){const context={year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable};return [...new Set(page.blocks.filter(b=>b.visible&&b.type==='catalog'&&b.binding.periodMode==='year').flatMap(b=>catalogYears(b,context)))].filter(y=>y>=1900&&y<=currentReportingYear()).sort((a,b)=>a-b);}
+ function updateCatalog(catalog,key,value){
+  if(!catalog)return;const id=catalog.dataset.catalogId,block=currentBlock(id);if(!block||block.type!=='catalog')return;
+  const previous=catalogFilters.get(id)||{},state=key==='reset'?{}:{...previous,page:1};
+  if(key==='query')state.query=value;if(key==='page')state.page=value;if(key.startsWith('filter:'))state.filters={...previous.filters,[key.slice(7)]:value};catalogFilters.set(id,state);
+  const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderCatalog(block,catalogTable(block),state);const next=wrapper.querySelector('.data-catalog-results');if(!next)return;catalog.querySelector('.data-catalog-results')?.replaceWith(next);catalog.querySelectorAll('[data-catalog-filter]').forEach((select,i)=>select.value=wrapper.querySelectorAll('[data-catalog-filter]')[i]?.value||'');if(key==='reset'&&catalog.querySelector('[data-catalog-query]'))catalog.querySelector('[data-catalog-query]').value='';options.afterUpdate?.();
+ }
  function handleAction(name,el){
+  if(['catalog-prev','catalog-next','catalog-reset'].includes(name)){const catalog=el.closest('.data-catalog');if(name==='catalog-reset')updateCatalog(catalog,'reset');else updateCatalog(catalog,'page',Number(catalog.querySelector('[data-catalog-page]').dataset.catalogPage)+(name==='catalog-next'?1:-1));return true;}
   if(['publication-prev','publication-next','publication-reset'].includes(name)){
    const catalog=el.closest('.publication-catalog');
    if(name==='publication-reset')updatePublicationFilter(catalog,'reset');
@@ -149,10 +161,12 @@ export function createSiteView(options){
  }
  function bindInputs(root){
   charts.observe(root);
+  root.addEventListener('input',event=>{if(event.target.matches('[data-catalog-query]'))updateCatalog(event.target.closest('.data-catalog'),'query',event.target.value);});
+  root.addEventListener('change',event=>{if(event.target.matches('[data-catalog-filter]'))updateCatalog(event.target.closest('.data-catalog'),'filter:'+event.target.dataset.catalogFilter,event.target.value);});
   root.addEventListener('input',event=>{if(event.target.matches('[data-project-query]'))updateProjectFilter(event.target.closest('.project-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{if(event.target.matches('[data-project-role],[data-project-program-select]'))updateProjectFilter(event.target.closest('.project-catalog'),event.target.matches('[data-project-role]')?'role':'program',event.target.value);});
   root.addEventListener('input',event=>{if(event.target.matches('[data-publication-query]'))updatePublicationFilter(event.target.closest('.publication-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{for(const key of ['faculty','index','quartile'])if(event.target.matches(`[data-publication-${key}]`))updatePublicationFilter(event.target.closest('.publication-catalog'),key,event.target.value);});
  }
- return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,noteResult,noteTable,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
+ return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,noteResult,noteTable,catalogTable,pageCatalogYears,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

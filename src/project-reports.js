@@ -1,5 +1,5 @@
-import { currentReportingYear, reportDate, updateProjectReports, validateBundle } from './data.js?v=sticky-period-20261106';
-import { icon } from './icons.js?v=sticky-period-20261106';
+import { currentReportingYear, reportDate, updateProjectReports, validateBundle } from './data.js?v=catalog-20261106';
+import { icon } from './icons.js?v=catalog-20261106';
 const reportEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function createProjectReportsEditor(options){
  let dialog,projects=[],selected='',drafts=new Map();

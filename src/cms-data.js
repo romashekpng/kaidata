@@ -1,7 +1,8 @@
-import { convertMoneyBlock } from './money.js?v=sticky-period-20261106';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=sticky-period-20261106';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=catalog-20261106';
+import { convertMoneyBlock } from './money.js?v=catalog-20261106';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=catalog-20261106';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
-export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
+export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Якість публікацій',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
 export const NOTE_OPERATIONS = {sum:'Сума значень',avg:'Середнє значення',min:'Найменше значення',max:'Найбільше значення',count:'Кількість рядків',distinct:'Кількість різних назв',value:'Значення одного рядка'};
 export function defaultNoteBinding(){return {kind:'builtin',source:'funding',blockId:'',periodMode:'year',period:'',column:'',row:'',operation:'sum',unit:'тис. грн',decimals:2,manualValue:''};}
@@ -231,6 +232,7 @@ export function validateCMSBlock(input) {
   if (!obj(input) || !Object.hasOwn(BLOCK_TYPES, input.type)) fail('Невідомий тип блоку.');
   const out = { id: id(input.id, 'ID блоку'), type: input.type, title: str(input.title, 'Заголовок блоку', 240), visible: bool(input.visible, 'Видимість блоку') };
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
+  if(input.type==='catalog'){out.binding=validateCatalogBinding(input.binding);out.catalog=validateCatalogConfig(input.catalog);if(input.dataTable)out.dataTable=validateCatalogTable(input.dataTable);if(out.binding.kind==='upload'&&!out.dataTable)fail('Завантажте таблицю каталогу.');}
   if(input.type==='dataNote'){
     out.lead=str(input.lead,'Вступ примітки',2000);out.text=str(input.text,'Текст примітки',50000);out.emptyText=str(input.emptyText,'Текст за відсутності даних',1000);out.binding=validateNoteBinding(input.binding);
     if(!Object.hasOwn(FEATURE_ICONS,input.icon))fail('Невідома іконка примітки.');out.icon=input.icon;
@@ -380,6 +382,7 @@ export function defaultCMSBlock(type) {
   if (type === 'text') block.text = 'Додайте текст вашого університету.';
   if (type === 'banner') Object.assign(block, { text: 'Важливе повідомлення або запрошення до співпраці.', tone: 'green', linkLabel: '', linkUrl: '' });
   if (type === 'feature') Object.assign(block,{title:'Відкрита наука',...defaultFeatureContent(),appearance:validateFeatureStyle(),settings:{...defaultBlockSettings(),width:34}});
+  if(type==='catalog')Object.assign(block,{title:'Каталог публікацій',binding:defaultCatalogBinding(),catalog:defaultCatalogConfig()});
   if(type==='dataNote')Object.assign(block,{title:'Примітка про фінансування',...defaultDataNoteContent(),settings:{...defaultBlockSettings(),background:'green'}});
   if (type === 'list') Object.assign(block, { items: ['Перший пункт', 'Другий пункт'], ordered: false });
   if (type === 'table') Object.assign(block, { columns: ['Назва', 'Значення'], rows: [['Приклад', '0']], caption: '' });
@@ -424,6 +427,7 @@ export function expandSiteBlocks(input, defaults = null) {
 }
 
 export function blockTableData(block) {
+  if(block.type==='catalog')return structuredClone(block.dataTable||{headers:['Назва','Автори','Рік','Тип','Індексація','Квартиль','Посилання'],rows:[]});
   if(block.type==='dataNote'){const headers=['title','lead','text','emptyText','icon'];return{headers,rows:[headers.map(key=>block[key])]};}
   if(block.type==='feature'){const headers=['title','eyebrow','headline','text','linkLabel','linkUrl','icon','linkIcon','openInNewTab'];return {headers,rows:[headers.map(key=>String(block[key]))]};}
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };

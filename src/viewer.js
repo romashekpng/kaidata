@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=sticky-period-20261106';
-import { createAnalytics } from './analytics.js?v=sticky-period-20261106';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=sticky-period-20261106';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=sticky-period-20261106';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=sticky-period-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=sticky-period-20261106';
-import { icon } from './icons.js?v=sticky-period-20261106';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=catalog-20261106';
+import { createAnalytics } from './analytics.js?v=catalog-20261106';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=catalog-20261106';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=catalog-20261106';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=catalog-20261106';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=catalog-20261106';
+import { icon } from './icons.js?v=catalog-20261106';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
@@ -33,7 +33,7 @@ function renderShell(){
  $('#footer').innerHTML=`<span>© ${currentReportingYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}</span>`;
 }
 function header(p){
- const years=reportingYears(data);
+ const years=[...new Set([...reportingYears(data),year,...view.pageCatalogYears(p)])].sort((a,b)=>a-b);
  return `<div class="page-heading"><div>${p.eyebrow?`<div class="eyebrow"><span></span>${e(p.eyebrow)}</div>`:''}<h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${p.showYear?`<div class="period-bar${p.stickyYear?' period-bar-sticky':''}"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length?years:[year]).slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}${years.length>8?`<select aria-label="Усі роки" id="all-years">${years.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select>`:''}</div></div>`:''}`;
 }
 let observedReportingYear=currentReportingYear();
