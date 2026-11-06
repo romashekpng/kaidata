@@ -406,3 +406,11 @@ dialog{background:var(--surface)}
 /* Continue the sidebar color below its content when it scrolls with the page. */
 @media(min-width:721px){body:has(>.sidebar-no-scroll){--sidebar-fill-width:244px;background-image:linear-gradient(to right,var(--nav) 0 var(--sidebar-fill-width),var(--bg) var(--sidebar-fill-width) 100%)}}
 @media(min-width:721px) and (max-width:1250px){body:has(>.sidebar-no-scroll){--sidebar-fill-width:215px}}
+
+/* Keep the enabled sidebar scrollbar visible, including when all items fit. */
+.sidebar:not(.sidebar-no-scroll){overflow-x:hidden;overflow-y:scroll;scrollbar-gutter:stable;background-image:linear-gradient(to left,color-mix(in srgb,var(--nav) 85%,white) 0 10px,var(--nav) 10px 100%)}
+.sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar{width:10px}
+.sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-track{background:color-mix(in srgb,var(--nav) 85%,white)}
+.sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--nav) 40%,#d9e6f5);border:2px solid var(--nav);border-radius:8px}
+.sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-thumb:hover{background:#d9e6f5}
+@supports not selector(::-webkit-scrollbar){.sidebar:not(.sidebar-no-scroll){scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--nav) 40%,#d9e6f5) color-mix(in srgb,var(--nav) 85%,white)}}
