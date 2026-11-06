@@ -19,7 +19,8 @@
           "visible": true,
           "source": "overview"
         }
-      ]
+      ],
+      "stickyYear": true
     },
     {
       "id": "publications",
@@ -301,7 +302,8 @@
           "dataMode": "live"
         }
       ],
-      "scopusLayoutVersion": 1
+      "scopusLayoutVersion": 1,
+      "stickyYear": true
     },
     {
       "id": "projects",
@@ -320,7 +322,8 @@
           "visible": true,
           "source": "projects"
         }
-      ]
+      ],
+      "stickyYear": true
     },
     {
       "id": "patents",
@@ -339,7 +342,8 @@
           "visible": true,
           "source": "patents"
         }
-      ]
+      ],
+      "stickyYear": true
     },
     {
       "id": "funding",
@@ -358,7 +362,8 @@
           "visible": true,
           "source": "funding"
         }
-      ]
+      ],
+      "stickyYear": true
     }
   ]
 }

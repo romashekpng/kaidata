@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand } from './sidebar-view.js?v=sidebar-autohide-20261106';
-import { createAnalytics } from './analytics.js?v=sidebar-autohide-20261106';
-import { createSiteView } from './site-view.js?v=sidebar-autohide-20261106';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=sidebar-autohide-20261106';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=sidebar-autohide-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=sidebar-autohide-20261106';
-import { icon } from './icons.js?v=sidebar-autohide-20261106';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=sticky-period-20261106';
+import { createAnalytics } from './analytics.js?v=sticky-period-20261106';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=sticky-period-20261106';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=sticky-period-20261106';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=sticky-period-20261106';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=sticky-period-20261106';
+import { icon } from './icons.js?v=sticky-period-20261106';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
@@ -28,13 +28,13 @@ function renderShell(){
  const sidebar=sidebarTextSections(i);
  $('#sidebar').classList.toggle('sidebar-no-scroll',!i.showSidebarScroll);
  $('#sidebar').classList.toggle('sidebar-auto-hide-scroll',i.showSidebarScroll&&i.autoHideSidebarScroll);
- $('#sidebar').innerHTML=`<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button>${sidebarBrand(i)}<div class="sidebar-label">АНАЛІТИКА УНІВЕРСИТЕТУ</div><nav aria-label="Основна навігація">${cms.pages().map(p=>`<a class="nav-item ${cmsRoute(p)===route?'active':''}" href="#${cmsRoute(p)}" ${cmsRoute(p)===route?'aria-current="page"':''}>${icon(navIcons[p.id]||'file')}<span>${e(p.title)}</span>${cmsRoute(p)===route?'<span class="active-dot"></span>':''}</a>`).join('')}</nav><div class="sidebar-bottom">${sidebar.note}${sidebar.details}</div>`;
+ $('#sidebar').innerHTML=`<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button>${sidebarBrand(i)}${sidebarMenuHeading(i)}<nav aria-label="Основна навігація">${cms.pages().map(p=>`<a class="nav-item ${cmsRoute(p)===route?'active':''}" href="#${cmsRoute(p)}" ${cmsRoute(p)===route?'aria-current="page"':''}>${icon(navIcons[p.id]||'file')}<span>${e(p.title)}</span>${cmsRoute(p)===route?'<span class="active-dot"></span>':''}</a>`).join('')}</nav><div class="sidebar-bottom">${sidebar.note}${sidebar.details}</div>`;
  $('#topbar').innerHTML=`<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(cms.getPage(route)?.title||'Сторінки')}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo?'demo':''}"><span></span>${data.demo?'Демонстраційні дані':'Опубліковані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0,3))}</span></div>`;
  $('#footer').innerHTML=`<span>© ${currentReportingYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}</span>`;
 }
 function header(p){
  const years=reportingYears(data);
- return `<div class="page-heading"><div>${p.eyebrow?`<div class="eyebrow"><span></span>${e(p.eyebrow)}</div>`:''}<h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${p.showYear?`<div class="period-bar"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length?years:[year]).slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}${years.length>8?`<select aria-label="Усі роки" id="all-years">${years.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select>`:''}</div></div>`:''}`;
+ return `<div class="page-heading"><div>${p.eyebrow?`<div class="eyebrow"><span></span>${e(p.eyebrow)}</div>`:''}<h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${p.showYear?`<div class="period-bar${p.stickyYear?' period-bar-sticky':''}"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length?years:[year]).slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}${years.length>8?`<select aria-label="Усі роки" id="all-years">${years.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select>`:''}</div></div>`:''}`;
 }
 let observedReportingYear=currentReportingYear();
 function refreshReportingCalendar(){if(!data||!cms)return;const current=currentReportingYear();if(current===observedReportingYear)return;if(year===observedReportingYear)year=current;observedReportingYear=current;render();}
@@ -77,5 +77,5 @@ try{
  data=validateBundle(await responses[0].json());site=expandSiteBlocks(await responses[1].json());
  const years=reportingYears(data);year=years.includes(currentReportingYear())?currentReportingYear():years.at(-1)||currentReportingYear();
  cms={pages:()=>site.pages.filter(p=>p.visible&&(p.kind==='custom'||p.id==='overview'||data.institution.blocks.includes(p.id))),getPage:r=>site.pages.find(p=>cmsRoute(p)===r)};
- view=createSiteView({...analytics,getData:()=>data,getYear:()=>year,getBlock:id=>site.pages.flatMap(p=>p.blocks).find(b=>b.id===id),refresh:render});site=view.repairMetricSnapshots(site);view.bindInputs(document);setRoute();
+ view=createSiteView({...analytics,getData:()=>data,getYear:()=>year,getBlock:id=>site.pages.flatMap(p=>p.blocks).find(b=>b.id===id),refresh:render});site=view.repairMetricSnapshots(site);view.bindInputs(document);setRoute();observePeriodHeader();
 }catch(error){$('#content').innerHTML=`<div class="empty"><h1>Не вдалося завантажити сайт</h1><p>Спробуйте оновити сторінку пізніше.</p></div>`;}

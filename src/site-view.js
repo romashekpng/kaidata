@@ -1,10 +1,19 @@
-import { reportDate, currentReportingYear } from './data.js?v=sidebar-autohide-20261106';
-import { createChartRenderer } from './chart-runtime.js?v=sidebar-autohide-20261106';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sidebar-autohide-20261106';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sidebar-autohide-20261106';
-import { icon } from './icons.js?v=sidebar-autohide-20261106';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=sidebar-autohide-20261106';
+import { reportDate, currentReportingYear } from './data.js?v=sticky-period-20261106';
+import { createChartRenderer } from './chart-runtime.js?v=sticky-period-20261106';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sticky-period-20261106';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=sticky-period-20261106';
+import { icon } from './icons.js?v=sticky-period-20261106';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=sticky-period-20261106';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function observePeriodHeader(){
+ const topbar=document.getElementById('topbar');if(!topbar)return;
+ const update=()=>{
+  const offset=['sticky','fixed'].includes(getComputedStyle(topbar).position)?Math.ceil(topbar.getBoundingClientRect().height):0,value=`${offset}px`,root=document.documentElement;
+  if(root.style.getPropertyValue('--period-sticky-top')!==value)root.style.setProperty('--period-sticky-top',value);
+ };
+ const observer=new ResizeObserver(update);observer.observe(topbar);window.addEventListener('resize',update);update();
+ return ()=>{observer.disconnect();window.removeEventListener('resize',update);};
+}
 export function createSiteView(options){
  const charts=createChartRenderer(()=>options.afterUpdate?.());
  const e=escapeView,hiddenSeries=new Map(),projectFilters=new Map(),publicationFilters=new Map();

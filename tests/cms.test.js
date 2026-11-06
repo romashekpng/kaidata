@@ -27,3 +27,9 @@ test('ZIP читається незалежною бібліотекою з пе
 test('ZIP забороняє вихід за межі каталогу та дубльовані імена',()=>{assert.throws(()=>createSiteZip([{name:'../bad',data:'x'}]));assert.throws(()=>createSiteZip([{name:'/etc/bad',data:'x'}]));assert.throws(()=>createSiteZip([{name:'x',data:'x'},{name:'x',data:'y'}]));});
 
 test('порожні таблиці, списки й картки проходять CSV без втрат',()=>{for(const type of ['table','list','metrics']){const b=defaultCMSBlock(type);if(type==='table')b.rows=[];else b.items=[];assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),b);}});
+
+test('закріплення року ввімкнене у старих сторінках, явне вимкнення зберігається незалежно від видимості року та JSON',()=>{
+ const legacy=custom();assert.equal(validateCMSPage(legacy).stickyYear,true);
+ for(const showYear of [true,false]){const page=validateCMSPage({...legacy,showYear,stickyYear:false});assert.equal(validateCMSPage(page).stickyYear,false);assert.equal(readCMSJSON(JSON.stringify({pageVersion:1,page}),'page').stickyYear,false);}
+ assert.throws(()=>validateCMSPage({...legacy,stickyYear:'false'}));
+});

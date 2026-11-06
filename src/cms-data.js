@@ -1,5 +1,5 @@
-import { convertMoneyBlock } from './money.js?v=sidebar-autohide-20261106';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=sidebar-autohide-20261106';
+import { convertMoneyBlock } from './money.js?v=sticky-period-20261106';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=sticky-period-20261106';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Якість публікацій',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -349,6 +349,7 @@ export function validateCMSPage(input) {
   if (!obj(input) || !['builtin', 'custom'].includes(input.kind)) fail('Некоректна сторінка.');
   const out = { id: id(input.id, 'ID сторінки'), kind: input.kind, title: str(input.title, 'Назва сторінки', 120, true), heading: str(input.heading, 'Заголовок сторінки', 200, true), description: str(input.description, 'Опис сторінки', 2000), slug: str(input.slug, 'Адреса сторінки', 64, true), visible: bool(input.visible, 'Видимість сторінки'), showYear: bool(input.showYear, 'Фільтр року') };
   out.eyebrow = str(input.eyebrow === undefined ? 'НАУКОВА ДІЯЛЬНІСТЬ' : input.eyebrow, 'Надзаголовок', 240);
+  out.stickyYear = bool(input.stickyYear === undefined ? true : input.stickyYear, 'Закріплення звітного періоду');
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(out.slug)) fail('Адреса: малі латинські літери, цифри й дефіс, до 64 символів.');
   if (out.kind === 'builtin' && (!Object.hasOwn(CORE_PAGES, out.id) || out.slug !== out.id)) fail('Не можна змінювати системну адресу вбудованої сторінки.');
   if (out.kind === 'custom' && Object.hasOwn(CORE_PAGES, out.id)) fail('ID сторінки зарезервований.');

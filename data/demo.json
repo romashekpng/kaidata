@@ -116,9 +116,10 @@
       ]
     },
     "sidebarLogo": "data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20830%20154%22%3E%3Cpath%20fill%3D%22white%22%20fill-rule%3D%22evenodd%22%20d%3D%22M88%200H216L187%2050%20249%200H390L283%2077%20303%20144%20456%200H632L618%20154H477L482%20136H447L430%20154H174L156%20106%20128%20154H0ZM482%2087H506L518%2044ZM707%200H830L742%20154H619Z%22%2F%3E%3C%2Fsvg%3E",
-    "sidebarBrandText": "SCIENCE & INSIGHTS",
+    "sidebarBrandText": "НАУКОВА ДІЯЛЬНІСТЬ",
     "showSidebarScroll": true,
-    "autoHideSidebarScroll": false
+    "autoHideSidebarScroll": false,
+    "sidebarMenuTitle": "АНАЛІТИКА УНІВЕРСИТЕТУ"
   },
   "publications": [
     {

@@ -1,10 +1,10 @@
-import { scaleMoney } from './money.js?v=sidebar-autohide-20261106';
-import { validateSiteStyles } from './style-data.js?v=sidebar-autohide-20261106';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=sidebar-autohide-20261106';
+import { scaleMoney } from './money.js?v=sticky-period-20261106';
+import { validateSiteStyles } from './style-data.js?v=sticky-period-20261106';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=sticky-period-20261106';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
- sidebarLogo:DEFAULT_SIDEBAR_LOGO,sidebarBrandText:'SCIENCE & INSIGHTS',showSidebarScroll:true,autoHideSidebarScroll:false,
+ sidebarLogo:DEFAULT_SIDEBAR_LOGO,sidebarBrandText:'НАУКОВА ДІЯЛЬНІСТЬ',sidebarMenuTitle:'АНАЛІТИКА УНІВЕРСИТЕТУ',showSidebarScroll:true,autoHideSidebarScroll:false,
  sidebarStatus:'Відкриті дані. Нові можливості.',
  sidebarTagline:'Знання, що формують\nмайбутнє університету.',
  showSidebarStatus:false,showSidebarTagline:false,showSidebarName:true,showSidebarSubtitle:false
@@ -98,7 +98,7 @@ export function validateBundle(input) {
     const value=i[key]===undefined?fallback:i[key];
     if(key==='sidebarLogo')out.institution[key]=validateSidebarLogo(value);
     else if(typeof fallback==='boolean'){if(typeof value!=='boolean')fail(`institution.${key}: true або false.`);out.institution[key]=value;}
-    else {const max=['sidebarStatus','sidebarBrandText'].includes(key)?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
+    else {const max=['sidebarStatus','sidebarBrandText','sidebarMenuTitle'].includes(key)?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
   }
   if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
   for (const key of DATASETS) {

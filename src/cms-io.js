@@ -1,6 +1,6 @@
-import { parseCSV, validateBundle } from './data.js?v=sidebar-autohide-20261106';
-import { readXLSXWorkbook } from './spreadsheet.js?v=sidebar-autohide-20261106';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sidebar-autohide-20261106';
+import { parseCSV, validateBundle } from './data.js?v=sticky-period-20261106';
+import { readXLSXWorkbook } from './spreadsheet.js?v=sticky-period-20261106';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=sticky-period-20261106';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {

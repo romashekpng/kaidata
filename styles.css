@@ -415,3 +415,7 @@ dialog{background:var(--surface)}
 .sidebar:not(.sidebar-no-scroll)::-webkit-scrollbar-thumb:hover{background:#d9e6f5}
 @supports not selector(::-webkit-scrollbar){.sidebar:not(.sidebar-no-scroll){scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--nav) 40%,#d9e6f5) color-mix(in srgb,var(--nav) 85%,white)}}
 .sidebar.sidebar-auto-hide-scroll:not(.sidebar-no-scroll){overflow-y:auto;scrollbar-gutter:auto;background-image:none}
+
+/* Keep year selection accessible below the mobile header while reading a page. */
+.period-bar-sticky{position:sticky;top:var(--period-sticky-top,0px);z-index:15;background:var(--bg);box-shadow:0 7px 12px -12px var(--ink)}
+.sidebar-label{overflow-wrap:anywhere;white-space:normal}
