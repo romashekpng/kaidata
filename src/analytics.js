@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=indicator-headings-20261108';
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=indicator-headings-20261108';
-import { icon } from './icons.js?v=indicator-headings-20261108';
-import { renderProjectCard } from './block-view.js?v=indicator-headings-20261108';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=indicator-headings-20261108';
+import { formatMoney } from './money.js?v=quartile-heading-20261108';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=quartile-heading-20261108';
+import { icon } from './icons.js?v=quartile-heading-20261108';
+import { renderProjectCard } from './block-view.js?v=quartile-heading-20261108';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=quartile-heading-20261108';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
@@ -58,7 +58,7 @@ function quartileChart() {
   const s = summarize(data, year); const keys = ['Q1','Q2','Q3','Q4',null];
   const counts = keys.map(q => s.indexed.filter(x => x.quartile === q).length);
   let pos = 0; const stops = counts.map((n, i) => { const start = pos; pos += n/(s.indexed.length || 1)*100; return `${QCOLORS[i]} ${start}% ${pos}%`; });
-  return `<article class="panel quartile-panel">${sectionHead('Основні показники', 'Розподіл Scopus / WoS за квартилями', pill(String(year)))}<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${s.indexed.length ? stops.join(',') : '#eef1f4 0% 100%'})" role="img" aria-label="Розподіл за квартилями: ${keys.map((q,i)=>`${q||'Без квартиля'}: ${counts[i]}`).join(', ')}"><div><strong>${fmt(s.indexed.length)}</strong><span>публікацій</span></div></div></div><div class="quartile-legend">${keys.map((q,i)=>`<div><span><i style="background:${QCOLORS[i]}"></i>${q || 'Без квартиля'}</span><strong>${counts[i]}</strong><small>${s.indexed.length ? Math.round(counts[i]/s.indexed.length*100) : 0}%</small></div>`).join('')}</div></article>`;
+  return `<article class="panel quartile-panel">${sectionHead('Публікації в Scopus / Web of Science за квартилями', 'Розподіл Scopus / WoS за квартилями', pill(String(year)))}<div class="donut-wrap"><div class="donut" style="background:conic-gradient(${s.indexed.length ? stops.join(',') : '#eef1f4 0% 100%'})" role="img" aria-label="Розподіл за квартилями: ${keys.map((q,i)=>`${q||'Без квартиля'}: ${counts[i]}`).join(', ')}"><div><strong>${fmt(s.indexed.length)}</strong><span>публікацій</span></div></div></div><div class="quartile-legend">${keys.map((q,i)=>`<div><span><i style="background:${QCOLORS[i]}"></i>${q || 'Без квартиля'}</span><strong>${counts[i]}</strong><small>${s.indexed.length ? Math.round(counts[i]/s.indexed.length*100) : 0}%</small></div>`).join('')}</div></article>`;
 }
 function facultyPanel(records, title='Внесок факультетів') {
   const groups = groupCount(records,'faculty'), max = Math.max(1,...groups.map(x=>x[1]));

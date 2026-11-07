@@ -1,11 +1,11 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=indicator-headings-20261108';
-import {defaultCatalogBinding} from './catalog-schema.js?v=indicator-headings-20261108';
-import { reportDate, currentReportingYear } from './data.js?v=indicator-headings-20261108';
-import { createChartRenderer } from './chart-runtime.js?v=indicator-headings-20261108';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=indicator-headings-20261108';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=indicator-headings-20261108';
-import { icon } from './icons.js?v=indicator-headings-20261108';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=indicator-headings-20261108';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=quartile-heading-20261108';
+import {defaultCatalogBinding} from './catalog-schema.js?v=quartile-heading-20261108';
+import { reportDate, currentReportingYear } from './data.js?v=quartile-heading-20261108';
+import { createChartRenderer } from './chart-runtime.js?v=quartile-heading-20261108';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=quartile-heading-20261108';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=quartile-heading-20261108';
+import { icon } from './icons.js?v=quartile-heading-20261108';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=quartile-heading-20261108';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;

@@ -78,7 +78,7 @@
         {
           "id": "original-publications-quartiles",
           "type": "analytics",
-          "title": "Основні показники",
+          "title": "Публікації в Scopus / Web of Science за квартилями",
           "visible": true,
           "source": "quartiles",
           "settings": {
