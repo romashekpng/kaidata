@@ -1,10 +1,10 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=mobile-year-20261107';
-import { reportDate, currentReportingYear } from './data.js?v=mobile-year-20261107';
-import { createChartRenderer } from './chart-runtime.js?v=mobile-year-20261107';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=mobile-year-20261107';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=mobile-year-20261107';
-import { icon } from './icons.js?v=mobile-year-20261107';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=mobile-year-20261107';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=compact-period-20261107';
+import { reportDate, currentReportingYear } from './data.js?v=compact-period-20261107';
+import { createChartRenderer } from './chart-runtime.js?v=compact-period-20261107';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-period-20261107';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=compact-period-20261107';
+import { icon } from './icons.js?v=compact-period-20261107';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=compact-period-20261107';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;

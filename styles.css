@@ -433,4 +433,4 @@ dialog{background:var(--surface)}
 
 /* Mobile year selection uses one dropdown instead of a wrapping button grid. */
 .year-tabs>.year-select{display:none}.year-tabs>.year-select-extra{display:block}
-@media(max-width:720px){.year-tabs{display:block;border:0;padding:0;background:transparent}.year-tabs>button{display:none}.year-tabs>.year-select{display:block;width:100%;max-width:none;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface-field);color:var(--ink);font-size:var(--site-controls-size,14px)}}
+@media(max-width:720px){.period-bar{flex-wrap:nowrap}.year-tabs{display:block;flex:0 0 auto;width:auto;margin-left:auto;border:0;padding:0;background:transparent}.year-tabs>button{display:none}.year-tabs>.year-select{display:block;width:auto;max-width:none;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface-field);color:var(--ink);font-size:var(--site-controls-size,14px)}}

@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=mobile-year-20261107';
-import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=mobile-year-20261107';
-import { icon } from './icons.js?v=mobile-year-20261107';
-import { renderProjectCard } from './block-view.js?v=mobile-year-20261107';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=mobile-year-20261107';
+import { formatMoney } from './money.js?v=compact-period-20261107';
+import { BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=compact-period-20261107';
+import { icon } from './icons.js?v=compact-period-20261107';
+import { renderProjectCard } from './block-view.js?v=compact-period-20261107';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=compact-period-20261107';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;

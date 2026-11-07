@@ -1,4 +1,4 @@
-import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=mobile-year-20261107';
+import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=compact-period-20261107';
 const noteNumber=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)&&Number.isFinite(Number(s))?Number(s):null;};
 export function notePeriod(binding,year){
  const text=binding.periodMode==='fixed'?binding.period:String(year),parts=text.split('-').map(Number),first=parts[0],last=parts[1]??first;

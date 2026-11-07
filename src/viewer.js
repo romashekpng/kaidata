@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=mobile-year-20261107';
-import { createAnalytics } from './analytics.js?v=mobile-year-20261107';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=mobile-year-20261107';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=mobile-year-20261107';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=mobile-year-20261107';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=mobile-year-20261107';
-import { icon } from './icons.js?v=mobile-year-20261107';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=compact-period-20261107';
+import { createAnalytics } from './analytics.js?v=compact-period-20261107';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=compact-period-20261107';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=compact-period-20261107';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=compact-period-20261107';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=compact-period-20261107';
+import { icon } from './icons.js?v=compact-period-20261107';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
