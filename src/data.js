@@ -1,6 +1,6 @@
-import { scaleMoney } from './money.js?v=compact-period-20261107';
-import { validateSiteStyles } from './style-data.js?v=compact-period-20261107';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=compact-period-20261107';
+import { scaleMoney } from './money.js?v=publication-columns-20261107';
+import { validateSiteStyles } from './style-data.js?v=publication-columns-20261107';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=publication-columns-20261107';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
@@ -15,6 +15,8 @@ export const CSV_HEADERS = {
   patents: ['id', 'title', 'number', 'date', 'authors', 'faculty', 'url'],
   revenues: ['year', 'source', 'amountThousandUAH'],
 };
+export function datasetColumns(data,dataset){return [...CSV_HEADERS[dataset],...(dataset==='publications'?data.publicationColumns||[]:[])];}
+export function datasetValue(record,field,dataset){return dataset==='publications'&&!CSV_HEADERS.publications.includes(field)?record.extraFields?.[field]??'':record[field];}
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 function fail(message) { throw new Error(message); }
 function text(v, field, max = 2000) {
@@ -101,6 +103,13 @@ export function validateBundle(input) {
     else {const max=['sidebarStatus','sidebarBrandText','sidebarMenuTitle'].includes(key)?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
   }
   if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
+  if(input.publicationColumns!==undefined&&!Array.isArray(input.publicationColumns))fail('publicationColumns: потрібен список додаткових колонок.');
+  const publicationColumns=[...(input.publicationColumns||[])];
+  for(const record of Array.isArray(input.publications)?input.publications:[]){
+    if(record?.extraFields!==undefined){if(!isObject(record.extraFields))fail('extraFields: потрібен об’єкт додаткових полів публікації.');for(const key of Object.keys(record.extraFields))if(!publicationColumns.includes(key))publicationColumns.push(key);}
+  }
+  if(publicationColumns.length>80-CSV_HEADERS.publications.length||new Set(publicationColumns).size!==publicationColumns.length||publicationColumns.some(h=>typeof h!=='string'||!h.trim()||h!==h.trim()||h.length>160||/^[=+@\-\t\r]/.test(h)||CSV_HEADERS.publications.includes(h)||['__proto__','prototype','constructor'].includes(h)))fail('Публікації: до 80 колонок разом з основними; додаткові заголовки мають бути непорожніми та унікальними.');
+  if(publicationColumns.length)out.publicationColumns=publicationColumns;
   for (const key of DATASETS) {
     if (!Array.isArray(input[key]) || input[key].length > 25000) fail(`${key}: потрібен масив, не більше 25 000 записів.`);
     const ids = new Set();
@@ -117,7 +126,8 @@ export function validateBundle(input) {
         if (!Array.isArray(r.indexes) || r.indexes.some(x => !['Scopus', 'WoS'].includes(x)) || new Set(r.indexes).size !== r.indexes.length) fail(`${f('indexes')}: масив із Scopus та/або WoS, або [].`);
         const quartile=normalizeQuartile(r.quartile,f('quartile'));
         if (quartile && !r.indexes.length) fail(`${f('quartile')}: квартиль потребує індексації.`);
-        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile, type: text(r.type, f('type')) };
+        const extraFields=Object.fromEntries(publicationColumns.map(h=>{const value=r.extraFields&&Object.hasOwn(r.extraFields,h)?r.extraFields[h]:'';if(!['string','number','boolean'].includes(typeof value)||typeof value==='number'&&!Number.isFinite(value)||String(value??'').length>10000)fail(`${f(h)}: потрібен текст до 10 000 символів.`);return [h,String(value??'').trim()];}));
+        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile, type: text(r.type, f('type')),...(publicationColumns.length?{extraFields}:{}) };
       }
       if (key === 'projects') {
         const startDate = date(r.startDate, f('startDate')), endDate = date(r.endDate, f('endDate'));
@@ -194,17 +204,18 @@ export function importCSV(source, dataset, current) {
 export function importTable({ headers, records }, dataset, current) {
   if (!DATASETS.includes(dataset)) fail('Оберіть тип таблиці.');
   if (records.length > 25000) fail('Таблиця містить понад 25 000 записів.');
+  if(headers.length>80)fail('Таблиця: до 80 колонок.');
   const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h)&&!(dataset==='projects'&&h==='progressByYear')&&!(dataset==='revenues'&&h==='amountThousandUAH'&&headers.includes('amountUAH')));
   if (missing.length) fail(`Відсутні колонки: ${missing.join(', ')}.`);
   const extra = headers.filter(h => !CSV_HEADERS[dataset].includes(h)&&!(dataset==='revenues'&&h==='amountUAH'));
-  if (extra.length) fail(`Невідомі колонки: ${extra.join(', ')}.`);
+  if (extra.length&&dataset!=='publications') fail(`Невідомі колонки: ${extra.join(', ')}.`);
   const numeric = (s, field) => { if (!s.trim()) fail(`${field}: порожнє числове поле.`); const cleaned = s.replace(/[\s\u00a0]/g, '').replace(',', '.'); if (!/^\d+(\.\d+)?$/.test(cleaned)) fail(`${field}: некоректне число.`); return Number(cleaned); };
   const converted = records.map((r, n) => {
     const x = { ...r }; const f = field => `${dataset}, рядок ${n + 2}, ${field}`;
     if ('year' in x) x.year = numeric(x.year, f('year'));
-    if ('amountThousandUAH' in x) x.amountThousandUAH = numeric(x.amountThousandUAH, f('amountThousandUAH'));
-    if ('amountUAH' in x) x.amountUAH = numeric(x.amountUAH, f('amountUAH'));
-    if (dataset === 'publications') { x.indexes = x.indexes ? x.indexes.split('|').map(s => s.trim()) : []; x.quartile = x.quartile || null; }
+    if (dataset==='revenues'&&'amountThousandUAH' in x) x.amountThousandUAH = numeric(x.amountThousandUAH, f('amountThousandUAH'));
+    if (dataset==='revenues'&&'amountUAH' in x) x.amountUAH = numeric(x.amountUAH, f('amountUAH'));
+    if (dataset === 'publications') { x.indexes = x.indexes ? x.indexes.split('|').map(s => s.trim()) : []; x.quartile = x.quartile || null;x.extraFields=Object.fromEntries(extra.map(h=>[h,r[h]])); }
     if (dataset === 'projects') {
       if (!['true', 'false'].includes(x.international)) fail(`${f('international')}: true або false.`);
       x.international = x.international === 'true';
@@ -212,13 +223,14 @@ export function importTable({ headers, records }, dataset, current) {
     }
     return x;
   });
-  return validateBundle({ ...current, updatedAt: new Date().toISOString().slice(0, 10), [dataset]: converted });
+  return validateBundle({ ...current, updatedAt: new Date().toISOString().slice(0, 10),...(dataset==='publications'?{publicationColumns:extra}:{}), [dataset]: converted });
 }
 export function toCSV(data, dataset) {
   data=validateBundle(data);
+  const headers=datasetColumns(data,dataset);
   const encode = v => '"' + String(v ?? '').replaceAll('"', '""') + '"';
-  return '\uFEFF' + [CSV_HEADERS[dataset].join(';'), ...data[dataset].map(r => CSV_HEADERS[dataset].map(h => {
-    let v = r[h]; if (h === 'indexes') v = v.join('|'); if (h === 'funding'||h==='progressByYear') v = JSON.stringify(v||[]);
+  return '\uFEFF' + [headers.map(encode).join(';'), ...data[dataset].map(r => headers.map(h => {
+    let v = datasetValue(r,h,dataset); if (h === 'indexes') v = v.join('|'); if (dataset==='projects'&&(h === 'funding'||h==='progressByYear')) v = JSON.stringify(v||[]);
     // Protect spreadsheets from formula injection in free-text fields.
     if (typeof v === 'string' && /^[=+@\-\t\r]/.test(v)) v = "'" + v;
     return encode(v);

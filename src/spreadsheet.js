@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, importTable, validateBundle } from './data.js?v=compact-period-20261107';
+import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=publication-columns-20261107';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const OPTIONAL_SETTINGS=Object.keys(SIDEBAR_DEFAULTS).map(key=>'institution.'+key);
@@ -38,7 +38,7 @@ function cellText(cell, location) {
   return String(value).trim();
 }
 function readTable(sheet, dataset) {
-  if (sheet.rowCount > 25001 || sheet.columnCount > CSV_HEADERS[dataset].length) fail(`${sheet.name}: забагато рядків або колонок.`);
+  if (sheet.rowCount > 25001 || sheet.columnCount > (dataset==='publications'?80:CSV_HEADERS[dataset].length)) fail(`${sheet.name}: забагато рядків або колонок.`);
   const headers = [];
   for (let c = 1; c <= sheet.columnCount; c++) headers.push(cellText(sheet.getCell(1, c), `${sheet.name}, заголовок ${c}`));
   if (!headers.length || headers.some(h => !h) || new Set(headers).size !== headers.length) fail(`${sheet.name}: порожні або повторювані заголовки.`);
@@ -125,14 +125,15 @@ export async function toXLSX(data, target = 'bundle', engine = globalThis.ExcelJ
   }
   for (const key of target === 'bundle' ? DATASETS : [target]) {
     const sheet = book.addWorksheet(SHEET_NAMES[key]);
-    sheet.addRow(CSV_HEADERS[key]);
-    for (const record of clean[key]) sheet.addRow(CSV_HEADERS[key].map(field => {
-      const value = record[field];
+    const columns=datasetColumns(clean,key);
+    sheet.addRow(columns);
+    for (const record of clean[key]) sheet.addRow(columns.map(field => {
+      const value = datasetValue(record,field,key);
       if (field === 'indexes') return value.join('|');
-      if (field === 'funding'||field==='progressByYear') return JSON.stringify(value||[]);
+      if (key==='projects'&&(field === 'funding'||field==='progressByYear')) return JSON.stringify(value||[]);
       return value ?? '';
     }));
-    styleSheet(sheet, CSV_HEADERS[key]);
+    styleSheet(sheet, columns);
     if (key === 'revenues') sheet.getColumn(CSV_HEADERS[key].indexOf('amountThousandUAH') + 1).numFmt = '#,##0.#####';
   }
   return book.xlsx.writeBuffer();

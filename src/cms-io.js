@@ -1,14 +1,14 @@
-import { validateCatalogTable } from './catalog-schema.js?v=compact-period-20261107';
-import { parseCSV, validateBundle } from './data.js?v=compact-period-20261107';
-import { readXLSXWorkbook } from './spreadsheet.js?v=compact-period-20261107';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-period-20261107';
+import { validateCatalogTable } from './catalog-schema.js?v=publication-columns-20261107';
+import { parseCSV, validateBundle } from './data.js?v=publication-columns-20261107';
+import { readXLSXWorkbook } from './spreadsheet.js?v=publication-columns-20261107';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-columns-20261107';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
   if(current.type==='catalog')return validateCMSBlock({...current,binding:{...current.binding,kind:'upload'},dataTable:validateCatalogTable(table)});
   const { headers, rows } = table;
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');
-  if (!Array.isArray(rows) || rows.length > 1000) fail('Не більше 1000 рядків у блоці.');
+  if (!Array.isArray(rows) || rows.length > (current.type==='analytics'&&current.source==='publications'?25000:1000)) fail('Перевищено кількість рядків у блоці.');
   const out = structuredClone(current);
   if (out.type === 'table' || out.type === 'chart') { out.columns = headers; out.rows = rows; }
   else if(out.type==='analytics'){
@@ -61,7 +61,8 @@ export async function importCMSBlockXLSX(bytes, block, engine = globalThis.Excel
   if (book.worksheets.length !== 1) fail('Для даних блоку потрібна книга з одним аркушем.');
   const sheet = book.worksheets[0];
   const colorColumns=isMetricBlock(block)?['background','backgroundColor'].filter(key=>Array.from({length:sheet.columnCount},(_,i)=>sheet.getCell(1,i+1).value).includes(key)).length:0;
-  if (sheet.columnCount > (block.type==='catalog'?80:12+colorColumns) || sheet.rowCount > (block.type==='catalog'?25001:1001)) fail('Не більше 12 колонок даних і 1000 рядків.');
+  const flexible=block.type==='catalog'||block.type==='analytics'&&block.source==='publications';
+  if (sheet.columnCount > (flexible?80:12+colorColumns) || sheet.rowCount > (flexible?25001:1001)) fail(flexible?'До 80 колонок даних і 25 000 рядків.':'Не більше 12 колонок даних і 1000 рядків.');
   const text = cell => {
     const v = cell.value;
     if (v == null) return '';

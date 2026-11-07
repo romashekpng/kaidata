@@ -46,3 +46,13 @@ export function inferCatalogConfig(headers,template='publication'){
  if(!index){c.columns[2].lines=[];for(const [field,fixedText]of[[find(['Scopus','Scopus indexed']), 'Scopus'],[find(['WoS','Web of Science','WoS indexed']),'WoS']])if(field)c.columns[2].lines.push({...defaultCatalogLine(field),format:'badges',fixedText,linkField:fixedText==='Scopus'?scopus:wos});if(!c.columns[2].lines.length)c.columns[2].lines=[{...defaultCatalogLine(),emptyText:'Без індексації'}];}
  c.columns=c.columns.filter((col,i)=>i===0||col.lines.some(l=>l.field));c.filters=[{label:'Тип',field:type,multiple:false},{label:'Індексація',field:index,multiple:true},{label:'Квартиль',field:quartile,multiple:false}].filter(f=>f.field);return c;
 }
+export function publicationCatalogConfig(headers,titleLinks=true){
+ const c=inferCatalogConfig(headers),find=names=>headers.find(h=>names.some(n=>h.toLowerCase()===n.toLowerCase()))||'',faculty=find(['Факультет','faculty']),type=find(['Тип','type']),title=c.columns[0];
+ if(!titleLinks)title.lines[0].linkField='';
+ if(type)title.lines.push({...defaultCatalogLine(type),style:'muted'});
+ c.columns=c.columns.filter(col=>col.label!=='Тип');
+ if(faculty)c.columns.splice(1,0,{label:'Факультет',width:0,align:'left',lines:[defaultCatalogLine(faculty)]});
+ c.filters=c.filters.filter(f=>f.field!==type);
+ if(faculty)c.filters.unshift({label:'Факультет',field:faculty,multiple:false});
+ c.pageSize=10;c.pageSizes=[10,20,50,100,0];return c;
+}

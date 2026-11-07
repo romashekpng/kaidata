@@ -1,10 +1,11 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=compact-period-20261107';
-import { reportDate, currentReportingYear } from './data.js?v=compact-period-20261107';
-import { createChartRenderer } from './chart-runtime.js?v=compact-period-20261107';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=compact-period-20261107';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=compact-period-20261107';
-import { icon } from './icons.js?v=compact-period-20261107';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=compact-period-20261107';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=publication-columns-20261107';
+import {defaultCatalogBinding} from './catalog-schema.js?v=publication-columns-20261107';
+import { reportDate, currentReportingYear } from './data.js?v=publication-columns-20261107';
+import { createChartRenderer } from './chart-runtime.js?v=publication-columns-20261107';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=publication-columns-20261107';
+import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=publication-columns-20261107';
+import { icon } from './icons.js?v=publication-columns-20261107';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=publication-columns-20261107';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -30,7 +31,11 @@ export function createSiteView(options){
     }
     return blockTableData(block);
   }
-  const catalogTable=(block,all=false)=>resolveCatalog(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
+  const catalogTable=(block,all=false)=>{
+    const publications=block.type==='analytics'&&block.source==='publications',source=publications?{...block,type:'catalog',binding:{...defaultCatalogBinding(),kind:'upload',periodMode:'all'},dataTable:editableTable(block)}:block;
+    const result=resolveCatalog(source,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
+    return publications?{...result,period:options.getBlockPeriod(block)}:result;
+  };
   const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
   function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
@@ -81,7 +86,7 @@ export function createSiteView(options){
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
         else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id,projectAsOf(b));
-        else if(b.source==='publications')body=renderPublicationCatalog(editableTable(b),s,publicationFilters.get(b.id),b.id,options.getBlockPeriod(b));
+        else if(b.source==='publications')body=b.catalog?renderCatalog(b,catalogTable(b),catalogFilters.get(b.id)):renderPublicationCatalog(editableTable(b),s,publicationFilters.get(b.id),b.id,options.getBlockPeriod(b));
         else if(b.dataMode==='manual'&&['insight','revenueNotice'].includes(b.source))body=`<div class="${b.source==='insight'?'insight-card':'notice'}"><p>${editableTable(b).rows.map(r=>e(r.join(' · '))).join('<br>')}</p></div>`;
         else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll);
         else body=`<div class="cms-analytics-content ${s.showAll?'show-all':''}">${options.renderAnalytics(b.source,s)}</div>`;
@@ -138,7 +143,7 @@ export function createSiteView(options){
 
  function pageCatalogYears(page){const context={year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable};return [...new Set(page.blocks.filter(b=>b.visible&&b.type==='catalog'&&b.binding.periodMode==='year').flatMap(b=>catalogYears(b,context)))].filter(y=>y>=1900&&y<=currentReportingYear()).sort((a,b)=>a-b);}
  function updateCatalog(catalog,key,value){
-  if(!catalog)return;const id=catalog.dataset.catalogId,block=currentBlock(id);if(!block||block.type!=='catalog')return;
+  if(!catalog)return;const id=catalog.dataset.catalogId,block=currentBlock(id);if(!block||!(block.type==='catalog'||block.type==='analytics'&&block.source==='publications'&&block.catalog))return;
   const previous=catalogFilters.get(id)||{},state=key==='reset'?{pageSize:previous.pageSize}:{...previous,page:1};
   if(key==='pageSize'&&block.catalog.pageSizes.includes(value))state.pageSize=value;if(key==='query')state.query=value;if(key==='page')state.page=value;if(key.startsWith('filter:'))state.filters={...previous.filters,[key.slice(7)]:value};catalogFilters.set(id,state);
   const wrapper=catalog.ownerDocument.createElement('div');wrapper.innerHTML=renderCatalog(block,catalogTable(block),state);const next=wrapper.querySelector('.data-catalog-results');if(!next)return;catalog.querySelector('.data-catalog-results')?.replaceWith(next);catalog.querySelectorAll('[data-catalog-filter]').forEach((select,i)=>select.value=wrapper.querySelectorAll('[data-catalog-filter]')[i]?.value||'');if(key==='reset'&&catalog.querySelector('[data-catalog-query]'))catalog.querySelector('[data-catalog-query]').value='';if(key==='pageSize')catalog.querySelector('[data-catalog-page-size]')?.focus({preventScroll:true});options.afterUpdate?.();

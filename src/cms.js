@@ -1,18 +1,20 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=compact-period-20261107';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=compact-period-20261107';
-import {inferCatalogConfig} from './catalog-schema.js?v=compact-period-20261107';
-import {renderCatalog} from './catalog-view.js?v=compact-period-20261107';
-import { createProjectReportsEditor } from './project-reports.js?v=compact-period-20261107';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=compact-period-20261107';
-import { createSiteView } from './site-view.js?v=compact-period-20261107';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=compact-period-20261107';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=compact-period-20261107';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=compact-period-20261107';
-import { validateBundle } from './data.js?v=compact-period-20261107';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=publication-columns-20261107';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=publication-columns-20261107';
+import {inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=publication-columns-20261107';
+import {renderCatalog} from './catalog-view.js?v=publication-columns-20261107';
+import { createProjectReportsEditor } from './project-reports.js?v=publication-columns-20261107';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=publication-columns-20261107';
+import { createSiteView } from './site-view.js?v=publication-columns-20261107';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=publication-columns-20261107';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=publication-columns-20261107';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=publication-columns-20261107';
+import { validateBundle } from './data.js?v=publication-columns-20261107';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=compact-period-20261107';
+import { icon } from './icons.js?v=publication-columns-20261107';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+const publicationBlock=block=>block?.type==='analytics'&&block.source==='publications';
+const catalogEditorBlock=block=>block?.type==='catalog'||publicationBlock(block);
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 export function createCMS(options) {
   const e = escapeCMS;
@@ -151,10 +153,11 @@ export function createCMS(options) {
     widgetState={kind,block:structuredClone(kind==='edit'?transferBlock(block):block),page:0,editLibrary:block.settings?.chartLibrary||'echarts'};
     widgetState.block.settings=resolvedSettings(block);
     if(kind==='edit')widgetState.table=isMetricBlock(block)?metricColorTable(editableTable(block)):editableTable(block);
+    if(kind==='settings'&&publicationBlock(widgetState.block)&&!widgetState.block.catalog)widgetState.block.catalog=publicationCatalogConfig(editableTable(widgetState.block).headers,widgetState.block.settings.publicationTitleLinks);
     renderWidgetDialog();
   }
-  function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||''});}
-  function refreshCatalogPreview(){if(widgetState?.block.type==='catalog'&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog(block,view.catalogTable(block),{},5);}}
+  function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||'',presentationOnly:publicationBlock(block)});}
+  function refreshCatalogPreview(){if(catalogEditorBlock(widgetState?.block)&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog(block,view.catalogTable(block),{},5);}}
   function useCatalogTable(state,table){
     const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
   }
@@ -251,7 +254,7 @@ export function createCMS(options) {
       if(block.type==='table')body+=`<label>Примітка таблиці<input data-widget-text="caption" value="${e(block.caption)}" maxlength="2000"></label>`;
       if(block.type==='banner')body+=`<div class="form-grid"><label>Оформлення<select data-widget-text="tone">${[['green','Зелене'],['blue','Синє'],['amber','Тепле'],['dark','Темне']].map(([v,t])=>`<option value="${v}" ${block.tone===v?'selected':''}>${t}</option>`).join('')}</select></label><label>Текст кнопки<input data-widget-text="linkLabel" value="${e(block.linkLabel)}"></label><label>Посилання<input data-widget-text="linkUrl" value="${e(block.linkUrl)}"></label></div>`;
       if(block.type==='analytics'&&block.source==='projects')body+=`<fieldset><legend>Картки грантових проєктів</legend>${check('showProjectGlobe','Показувати земну кулю для міжнародних проєктів')}${check('showProjectFlag','Показувати прапор України для українських проєктів')}<p class="cms-field-help">Вимкніть обидва пункти, щоб приховати позначення. Для ручних даних колонка «Міжнародний»: true — міжнародний, false — український; порожнє значення — тип не вказано. Смуга внизу картки показує часовий прогрес за датами виконання.</p></fieldset>`;
-      if(block.type==='analytics'&&block.source==='publications')body+=`<fieldset><legend>Каталог публікацій</legend>${check('publicationTitleLinks','Посилання зробити активним для назви статті','Якщо в полі «Посилання» є http/https-адреса, назва відкриває статтю в новій вкладці. Без адреси або з вимкненим пунктом назва є звичайним текстом.')}<p class="cms-field-help">Пошук, фільтри й чотири стовпці каталогу однакові для обох джерел даних. Автори та тип показуються під назвою; рік і адреса посилання залишаються в даних. «Аналітика сайта» оновлює записи за вибраний рік. «Власні дані» — окрема копія за період на момент редагування; вона не змінює спільний набір і графіки. Перемикання на аналітику показує спільні записи замість ручної копії.</p></fieldset>`;
+      if(publicationBlock(block))body+=`<p class="cms-field-help">Додаткові колонки (DOI, посилання Scopus / WoS та інші) зберігаються у вихідних даних. Нижче виберіть, які з них показувати, шукати й фільтрувати. Назву статті можна пов’язати з колонкою DOI. Зміна оформлення не змінює дані для розрахунку показників.</p>${catalogFields(block)}`;
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics','catalog'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
@@ -292,12 +295,12 @@ export function createCMS(options) {
   function updateWidgetField(el) {
     if(!widgetState)return;
     const state=widgetState;
-    if(state.block.type==='catalog'&&(el.dataset.catalogEdit||el.dataset.catalogSearchField!==undefined||el.dataset.catalogPageSizes!==undefined)){
+    if(catalogEditorBlock(state.block)&&(el.dataset.catalogEdit||el.dataset.catalogSearchField!==undefined||el.dataset.catalogPageSizes!==undefined)){
       if(el.dataset.catalogEdit==='binding.kind'&&el.value==='upload'&&!state.block.dataTable){const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.dataTable=table;}
       const result=updateCatalogField(state.block,el);
       if(result.error){$('#cms-widget-error').textContent=result.error;return;}
       if(result.sizesChanged){$('#cms-widget-error').textContent='';const select=$('#cms-widget-dialog [data-catalog-edit="catalog.pageSize"]');select.innerHTML=state.block.catalog.pageSizes.map(n=>`<option value="${n}" ${n===state.block.catalog.pageSize?'selected':''}>${n===0?'Всі':n}</option>`).join('');}
-      if(state.block.binding.periodMode==='fixed'&&!state.block.binding.period)state.block.binding.period=String(options.getYear());
+      if(state.block.binding?.periodMode==='fixed'&&!state.block.binding.period)state.block.binding.period=String(options.getYear());
       if(result.source){state.block.binding.yearColumn='';const table=view.catalogTable(state.block,true).table;if(table.headers.length)state.block.catalog=inferCatalogConfig(table.headers);}
       if(result.rerender)renderWidgetDialog();else refreshCatalogPreview();return;
     }
@@ -428,7 +431,7 @@ export function createCMS(options) {
   async function action(name, el) {
     const id=el.dataset.blockId, b=id?currentBlock(id):null;
     if(view.handleAction(name,el))return;
-    if(name.startsWith('catalog-')&&widgetState?.block.type==='catalog'){if(catalogEditorAction(widgetState.block,name.slice(8),el,view.catalogTable(widgetState.block,true).table.headers)){renderWidgetDialog();return;}}
+    if(name.startsWith('catalog-')&&catalogEditorBlock(widgetState?.block)){if(catalogEditorAction(widgetState.block,name.slice(8),el,view.catalogTable(widgetState.block,true).table.headers)){renderWidgetDialog();return;}}
     if(name==='metric-background-open'){openMetricBackground(+el.dataset.row);return;}
     if(name==='metric-background-apply'||name==='metric-background-cancel'){closeMetricBackground(name==='metric-background-apply');return;}
     if(name==='project-reports'){projectReports.open();return;}
@@ -445,9 +448,9 @@ export function createCMS(options) {
       if(name==='widget-width-preset'){state.block.settings.width=+el.dataset.width;state.block.settings.widthMode='percent';}
       if(name==='widget-add-color'&&widgetSettings().customColors.length<12){storeWidgetSetting('customColors',[...widgetSettings().customColors,'#3479c6']);storeWidgetSetting('palette','custom');}
       if(name==='widget-remove-color'&&widgetSettings().customColors.length>1){storeWidgetSetting('customColors',widgetSettings().customColors.slice(0,-1));storeWidgetSetting('palette','custom');}
-      if(name==='widget-add-row'){if(table.rows.length>=1000)throw new Error('До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}
+      if(name==='widget-add-row'){if(table.rows.length>=(publicationBlock(state.block)?25000:1000))throw new Error(publicationBlock(state.block)?'До 25 000 рядків.':'До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}
       if(name==='widget-delete-row'){table.rows.splice(+el.dataset.row,1);state.page=Math.min(state.page,Math.max(0,Math.ceil(table.rows.length/20)-1));}
-      if(name==='widget-add-column'){if(table.headers.length>=(isMetricBlock(state.block)?14:12))throw new Error('До 12 колонок даних.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
+      if(name==='widget-add-column'){if(table.headers.length>=(publicationBlock(state.block)?80:isMetricBlock(state.block)?14:12))throw new Error(publicationBlock(state.block)?'До 80 колонок даних.':'До 12 колонок даних.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
       if(name==='widget-delete-column'){
         const minimum=state.block.type==='chart'||CHART_SOURCES.includes(state.block.source)?2:1;if(table.headers.length<=minimum)throw new Error(`Залиште хоча б ${minimum} колонки.`);
         table.headers.splice(+el.dataset.col,1);table.rows.forEach(r=>r.splice(+el.dataset.col,1));
