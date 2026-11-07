@@ -303,6 +303,25 @@ dialog{background:var(--surface)}
 .publication-choice strong{display:block;font-size:16px;color:var(--ink);line-height:1.5}.publication-choice small{display:block;font-size:14px;color:var(--muted);line-height:1.6;margin-top:6px}
 
 .cms-chart-libraries{background:var(--surface-muted);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:20px}.cms-library-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.cms-library-row strong{font-size:14px}.cms-library-row p{font-size:12px;color:var(--muted);margin:5px 0 0}.cms-library-options{display:flex;flex-wrap:wrap;gap:6px}.cms-library-editor{border-top:1px solid var(--line);margin-top:14px;padding-top:12px}.cms-library-options .button{white-space:normal}.cms-library-options .button[aria-pressed=true]{outline:2px solid var(--primary-bg);outline-offset:1px}
+/* Chart settings use one scroll area and aligned library controls. */
+#cms-widget-dialog.cms-chart-dialog[open]{display:flex;flex-direction:column;overflow:hidden}
+#cms-widget-dialog.cms-chart-dialog>.dialog-heading,#cms-widget-dialog.cms-chart-dialog>.dialog-actions{flex-shrink:0;background:var(--surface)}
+#cms-widget-dialog.cms-chart-dialog>.dialog-heading{gap:16px;border-bottom:1px solid var(--line)}
+#cms-widget-dialog.cms-chart-dialog>.dialog-heading h2{min-width:0;overflow-wrap:anywhere}
+#cms-widget-dialog.cms-chart-dialog>.dialog-body{min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+#cms-widget-dialog.cms-chart-dialog>.dialog-actions{margin:0;padding:16px 29px}
+.cms-chart-settings{display:grid;gap:24px;min-width:0}
+#cms-widget-dialog .cms-chart-settings>fieldset{min-width:0;margin:0}
+#cms-widget-dialog .cms-chart-settings select{margin:0}
+.cms-chart-settings .form-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.cms-chart-settings .cms-chart-libraries{margin:0}
+.cms-chart-settings .cms-library-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:20px}
+.cms-chart-settings .cms-library-row>div{min-width:0}
+.cms-chart-settings .cms-library-options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:3px}
+.cms-chart-settings .cms-library-options .button{min-width:0;width:100%;height:100%;overflow-wrap:anywhere;text-align:center}
+.cms-chart-settings .cms-library-row p{line-height:1.5}
+.cms-chart-settings .cms-palette-grid{max-height:none;overflow:visible}
+@media(max-width:720px){.cms-chart-settings{gap:20px}.cms-chart-settings .form-grid,.cms-chart-settings .cms-library-row{grid-template-columns:minmax(0,1fr)}.cms-chart-settings .cms-library-row{gap:12px}.cms-chart-settings .cms-chart-libraries{padding:13px}.cms-chart-settings .cms-library-options{gap:6px}#cms-widget-dialog.cms-chart-dialog>.dialog-actions{padding:12px 16px;gap:10px}#cms-widget-dialog.cms-chart-dialog>.dialog-actions .button{min-width:0;white-space:normal}}
 .cms-library-host{position:relative;min-width:0;width:100%;overflow:hidden}.cms-library-canvas{width:100%;height:100%;position:relative}.cms-chart-graphic[data-chart-kind=progress]{max-height:var(--chart-height,320px);overflow:auto}.show-all .cms-chart-graphic[data-chart-kind=progress]{max-height:none}.cms-library-total{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:32px;font-weight:700;color:var(--ink);pointer-events:none}.cms-chart-library-error{font-size:12px;color:var(--muted)}.cms-library-host canvas{display:block}.cms-library-host .js-plotly-plot .plotly .modebar{display:none}
 
 .cms-chart-canvas-mirror{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}

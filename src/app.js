@@ -8,7 +8,7 @@ import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentR
 import { icon } from './icons.js?v=compact-period-20261107';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js?v=compact-period-20261107';
-import { createCMS } from './cms.js?v=compact-period-20261107';
+import { createCMS } from './cms.js?v=chart-settings-layout-20261107';
 import { cmsRoute } from './cms-data.js?v=compact-period-20261107';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
