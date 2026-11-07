@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=publication-columns-20261107';
+import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=indicator-headings-20261108';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const OPTIONAL_SETTINGS=Object.keys(SIDEBAR_DEFAULTS).map(key=>'institution.'+key);

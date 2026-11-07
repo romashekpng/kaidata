@@ -78,7 +78,7 @@
         {
           "id": "original-publications-quartiles",
           "type": "analytics",
-          "title": "Якість публікацій",
+          "title": "Основні показники",
           "visible": true,
           "source": "quartiles",
           "settings": {

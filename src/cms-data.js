@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=publication-columns-20261107';
-import { convertMoneyBlock } from './money.js?v=publication-columns-20261107';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=publication-columns-20261107';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=indicator-headings-20261108';
+import { convertMoneyBlock } from './money.js?v=indicator-headings-20261108';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=indicator-headings-20261108';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Якість публікацій',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -29,7 +29,7 @@ export function validateFeatureStyle(input = {}) {
  for(const [key,min,max]of [['minHeight',0,1000],['padding',0,80],['radius',0,80],['borderWidth',0,10],['eyebrowSize',10,36],['headingSize',12,64],['textSize',10,36],['linkSize',10,36]])if(!Number.isInteger(out[key])||out[key]<min||out[key]>max)throw new Error(`${key}: від ${min} до ${max}.`);
  return Object.fromEntries(['background','backgroundColor','eyebrowColor','headingColor','textColor','linkColor','borderColor','align','autoHeight','minHeight','padding','radius','borderWidth','eyebrowSize','headingSize','textSize','linkSize'].map(key=>[key,out[key]]));
 }
-export const ANALYTICS = { stats: 'Картки основних показників', publicationChart: 'Публікації за роками', quartiles: 'Якість публікацій', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
+export const ANALYTICS = { stats: 'Основні показники', publicationChart: 'Публікації за роками', quartiles: 'Основні показники', faculties: 'Внесок факультетів', projects: 'Грантові проєкти', publications: 'Каталог публікацій', patents: 'Реєстр патентів', funding: 'Надходження на науку', projectChart: 'Проєкти за роками', programs: 'Кошти за програмами', fundingSources: 'Джерела фінансування', fundingTable: 'Надходження за джерелами', fundingStats: 'Показники фінансування', patentStats: 'Показники патентів', patentFaculties: 'Патенти за факультетами', insight: 'Відкрита наука', revenueNotice: 'Примітка про фінансування' };
 export const CHART_SOURCES = ['publicationChart', 'quartiles', 'funding', 'projectChart', 'programs', 'fundingSources', 'faculties', 'patentFaculties'];
 export const CHART_TYPES = { stacked: 'Стекові стовпчики', bar: 'Груповані стовпчики', horizontal: 'Горизонтальна стовпчаста діаграма', horizontalStacked: 'Горизонтальні накопичувальні стовпчики', progress: 'Лінійчата діаграма прогресу', line: 'Лінійний графік', donut: 'Кільцева діаграма', pie: 'Кругова діаграма' };
 export const TEXT_BACKGROUNDS = { menu:'Колір меню', accent:'Основний акцент', blue:'Блакитний відтінок', green:'Зелений відтінок', amber:'Теплий відтінок', violet:'Фіолетовий відтінок', default:'Стандартний фон', custom:'Власний колір' };
@@ -231,6 +231,12 @@ export function validateCMSBlock(input) {
   }
   if (!obj(input) || !Object.hasOwn(BLOCK_TYPES, input.type)) fail('Невідомий тип блоку.');
   const out = { id: id(input.id, 'ID блоку'), type: input.type, title: str(input.title, 'Заголовок блоку', 240), visible: bool(input.visible, 'Видимість блоку') };
+  if(input.type==='analytics'&&['stats','quartiles'].includes(input.source)){
+    if(input.indicatorTitleVersion!==undefined&&input.indicatorTitleVersion!==1)fail('Невідома версія назв основних показників.');
+    const previous=input.source==='stats'?'Картки основних показників':'Якість публікацій';
+    if(input.indicatorTitleVersion!==1&&out.title===previous)out.title='Основні показники';
+    out.indicatorTitleVersion=1;
+  }
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
   if(input.type==='catalog'){out.binding=validateCatalogBinding(input.binding);out.catalog=validateCatalogConfig(input.catalog);if(input.dataTable)out.dataTable=validateCatalogTable(input.dataTable);if(out.binding.kind==='upload'&&!out.dataTable)fail('Завантажте таблицю каталогу.');}
   if(input.type==='dataNote'){
