@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=admin-theme-20261107';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=admin-theme-20261107';
-import {inferCatalogConfig} from './catalog-schema.js?v=admin-theme-20261107';
-import {renderCatalog} from './catalog-view.js?v=admin-theme-20261107';
-import { createProjectReportsEditor } from './project-reports.js?v=admin-theme-20261107';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=admin-theme-20261107';
-import { createSiteView } from './site-view.js?v=admin-theme-20261107';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=admin-theme-20261107';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=admin-theme-20261107';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=admin-theme-20261107';
-import { validateBundle } from './data.js?v=admin-theme-20261107';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=mobile-year-20261107';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=mobile-year-20261107';
+import {inferCatalogConfig} from './catalog-schema.js?v=mobile-year-20261107';
+import {renderCatalog} from './catalog-view.js?v=mobile-year-20261107';
+import { createProjectReportsEditor } from './project-reports.js?v=mobile-year-20261107';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=mobile-year-20261107';
+import { createSiteView } from './site-view.js?v=mobile-year-20261107';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=mobile-year-20261107';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=mobile-year-20261107';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=mobile-year-20261107';
+import { validateBundle } from './data.js?v=mobile-year-20261107';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=admin-theme-20261107';
+import { icon } from './icons.js?v=mobile-year-20261107';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -122,7 +122,7 @@ export function createCMS(options) {
       const page = frame.contentDocument?.querySelector('.cms-frame-page');
       if (page) frame.style.height = `${Math.ceil(page.getBoundingClientRect().height)}px`;
       frame.contentDocument?.addEventListener('click',event=>{
-        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar,.catalog-toolbar,[data-catalog-page-size]')&&!event.target.closest('[data-cms-action]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
+        if(event.target.closest('summary,[data-project-query],[data-project-role],[data-project-program-select],.publication-filter-toolbar,.catalog-toolbar,[data-catalog-page-size],#all-years')&&!event.target.closest('[data-cms-action]'))return;event.preventDefault();const el=event.target.closest('[data-cms-action]');
         if(el)action(el.dataset.cmsAction,el).catch(showError);
         const yearButton=event.target.closest('[data-year]');
         if(yearButton){options.selectPreviewYear(+yearButton.dataset.year);schedulePreview();}
