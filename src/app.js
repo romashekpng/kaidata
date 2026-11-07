@@ -1,4 +1,4 @@
-import { observePeriodHeader } from './site-view.js?v=publication-columns-20261107';
+import { observePeriodHeader } from './site-view.js?v=filter-labels-20261108';
 import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=publication-columns-20261107';
 import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=publication-columns-20261107';
 import { formatMoney } from './money.js?v=publication-columns-20261107';
@@ -8,7 +8,7 @@ import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentR
 import { icon } from './icons.js?v=publication-columns-20261107';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js?v=publication-columns-20261107';
-import { createCMS } from './cms.js?v=publication-columns-20261107';
+import { createCMS } from './cms.js?v=filter-labels-20261108';
 import { cmsRoute } from './cms-data.js?v=publication-columns-20261107';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));

@@ -1,6 +1,6 @@
 import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=publication-columns-20261107';
 import { createAnalytics } from './analytics.js?v=publication-columns-20261107';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=publication-columns-20261107';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=filter-labels-20261108';
 import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=publication-columns-20261107';
 import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=publication-columns-20261107';
 import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=publication-columns-20261107';

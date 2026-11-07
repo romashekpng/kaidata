@@ -1,4 +1,4 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=publication-columns-20261107';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=filter-labels-20261108';
 import {defaultCatalogBinding} from './catalog-schema.js?v=publication-columns-20261107';
 import { reportDate, currentReportingYear } from './data.js?v=publication-columns-20261107';
 import { createChartRenderer } from './chart-runtime.js?v=publication-columns-20261107';

@@ -1,10 +1,10 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=publication-columns-20261107';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=filter-labels-20261108';
 import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=publication-columns-20261107';
 import {inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=publication-columns-20261107';
-import {renderCatalog} from './catalog-view.js?v=publication-columns-20261107';
+import {renderCatalog} from './catalog-view.js?v=filter-labels-20261108';
 import { createProjectReportsEditor } from './project-reports.js?v=publication-columns-20261107';
 import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=publication-columns-20261107';
-import { createSiteView } from './site-view.js?v=publication-columns-20261107';
+import { createSiteView } from './site-view.js?v=filter-labels-20261108';
 import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=publication-columns-20261107';
 import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=publication-columns-20261107';
 import { renderDataNote, renderBlockTable } from './block-view.js?v=publication-columns-20261107';
