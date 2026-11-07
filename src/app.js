@@ -1,15 +1,15 @@
-import { observePeriodHeader } from './site-view.js?v=catalog-pagination-20261106';
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=catalog-pagination-20261106';
-import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=catalog-pagination-20261106';
-import { formatMoney } from './money.js?v=catalog-pagination-20261106';
-import { createAnalytics } from './analytics.js?v=catalog-pagination-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=catalog-pagination-20261106';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=catalog-pagination-20261106';
-import { icon } from './icons.js?v=catalog-pagination-20261106';
+import { observePeriodHeader } from './site-view.js?v=admin-theme-20261107';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=admin-theme-20261107';
+import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=admin-theme-20261107';
+import { formatMoney } from './money.js?v=admin-theme-20261107';
+import { createAnalytics } from './analytics.js?v=admin-theme-20261107';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=admin-theme-20261107';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=admin-theme-20261107';
+import { icon } from './icons.js?v=admin-theme-20261107';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=catalog-pagination-20261106';
-import { createCMS } from './cms.js?v=catalog-pagination-20261106';
-import { cmsRoute } from './cms-data.js?v=catalog-pagination-20261106';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=admin-theme-20261107';
+import { createCMS } from './cms.js?v=admin-theme-20261107';
+import { cmsRoute } from './cms-data.js?v=admin-theme-20261107';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -19,7 +19,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 const STORE = 'kai-science.v1';
 const THEME_STORE = 'kai-science.theme.v1';
 const THEMES = { standard: 'Стандартна', dark: 'Темна', warm: 'Тепла', blue: 'Синя' };
-let theme = 'blue';
+let theme = Object.hasOwn(THEMES,document.documentElement.dataset.theme)?document.documentElement.dataset.theme:'blue';
 try { const saved = localStorage.getItem(THEME_STORE); if (Object.hasOwn(THEMES, saved)) theme = saved; } catch {}
 applyTheme(theme, false);
 const navIcons = { overview: 'grid', publications: 'book', projects: 'globe', patents: 'award', funding: 'wallet' };
@@ -50,7 +50,7 @@ function applyTheme(value, save = true) {
 }
 function themeSettings() {
   const descriptions = {standard:'Світлий фон і прохолодні кольори',dark:'Темний фон і світлий контрастний текст',warm:'Кремовий фон і м’які теплі кольори',blue:'Темно-синє меню, сині акценти та зелено-червоні індикатори'};
-  return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається для цього браузера.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
+  return `<fieldset><legend>Тема оформлення</legend><p class="muted">Застосовується одразу та зберігається в цьому браузері. Експорт сайта включає вибрану тему.</p><div class="theme-options">${Object.entries(THEMES).map(([id,label])=>`<label class="theme-option"><input type="radio" name="displayTheme" value="${id}" ${theme===id?'checked':''}><span class="theme-swatch ${id}" aria-hidden="true"></span><strong>${label}</strong><small>${descriptions[id]}</small></label>`).join('')}</div></fieldset>`;
 }
 function applySiteStyles(settings = defaultSiteStyles()) {
   const roots=[document.documentElement,document.querySelector('#cms-live-frame')?.contentDocument?.documentElement].filter(Boolean);
@@ -116,7 +116,8 @@ function renderShell() {
   $('#sidebar').innerHTML = `<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button>${sidebarBrand(i)}
   ${sidebarMenuHeading(i)}<nav aria-label="Основна навігація">${cms.pages().map(p => `<a class="nav-item ${route === cmsRoute(p) ? 'active' : ''}" href="#${cmsRoute(p)}" ${route === cmsRoute(p) ? 'aria-current="page"' : ''}>${icon(navIcons[p.id] || 'file')}<span>${e(p.title)}</span>${route === cmsRoute(p) ? '<span class="active-dot"></span>' : ''}</a>`).join('')}</nav>
   <div class="sidebar-bottom"><a class="nav-item ${route==='admin'?'active':''}" href="#admin">${icon('settings')}<span>Адмінка</span></a>${sidebar.note}<button class="nav-item" data-action="import">${icon('upload')} Керування даними</button><button class="nav-item" data-action="settings">${icon('settings')} Налаштування</button>${sidebar.details}</div>`;
-  $('#topbar').innerHTML = `<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(route==='admin'?'Адмінка':cms.getPage(route)?.title || pageTitles[route] || 'Сторінки')}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo ? 'demo' : ''}"><span></span>${data.demo ? 'Демонстраційні дані' : 'Імпортовані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0, 3))}</span></div>`;
+  $('#topbar').classList.toggle('topbar-view',route!=='admin');
+  $('#topbar').innerHTML = `<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(route==='admin'?'Адмінка':cms.getPage(route)?.title || pageTitles[route] || 'Сторінки')}</strong></div><div class="topbar-right">${route==='admin'?`<label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="topbar-divider"></span>`:''}<span class="institution-avatar">${e(i.shortName.slice(0, 3))}</span></div>`;
   $('#footer').innerHTML = `<span>© ${currentReportingYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}<span class="footer-dot">·</span><button data-action="format">Про дані та методологію ${icon('info')}</button></span>`;
 }
 function header(cmsPage = null) {

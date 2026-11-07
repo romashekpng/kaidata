@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-pagination-20261106';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-pagination-20261106';
-import {inferCatalogConfig} from './catalog-schema.js?v=catalog-pagination-20261106';
-import {renderCatalog} from './catalog-view.js?v=catalog-pagination-20261106';
-import { createProjectReportsEditor } from './project-reports.js?v=catalog-pagination-20261106';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-pagination-20261106';
-import { createSiteView } from './site-view.js?v=catalog-pagination-20261106';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-pagination-20261106';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-pagination-20261106';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=catalog-pagination-20261106';
-import { validateBundle } from './data.js?v=catalog-pagination-20261106';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=admin-theme-20261107';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=admin-theme-20261107';
+import {inferCatalogConfig} from './catalog-schema.js?v=admin-theme-20261107';
+import {renderCatalog} from './catalog-view.js?v=admin-theme-20261107';
+import { createProjectReportsEditor } from './project-reports.js?v=admin-theme-20261107';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=admin-theme-20261107';
+import { createSiteView } from './site-view.js?v=admin-theme-20261107';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=admin-theme-20261107';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=admin-theme-20261107';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=admin-theme-20261107';
+import { validateBundle } from './data.js?v=admin-theme-20261107';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=catalog-pagination-20261106';
+import { icon } from './icons.js?v=admin-theme-20261107';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
@@ -402,7 +402,7 @@ export function createCMS(options) {
   async function publishZip(target){
     if(dirty)throw new Error('Спочатку збережіть сторінку.');
     const dialog=$('#cms-publication-dialog'),mode=dialog.querySelector('input[name="publicationMode"]:checked')?.value,ticket=++publicationTicket;
-    const dataSnapshot=structuredClone(options.getData()),siteSnapshot=structuredClone(site),names=mode==='editor'?PUBLICATION_ASSETS:VISITOR_ASSETS;
+    const themeSnapshot=document.documentElement.dataset.theme,dataSnapshot=structuredClone(options.getData()),siteSnapshot=structuredClone(site),names=mode==='editor'?PUBLICATION_ASSETS:VISITOR_ASSETS;
     target.disabled=true;$('#cms-publication-error').textContent='';
     try{
       const pairs=await Promise.all(names.map(async name=>{
@@ -410,7 +410,7 @@ export function createCMS(options) {
         const response=await fetch(new URL(name,document.baseURI));if(!response.ok)throw new Error(`Не вдалося завантажити ${name}.`);return [name,await response.text()];
       }));
       if(ticket!==publicationTicket||!dialog.open)return;
-      const files=buildPublicationFiles(Object.fromEntries(pairs),dataSnapshot,siteSnapshot,mode);
+      const files=buildPublicationFiles(Object.fromEntries(pairs),dataSnapshot,siteSnapshot,mode,themeSnapshot);
       options.download(mode==='editor'?'kai-site-with-admin.zip':'kai-site-visitors.zip',createSiteZip(files),'application/zip');
       dialog.close();options.notify(mode==='editor'?'ZIP сайта з адмінкою готовий.':'ZIP сайта для відвідувачів готовий.');
     }catch(error){if(ticket===publicationTicket&&dialog.open)$('#cms-publication-error').textContent=error.message;}

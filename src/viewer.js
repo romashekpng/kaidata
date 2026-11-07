@@ -1,22 +1,21 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=catalog-pagination-20261106';
-import { createAnalytics } from './analytics.js?v=catalog-pagination-20261106';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=catalog-pagination-20261106';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=catalog-pagination-20261106';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=catalog-pagination-20261106';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=catalog-pagination-20261106';
-import { icon } from './icons.js?v=catalog-pagination-20261106';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=admin-theme-20261107';
+import { createAnalytics } from './analytics.js?v=admin-theme-20261107';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=admin-theme-20261107';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=admin-theme-20261107';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=admin-theme-20261107';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=admin-theme-20261107';
+import { icon } from './icons.js?v=admin-theme-20261107';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
-const THEMES={standard:'Стандартна',dark:'Темна',warm:'Тепла',blue:'Синя'},THEME_STORE='kai-science.theme.v1';
+const THEMES={standard:'Стандартна',dark:'Темна',warm:'Тепла',blue:'Синя'};
 const navIcons={overview:'grid',publications:'book',projects:'globe',patents:'award',funding:'wallet'};
 let data,site,cms,view,year,route='overview',query='',faculty='',quartile='',indexFilter='',projectStatus='all',page=1,theme='blue';
-try{const saved=localStorage.getItem(THEME_STORE);if(Object.hasOwn(THEMES,saved))theme=saved;}catch{}
+if(Object.hasOwn(THEMES,document.documentElement.dataset.theme))theme=document.documentElement.dataset.theme;
 const analytics=createAnalytics({readOnly:true,getData:()=>data,getYear:()=>year,getRoute:()=>route,getPage:r=>cms?.getPage(r),getFilters:()=>({query,faculty,quartile,indexFilter,projectStatus,page})});
 function applyTheme(value){
  if(!Object.hasOwn(THEMES,value))return;theme=value;document.documentElement.dataset.theme=value;
  document.querySelector('meta[name="theme-color"]').content=({standard:'#101f2c',dark:'#0c1521',warm:'#302922',blue:'#25395d'})[value];
- try{localStorage.setItem(THEME_STORE,value);}catch{}
 }
 function renderShell(){
  applyTheme(theme);document.documentElement.style.setProperty('--accent',data.institution.accent);
@@ -29,7 +28,8 @@ function renderShell(){
  $('#sidebar').classList.toggle('sidebar-no-scroll',!i.showSidebarScroll);
  $('#sidebar').classList.toggle('sidebar-auto-hide-scroll',i.showSidebarScroll&&i.autoHideSidebarScroll);
  $('#sidebar').innerHTML=`<button class="icon-button sidebar-close" data-action="close-menu" aria-label="Закрити меню">${icon('close')}</button>${sidebarBrand(i)}${sidebarMenuHeading(i)}<nav aria-label="Основна навігація">${cms.pages().map(p=>`<a class="nav-item ${cmsRoute(p)===route?'active':''}" href="#${cmsRoute(p)}" ${cmsRoute(p)===route?'aria-current="page"':''}>${icon(navIcons[p.id]||'file')}<span>${e(p.title)}</span>${cmsRoute(p)===route?'<span class="active-dot"></span>':''}</a>`).join('')}</nav><div class="sidebar-bottom">${sidebar.note}${sidebar.details}</div>`;
- $('#topbar').innerHTML=`<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(cms.getPage(route)?.title||'Сторінки')}</strong></div><div class="topbar-right"><label class="theme-switch"><span>Тема</span><select id="theme-select" aria-label="Тема оформлення">${Object.entries(THEMES).map(([id,label])=>`<option value="${id}" ${theme===id?'selected':''}>${label}</option>`).join('')}</select></label><span class="dataset-state ${data.demo?'demo':''}"><span></span>${data.demo?'Демонстраційні дані':'Опубліковані дані'}</span><span class="topbar-divider"></span><span class="institution-avatar">${e(i.shortName.slice(0,3))}</span></div>`;
+ $('#topbar').classList.add('topbar-view');
+ $('#topbar').innerHTML=`<div class="breadcrumbs"><button class="icon-button mobile-menu" data-action="menu" aria-label="Відкрити меню" aria-controls="sidebar" aria-expanded="false">${icon('menu')}</button><span>Аналітика</span>${icon('chevron')}<strong>${e(cms.getPage(route)?.title||'Сторінки')}</strong></div><div class="topbar-right"><span class="institution-avatar">${e(i.shortName.slice(0,3))}</span></div>`;
  $('#footer').innerHTML=`<span>© ${currentReportingYear()} ${e(i.shortName)} · Наукова аналітика</span><span>Оновлено ${date(data.updatedAt)}</span>`;
 }
 function header(p){

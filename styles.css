@@ -427,3 +427,6 @@ dialog{background:var(--surface)}
 @media(max-width:720px){.catalog-toolbar label,.catalog-toolbar .catalog-search{flex-basis:100%}.data-catalog-table thead{display:none}.data-catalog-table,.data-catalog-table tbody,.data-catalog-table tr{display:block;width:100%}.data-catalog-table tr{border:1px solid var(--line);border-radius:7px;margin:10px 0;padding:7px}.data-catalog-table td{display:grid;grid-template-columns:minmax(70px,27%) minmax(0,1fr);gap:9px;text-align:left!important;width:auto!important;padding:8px 5px}.data-catalog-table td::before{content:attr(data-label);color:var(--text-secondary);font-size:var(--site-small-size,13px)}.data-catalog-table td>div{min-width:0}.data-catalog-table td:last-child{border-bottom:0}.catalog-line-editor,.catalog-column-editor{padding:10px}}
 
 .catalog-page-size{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.catalog-page-size select{padding:7px 10px;min-width:78px;border:1px solid var(--line);border-radius:6px;background:var(--surface-field);color:var(--ink);font-size:var(--site-controls-size,14px)}
+
+/* Public pages keep a compact header without editor controls or dataset status. */
+.topbar.topbar-view{flex-wrap:nowrap}.topbar.topbar-view .topbar-right{width:auto;flex-wrap:nowrap;flex-shrink:0}.topbar-view .breadcrumbs{min-width:0;overflow-wrap:anywhere}

@@ -18,3 +18,8 @@ test('версія для відвідувачів зберігає оформл
  assert.deepEqual(copied.metricAppearance,stats.metricAppearance);assert(!copied.metricManualBackup);assert(!published.pages[0].blocks.some(b=>b.id===hidden.id));assert.equal(JSON.stringify(site),before);
  assert.throws(()=>buildPublicationFiles(assets,data,site,'wrong'));assert.throws(()=>buildPublicationFiles({},data,site,'visitor'));assert.throws(()=>buildPublicationFiles({...assets,'index.html':'<html></html>'},data,site,'visitor'));
 });
+
+test('publication preserves the theme chosen in the editor in both variants and validates the selection',()=>{
+ for(const mode of ['editor','visitor'])for(const theme of ['standard','dark','warm','blue']){const html=buildPublicationFiles(assets,data,base,mode,theme).find(f=>f.name==='index.html').data;assert(html.includes(`data-theme="${theme}"`));}
+ assert.throws(()=>buildPublicationFiles(assets,data,base,'visitor','<script>'),/Невідома тема/);
+});
