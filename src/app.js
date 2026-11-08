@@ -8,7 +8,7 @@ import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentR
 import { icon } from './icons.js?v=quartile-heading-20261108';
 import './vendor/exceljs.min.js';
 import { importXLSX, toXLSX } from './spreadsheet.js?v=quartile-heading-20261108';
-import { createCMS } from './cms.js?v=hosting-styles-20261108';
+import { createCMS } from './cms.js?v=visitor-external-css-20261108';
 import { cmsRoute } from './cms-data.js?v=quartile-heading-20261108';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
