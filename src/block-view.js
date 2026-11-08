@@ -1,12 +1,22 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=quartile-heading-20261108';
-import { icon } from './icons.js?v=quartile-heading-20261108';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock } from './cms-data.js?v=quartile-heading-20261108';
+import { formatMoney, convertMoneyTable } from './money.js?v=text-note-links-20261108';
+import { icon } from './icons.js?v=text-note-links-20261108';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=text-note-links-20261108';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
+function textLink(block){
+ if(!block.linkUrl||!block.linkLabel)return '';let url;try{url=safeCMSLink(block.linkUrl);}catch{return '';}
+ return `<a class="cms-block-link" href="${esc(url)}"${block.openInNewTab?' target="_blank" rel="noopener noreferrer"':''}>${esc(block.linkLabel)}</a>`;
+}
+export function renderTextBlock(block){
+ const paragraphs=block.text.split(/\n\s*\n/).filter(Boolean).map(p=>esc(p).replaceAll('\n','<br>')),link=textLink(block);
+ if(link){if(block.linkPlacement==='line')paragraphs.push(link);else if(paragraphs.length)paragraphs[paragraphs.length-1]+=' '+link;else paragraphs.push(link);}
+ return `<div class="cms-prose">${paragraphs.map(p=>`<p>${p}</p>`).join('')}</div>`;
+}
 export function renderDataNote(block,result){
  const s={...defaultBlockSettings(),...block.settings},color=s.background==='custom'?customBackgroundStyle(s.backgroundColor):'';
- return `<div class="cms-data-note cms-text-bg-${s.background}" ${color?`style="${color}"`:''} ${result.error?'role="status"':''}>${block.icon==='none'?'':icon(block.icon)}<div>${result.lead?`<strong>${esc(result.lead)}</strong> `:''}<span>${esc(result.text).replaceAll('\n','<br>')}</span></div></div>`;
+ const link=textLink(block),suffix=link?(block.linkPlacement==='line'?`<span class="cms-block-link-row">${link}</span>`:' '+link):'';
+ return `<div class="cms-data-note cms-text-bg-${s.background}" ${color?`style="${color}"`:''} ${result.error?'role="status"':''}>${block.icon==='none'?'':icon(block.icon)}<div>${result.lead?`<strong>${esc(result.lead)}</strong> `:''}<span>${esc(result.text).replaceAll('\n','<br>')}</span>${suffix}</div></div>`;
 }
 export function renderFeatureCard(input) {
  const b=validateCMSBlock(input),s=b.appearance;

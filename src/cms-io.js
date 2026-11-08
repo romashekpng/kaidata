@@ -1,7 +1,7 @@
-import { validateCatalogTable } from './catalog-schema.js?v=quartile-heading-20261108';
-import { parseCSV, validateBundle } from './data.js?v=quartile-heading-20261108';
-import { readXLSXWorkbook } from './spreadsheet.js?v=quartile-heading-20261108';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=quartile-heading-20261108';
+import { validateCatalogTable } from './catalog-schema.js?v=text-note-links-20261108';
+import { parseCSV, validateBundle } from './data.js?v=text-note-links-20261108';
+import { readXLSXWorkbook } from './spreadsheet.js?v=text-note-links-20261108';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=text-note-links-20261108';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
@@ -20,12 +20,17 @@ export function tableToCMSBlock(table, current) {
   }
   else {
     const expected = out.type==='metrics'?['label','value','unit','note']:blockTable(out).headers;
-    if ((out.type==='metrics'?headers.some(h=>![...expected,'background','backgroundColor'].includes(h)):expected.length!==headers.length) || expected.some(h => !headers.includes(h))) fail(`Очікуються колонки: ${expected.join(', ')}.`);
+    const linkFields=['text','dataNote'].includes(out.type)?Object.keys(defaultTextLink()):[],required=expected.filter(h=>!linkFields.includes(h)),allowed=out.type==='metrics'?[...expected,'background','backgroundColor']:expected;
+    if(headers.some(h=>!allowed.includes(h))||required.some(h=>!headers.includes(h)))fail(`Очікуються колонки: ${required.join(', ')}.`);
     const records = rows.map(row => { if (row.length !== headers.length) fail('Кількість клітинок не відповідає заголовкам.'); return Object.fromEntries(headers.map((h, i) => [h, row[i]])); });
     if (out.type === 'list') out.items = records.map(x => x.item);
     if (out.type === 'metrics') out.items = records;
     if (out.type === 'text' || out.type === 'banner') { if (records.length !== 1) fail('Для тексту або банера потрібен один рядок.'); Object.assign(out, records[0]); }
     if(out.type==='dataNote'){if(records.length!==1)fail('Для примітки потрібен один рядок.');Object.assign(out,records[0]);}
+    if(linkFields.length&&headers.includes('openInNewTab')){
+      if(!['true','false'].includes(records[0].openInNewTab))fail('openInNewTab: вкажіть true або false.');
+      out.openInNewTab=records[0].openInNewTab==='true';
+    }
     if(out.type==='feature'){
       if(records.length!==1)fail('Для інформаційної картки потрібен один рядок.');
       const record=records[0];if(!['true','false'].includes(record.openInNewTab))fail('openInNewTab: вкажіть true або false.');

@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=quartile-heading-20261108';
-import { createAnalytics } from './analytics.js?v=quartile-heading-20261108';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=quartile-heading-20261108';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=quartile-heading-20261108';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=quartile-heading-20261108';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=quartile-heading-20261108';
-import { icon } from './icons.js?v=quartile-heading-20261108';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=text-note-links-20261108';
+import { createAnalytics } from './analytics.js?v=text-note-links-20261108';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=text-note-links-20261108';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=text-note-links-20261108';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=text-note-links-20261108';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=text-note-links-20261108';
+import { icon } from './icons.js?v=text-note-links-20261108';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

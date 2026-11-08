@@ -1,11 +1,12 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=quartile-heading-20261108';
-import { convertMoneyBlock } from './money.js?v=quartile-heading-20261108';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=quartile-heading-20261108';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=text-note-links-20261108';
+import { convertMoneyBlock } from './money.js?v=text-note-links-20261108';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=text-note-links-20261108';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
 export const NOTE_OPERATIONS = {sum:'Сума значень',avg:'Середнє значення',min:'Найменше значення',max:'Найбільше значення',count:'Кількість рядків',distinct:'Кількість різних назв',value:'Значення одного рядка'};
 export function defaultNoteBinding(){return {kind:'builtin',source:'funding',blockId:'',periodMode:'year',period:'',column:'',row:'',operation:'sum',unit:'тис. грн',decimals:2,manualValue:''};}
+export function defaultTextLink(){return {linkLabel:'',linkUrl:'',linkPlacement:'inline',openInNewTab:false};}
 export function defaultDataNoteContent(){return {lead:'{source} {periodLabel}:',text:'{value} {unit}. Грантові кошти обліковуються окремо; ці суми не додаються автоматично.',emptyText:'дані не завантажено',icon:'info',binding:defaultNoteBinding()};}
 export function validateNoteBinding(input={}){
  if(!obj(input))fail('Некоректне джерело примітки.');const out={...defaultNoteBinding(),...input};
@@ -238,6 +239,13 @@ export function validateCMSBlock(input) {
     out.indicatorTitleVersion=2;
   }
   if (input.type === 'text') out.text = str(input.text, 'Текст', 50000);
+  if(['text','dataNote'].includes(input.type)){
+    const link={...defaultTextLink(),...input};
+    out.linkLabel=str(link.linkLabel,'Текст посилання',240);out.linkUrl=safeCMSLink(link.linkUrl);
+    if(out.linkUrl&&!out.linkLabel)fail('Для посилання потрібен текст.');
+    if(!['inline','line'].includes(link.linkPlacement))fail('Розміщення посилання: продовження тексту або окремий рядок.');
+    out.linkPlacement=link.linkPlacement;out.openInNewTab=bool(link.openInNewTab,'Нова вкладка');
+  }
   if(input.type==='catalog'){out.binding=validateCatalogBinding(input.binding);out.catalog=validateCatalogConfig(input.catalog);if(input.dataTable)out.dataTable=validateCatalogTable(input.dataTable);if(out.binding.kind==='upload'&&!out.dataTable)fail('Завантажте таблицю каталогу.');}
   if(input.type==='dataNote'){
     out.lead=str(input.lead,'Вступ примітки',2000);out.text=str(input.text,'Текст примітки',50000);out.emptyText=str(input.emptyText,'Текст за відсутності даних',1000);out.binding=validateNoteBinding(input.binding);
@@ -386,11 +394,11 @@ export function validateSite(input) {
 }
 export function defaultCMSBlock(type) {
   const block = { id: newCMSId(), type, title: BLOCK_TYPES[type], visible: true };
-  if (type === 'text') block.text = 'Додайте текст вашого університету.';
+  if (type === 'text') Object.assign(block,{text:'Додайте текст вашого університету.',...defaultTextLink()});
   if (type === 'banner') Object.assign(block, { text: 'Важливе повідомлення або запрошення до співпраці.', tone: 'green', linkLabel: '', linkUrl: '' });
   if (type === 'feature') Object.assign(block,{title:'Відкрита наука',...defaultFeatureContent(),appearance:validateFeatureStyle(),settings:{...defaultBlockSettings(),width:34}});
   if(type==='catalog')Object.assign(block,{title:'Каталог публікацій',binding:defaultCatalogBinding(),catalog:defaultCatalogConfig()});
-  if(type==='dataNote')Object.assign(block,{title:'Примітка про фінансування',...defaultDataNoteContent(),settings:{...defaultBlockSettings(),background:'green'}});
+  if(type==='dataNote')Object.assign(block,{title:'Примітка про фінансування',...defaultDataNoteContent(),...defaultTextLink(),settings:{...defaultBlockSettings(),background:'green'}});
   if (type === 'list') Object.assign(block, { items: ['Перший пункт', 'Другий пункт'], ordered: false });
   if (type === 'table') Object.assign(block, { columns: ['Назва', 'Значення'], rows: [['Приклад', '0']], caption: '' });
   if (type === 'chart') Object.assign(block, { columns:['Рік','Серія 1','Серія 2'], rows:[['2024','80','40'],['2025','100','55'],['2026','120','65']], settings:{...defaultBlockSettings(),allYears:true} });
@@ -435,7 +443,7 @@ export function expandSiteBlocks(input, defaults = null) {
 
 export function blockTableData(block) {
   if(block.type==='catalog')return structuredClone(block.dataTable||{headers:['Назва','Автори','Рік','Тип','Індексація','Квартиль','Посилання'],rows:[]});
-  if(block.type==='dataNote'){const headers=['title','lead','text','emptyText','icon'];return{headers,rows:[headers.map(key=>block[key])]};}
+  if(block.type==='dataNote'){const headers=['title','lead','text','emptyText','icon',...Object.keys(defaultTextLink())];return{headers,rows:[headers.map(key=>String(block[key]??defaultTextLink()[key]??''))]};}
   if(block.type==='feature'){const headers=['title','eyebrow','headline','text','linkLabel','linkUrl','icon','linkIcon','openInNewTab'];return {headers,rows:[headers.map(key=>String(block[key]))]};}
   if (block.type === 'table' || block.type === 'chart') return { headers: [...block.columns], rows: block.rows.map(x => [...x]) };
   if (block.type === 'analytics' && block.dataTable) return structuredClone(block.dataTable);
@@ -445,7 +453,7 @@ export function blockTableData(block) {
     if(!block.items.some(x=>x.background!==undefined||x.backgroundColor!==undefined))return table;
     const colored=metricColorTable(table);colored.rows.forEach((row,i)=>{row[4]=block.items[i].background||'default';row[5]=block.items[i].backgroundColor||'#25395d';});return colored;
   }
-  if (block.type === 'text') return { headers: ['title', 'text'], rows: [[block.title, block.text]] };
+  if (block.type === 'text') {const headers=['title','text',...Object.keys(defaultTextLink())];return {headers,rows:[headers.map(key=>String(block[key]??defaultTextLink()[key]??''))]};}
   if (block.type === 'banner') return { headers: ['title', 'text', 'tone', 'linkLabel', 'linkUrl'], rows: [[block.title, block.text, block.tone, block.linkLabel, block.linkUrl]] };
   fail('Для аналітики використайте імпорт/експорт даних сайта або JSON конфігурації блоку.');
 }

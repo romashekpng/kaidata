@@ -1,11 +1,11 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=quartile-heading-20261108';
-import {defaultCatalogBinding} from './catalog-schema.js?v=quartile-heading-20261108';
-import { reportDate, currentReportingYear } from './data.js?v=quartile-heading-20261108';
-import { createChartRenderer } from './chart-runtime.js?v=quartile-heading-20261108';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=quartile-heading-20261108';
-import { renderDataNote, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=quartile-heading-20261108';
-import { icon } from './icons.js?v=quartile-heading-20261108';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=quartile-heading-20261108';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=text-note-links-20261108';
+import {defaultCatalogBinding} from './catalog-schema.js?v=text-note-links-20261108';
+import { reportDate, currentReportingYear } from './data.js?v=text-note-links-20261108';
+import { createChartRenderer } from './chart-runtime.js?v=text-note-links-20261108';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=text-note-links-20261108';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=text-note-links-20261108';
+import { icon } from './icons.js?v=text-note-links-20261108';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=text-note-links-20261108';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -96,7 +96,7 @@ export function createSiteView(options){
       else if(b.type==='feature')body=renderFeatureCard(b);
       else if(b.type==='catalog'){note=catalogTable(b);body=renderCatalog(b,note,catalogFilters.get(b.id));}
       else if(b.type==='dataNote'){note=noteResult(b);body=renderDataNote(b,note);}
-      else if(b.type==='text')body=`<div class="cms-prose">${b.text.split(/\n\s*\n/).filter(Boolean).map(p=>`<p>${e(p).replaceAll('\n','<br>')}</p>`).join('')}</div>`;
+      else if(b.type==='text')body=renderTextBlock(b);
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);

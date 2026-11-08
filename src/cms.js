@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=quartile-heading-20261108';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=quartile-heading-20261108';
-import {inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=quartile-heading-20261108';
-import {renderCatalog} from './catalog-view.js?v=quartile-heading-20261108';
-import { createProjectReportsEditor } from './project-reports.js?v=quartile-heading-20261108';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=visitor-external-css-20261108';
-import { createSiteView } from './site-view.js?v=quartile-heading-20261108';
-import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=quartile-heading-20261108';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=quartile-heading-20261108';
-import { renderDataNote, renderBlockTable } from './block-view.js?v=quartile-heading-20261108';
-import { validateBundle } from './data.js?v=quartile-heading-20261108';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=text-note-links-20261108';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=text-note-links-20261108';
+import {inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=text-note-links-20261108';
+import {renderCatalog} from './catalog-view.js?v=text-note-links-20261108';
+import { createProjectReportsEditor } from './project-reports.js?v=text-note-links-20261108';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=text-note-links-20261108';
+import { createSiteView } from './site-view.js?v=text-note-links-20261108';
+import { NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=text-note-links-20261108';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=text-note-links-20261108';
+import { renderDataNote, renderBlockTable } from './block-view.js?v=text-note-links-20261108';
+import { validateBundle } from './data.js?v=text-note-links-20261108';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=quartile-heading-20261108';
+import { icon } from './icons.js?v=text-note-links-20261108';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const publicationBlock=block=>block?.type==='analytics'&&block.source==='publications';
@@ -87,7 +87,7 @@ export function createCMS(options) {
     if(b.type==='catalog')return '<p class="cms-field-help span-2">Виберіть джерело, стовпчики, пошук і фільтри через «Налаштування» або «Редагувати».</p>';
     if(b.type==='dataNote')return noteContentFields(b,false);
     if(b.type==='feature')return featureContentFields(b,false);
-    if (b.type === 'text') return blockText(b, 'text', 'Текст · абзаци розділяються порожнім рядком', 7);
+    if (b.type === 'text') return blockText(b, 'text', 'Текст · абзаци розділяються порожнім рядком', 7)+textLinkFields(b,false);
     if (b.type === 'banner') return `${blockText(b, 'text', 'Текст банера')}<label>Оформлення<select data-block-id="${b.id}" data-block-field="tone">${[['green','Зелений'],['blue','Синій'],['amber','Теплий'],['dark','Темний']].map(([v,t])=>`<option value="${v}" ${b.tone===v?'selected':''}>${t}</option>`).join('')}</select></label>${blockInput(b,'linkLabel','Текст кнопки')}${blockInput(b,'linkUrl','Посилання · https://… або #page/slug')}`;
     if (b.type === 'list') return `${blockText(b,'items','Пункти · кожен із нового рядка',7,b.items.join('\n'))}<label class="checkbox-label"><input type="checkbox" data-block-id="${b.id}" data-block-field="ordered" ${b.ordered?'checked':''}>Нумерований список</label>`;
     if (b.type === 'analytics') return `<label class="span-2">Джерело аналітики<select data-block-id="${b.id}" data-block-field="source">${Object.entries(ANALYTICS).filter(([key])=>!['insight','revenueNotice'].includes(key)).map(([v,t])=>`<option value="${v}" ${b.source===v?'selected':''}>${t}</option>`).join('')}</select></label><p class="cms-field-help span-2">Використовує дані сайта за вибраний рік. Для зміни таблиць відкрийте «Імпорт даних аналітики». Увімкніть фільтр року в параметрах сторінки.</p>`;
@@ -161,9 +161,13 @@ export function createCMS(options) {
   function useCatalogTable(state,table){
     const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
   }
+  function textLinkFields(block,widget=true){
+    const attr=key=>widget?`data-widget-text="${key}"`:`data-block-id="${block.id}" data-block-field="${key}"`;
+    return `<fieldset class="${widget?'':'span-2'}"><legend>Посилання</legend><div class="form-grid"><label>Текст посилання<input ${attr('linkLabel')} value="${e(block.linkLabel||'')}" maxlength="240" placeholder="Дослідити публікації"></label><label>Адреса посилання<input ${attr('linkUrl')} value="${e(block.linkUrl||'')}" maxlength="2000" placeholder="https://… або #publications"></label><label>Розміщення посилання<select ${attr('linkPlacement')}><option value="inline" ${block.linkPlacement!=='line'?'selected':''}>Продовження тексту</option><option value="line" ${block.linkPlacement==='line'?'selected':''}>Окремий рядок</option></select></label><label class="checkbox-label cms-setting-check"><input type="checkbox" ${attr('openInNewTab')} ${block.openInNewTab?'checked':''}><span>Відкривати в новій вкладці</span></label></div><p class="cms-field-help">Посилання додається в кінці тексту. Підтримуються адреси http/https та внутрішні сторінки, наприклад #publications або #page/slug. Щоб приховати посилання, очистьте його адресу.</p></fieldset>`;
+  }
   function noteContentFields(block,widget=true){
     const attr=key=>widget?`data-widget-text="${key}"`:`data-block-id="${block.id}" data-block-field="${key}"`;
-    return `<label class="${widget?'':'span-2'}">Вступ / виділений текст<input ${attr('lead')} value="${e(block.lead)}"></label><label class="${widget?'':'span-2'}">Текст примітки<textarea ${attr('text')} rows="4">${e(block.text)}</textarea></label><label>Як показувати відсутність даних<input ${attr('emptyText')} value="${e(block.emptyText)}"></label><label>Іконка<select ${attr('icon')}>${Object.entries(FEATURE_ICONS).map(([key,title])=>`<option value="${key}" ${block.icon===key?'selected':''}>${title}</option>`).join('')}</select></label><p class="cms-field-help ${widget?'':'span-2'}">Підстановки: {value} — результат; {unit} — одиниця; {period} — рік або період; {periodLabel} — «у 2026 році» / «за 2021–2025 роки»; {source} — назва джерела.</p>`;
+    return `<label class="${widget?'':'span-2'}">Вступ / виділений текст<input ${attr('lead')} value="${e(block.lead)}"></label><label class="${widget?'':'span-2'}">Текст примітки<textarea ${attr('text')} rows="4">${e(block.text)}</textarea></label><label>Як показувати відсутність даних<input ${attr('emptyText')} value="${e(block.emptyText)}"></label><label>Іконка<select ${attr('icon')}>${Object.entries(FEATURE_ICONS).map(([key,title])=>`<option value="${key}" ${block.icon===key?'selected':''}>${title}</option>`).join('')}</select></label><p class="cms-field-help ${widget?'':'span-2'}">Підстановки: {value} — результат; {unit} — одиниця; {period} — рік або період; {periodLabel} — «у 2026 році» / «за 2021–2025 роки»; {source} — назва джерела.</p>${widget?'':textLinkFields(block,false)}`;
   }
   function noteSourceOptions(id){
     return site.pages.flatMap(page=>(draft&&page.id===selected?draft:page).blocks.filter(block=>block.id!==id&&(['table','chart'].includes(block.type)||block.type==='analytics'&&Object.hasOwn(NOTE_SOURCES,block.source))).map(block=>({id:block.id,label:`${page.title} — ${block.title||BLOCK_TYPES[block.type]}${!page.visible||!block.visible?' (прихований)':''}`})));
@@ -243,7 +247,8 @@ export function createCMS(options) {
       body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle??(block.type==='analytics'?defaultBlockSubtitle(block.source):''))}" maxlength="2000"></label></div>`;
       if(block.type==='feature')body+=`<fieldset><legend>Вміст картки</legend>${featureContentFields(block)}</fieldset>${featureAppearanceFields(block)}`;
       if(block.type==='catalog')body+=catalogFields(block);
-      if(block.type==='dataNote')body+=`<fieldset><legend>Вміст примітки</legend>${noteContentFields(block)}</fieldset>${noteBindingFields(block)}`;
+      if(block.type==='dataNote')body+=`<fieldset><legend>Вміст примітки</legend>${noteContentFields(block)}</fieldset>${textLinkFields(block)}${noteBindingFields(block)}`;
+      if(block.type==='text')body+=textLinkFields(block);
       if(block.type==='analytics')body+=`<label class="cms-field-help">Джерело даних<select data-widget-text="dataMode"><option value="live" ${block.dataMode!=='manual'?'selected':''}>Аналітика сайта — автоматичний розрахунок</option><option value="manual" ${block.dataMode==='manual'?'selected':''}>Власні дані цього блоку</option></select></label><p class="cms-field-help">${metric?'Зміна лише фону або порядку карток зберігає автоматичний розрахунок. Ручна зміна чисел і текстів створює власні дані блоку.':'Редагування та імпорт CSV/XLSX створюють власні дані лише для цього блоку.'} Для зміни вихідних записів усіх пов’язаних блоків використайте «Керування даними».</p>`;
       if(chartSettings){
         body+=`<section class="cms-chart-libraries" aria-label="Бібліотеки діаграм"><div class="cms-library-row"><div><strong>Активна бібліотека для діаграм</strong><p>Налаштування зберігаються окремо під кожну бібліотеку</p></div><div class="cms-library-options" role="group" aria-label="Активна бібліотека для діаграм">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-active',label,`data-library="${key}" aria-pressed="${block.settings.chartLibrary===key}"`,block.settings.chartLibrary===key?'primary small':'secondary small')).join('')}</div></div><div class="cms-library-row cms-library-editor"><strong>Редагувати параметри для:</strong><div class="cms-library-options" role="group" aria-label="Бібліотека для редагування параметрів">${Object.entries(CHART_LIBRARIES).map(([key,label])=>button('widget-library-edit',`${label}${block.settings.chartLibrary===key?' (активна)':''}`,`data-library="${key}" aria-pressed="${widgetState.editLibrary===key}"`,widgetState.editLibrary===key?'primary small':'secondary small')).join('')}</div></div></section>`;
@@ -260,12 +265,14 @@ export function createCMS(options) {
       if(['table','list','metrics','chart','analytics','catalog'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
       if(!['feature','dataNote','catalog'].includes(block.type)&&(block.type!=='analytics'||block.dataMode==='manual'))body+=`<fieldset><legend>Період даних</legend>${field('Рік або діапазон (необов’язково)','period','text','maxlength="20" placeholder="2026 або 2021-2026"')}<p class="cms-field-help">Якщо порожньо, період визначається з років у даних або з періоду, за який було створено ручну копію.</p></fieldset>`;
       body+=width;
+    } else if(block.type==='text') {
+      body=`<label>Текст · абзаци розділяються порожнім рядком<textarea data-widget-text="text" rows="7">${e(block.text)}</textarea></label>${textLinkFields(block)}`;
     } else if(block.type==='feature') {
       body=featureContentFields(block);
     } else if(block.type==='catalog') {
       body=catalogFields(block);
     } else if(block.type==='dataNote') {
-      body=noteContentFields(block)+noteBindingFields(block);
+      body=noteContentFields(block)+textLinkFields(block)+noteBindingFields(block);
     } else {
       const table=widgetState.table,offset=widgetState.page*20,free=['table','chart','analytics'].includes(block.type);
       const visibleColumns=table.headers.map((h,c)=>({h,c})).filter(({h})=>!metric||!['background','backgroundColor'].includes(h));
@@ -283,7 +290,7 @@ export function createCMS(options) {
     if(widgetState.catalogLoading)throw new Error('Дочекайтесь завершення завантаження таблиці.');
     const sizeInput=$('#cms-widget-dialog [data-catalog-page-sizes]');if(sizeInput&&!sizeInput.checkValidity())throw new Error(sizeInput.validationMessage);
     let next=widgetState.block;
-    if(widgetState.kind==='edit'&&!['feature','dataNote','catalog'].includes(next.type))next=tableToCMSBlock(widgetState.table,next);
+    if(widgetState.kind==='edit'&&!['text','feature','dataNote','catalog'].includes(next.type))next=tableToCMSBlock(widgetState.table,next);
     if(next.type==='analytics'&&next.dataMode==='manual'&&!next.dataTable){next.dataTable=editableTable(currentBlock(next.id));next.dataPeriod=options.getBlockPeriod(currentBlock(next.id));}
     next=validateCMSBlock(next);
     validateCMSPage({...draft,blocks:draft.blocks.map(b=>b.id===next.id?next:b)});

@@ -1,6 +1,6 @@
-import {parseCSV} from './data.js?v=quartile-heading-20261108';
-import {readXLSXWorkbook} from './spreadsheet.js?v=quartile-heading-20261108';
-import {validateCatalogTable} from './catalog-schema.js?v=quartile-heading-20261108';
+import {parseCSV} from './data.js?v=text-note-links-20261108';
+import {readXLSXWorkbook} from './spreadsheet.js?v=text-note-links-20261108';
+import {validateCatalogTable} from './catalog-schema.js?v=text-note-links-20261108';
 export function catalogCSVTable(text){const {headers,records}=parseCSV(text,true);return validateCatalogTable({headers,rows:records.map(r=>headers.map(h=>r[h]))});}
 export function catalogSheetTable(book,name){
  const sheet=book.getWorksheet(name);if(!sheet)throw new Error('Аркуш не знайдено.');if(sheet.columnCount>80||sheet.rowCount>25001)throw new Error('Каталог: до 80 колонок і 25 000 рядків.');
