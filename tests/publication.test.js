@@ -23,3 +23,18 @@ test('publication preserves the theme chosen in the editor in both variants and 
  for(const mode of ['editor','visitor'])for(const theme of ['standard','dark','warm','blue']){const html=buildPublicationFiles(assets,data,base,mode,theme).find(f=>f.name==='index.html').data;assert(html.includes(`data-theme="${theme}"`));}
  assert.throws(()=>buildPublicationFiles(assets,data,base,'visitor','<script>'),/Невідома тема/);
 });
+
+test('visitor HTML embeds the complete stylesheet so a missing CSS file cannot remove the layout',()=>{
+ const files=buildPublicationFiles(assets,data,base,'visitor'),html=files.find(f=>f.name==='index.html').data;
+ assert(html.includes('<style id="kai-publication-styles">\n'+assets['styles.css']+'\n</style>'));
+ assert.doesNotMatch(html,/<link\b[^>]*rel="stylesheet"/i);
+ assert(html.includes('src/viewer.js?'));
+ assert(files.find(f=>f.name==='PUBLICATION.txt').data.includes('папки src і data'));
+ assert.equal(buildPublicationFiles(assets,data,base,'editor').find(f=>f.name==='index.html').data,assets['index.html']);
+});
+
+test('visitor export rejects HTML returned instead of CSS and safely embeds CSS containing style end tags',()=>{
+ for(const css of ['', '   ', '<!doctype html><html><body>Not found</body></html>', '\uFEFF<html>Hosting fallback</html>'])assert.throws(()=>buildPublicationFiles({...assets,'styles.css':css},data,base,'visitor'),/styles.css/);
+ const css='body::after{content:"</style><script>invalid()</script>"}',html=buildPublicationFiles({...assets,'styles.css':css},data,base,'visitor').find(f=>f.name==='index.html').data;
+ assert(html.includes('<\\/style>'));assert(!html.includes('</style><script>invalid()'));
+});
