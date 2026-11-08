@@ -456,3 +456,6 @@ dialog{background:var(--surface)}
 
 /* Text and data-note links inherit readable colors from the block background. */
 .cms-block-link{color:inherit;font-weight:650;text-decoration:underline;text-underline-offset:3px;overflow-wrap:anywhere}.cms-block-link:hover{opacity:.85}.cms-block-link-row{display:block;margin-top:var(--site-paragraph-gap,8px)}
+
+/* Optional text frames use the same outer card as informational blocks. */
+.cms-widget.cms-text-background{border-color:transparent}.cms-text-frame-content{min-width:0;padding:var(--site-block-padding,22px);border-radius:var(--site-radius,10px);overflow-wrap:anywhere}

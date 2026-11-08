@@ -1,11 +1,11 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=text-note-links-20261108';
-import {defaultCatalogBinding} from './catalog-schema.js?v=text-note-links-20261108';
-import { reportDate, currentReportingYear } from './data.js?v=text-note-links-20261108';
-import { createChartRenderer } from './chart-runtime.js?v=text-note-links-20261108';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=text-note-links-20261108';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=text-note-links-20261108';
-import { icon } from './icons.js?v=text-note-links-20261108';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=text-note-links-20261108';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=text-frame-20261108';
+import {defaultCatalogBinding} from './catalog-schema.js?v=text-frame-20261108';
+import { reportDate, currentReportingYear } from './data.js?v=text-frame-20261108';
+import { createChartRenderer } from './chart-runtime.js?v=text-frame-20261108';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=text-frame-20261108';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=text-frame-20261108';
+import { icon } from './icons.js?v=text-frame-20261108';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=text-frame-20261108';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -104,7 +104,8 @@ export function createSiteView(options){
       const period=['catalog','dataNote'].includes(b.type)?note.period:b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
-      return `${rowPrefix}<section class="cms-widget ${b.type==='text'?`cms-text-background cms-text-bg-${s.background}`:''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" data-width-mode="${s.widthMode}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--widget-fixed-width:${s.widthPixels}px;--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${heading}${subtitle}${body}</div></section>`;
+      const textBackground=`cms-text-background cms-text-bg-${s.background}`,framed=b.type==='text'&&s.showTextFrame,content=`${heading}${subtitle}${body}`;
+      return `${rowPrefix}<section class="cms-widget ${b.type==='text'?(framed?'cms-text-framed':textBackground):''} ${isChart?'cms-chart-widget':''} ${b.type==='feature'&&b.appearance?.autoHeight?'cms-feature-auto-height':''} ${isMetricBlock(b)&&s.autoColumns?'cms-metric-auto-columns':''} ${s.showAll?'show-all':''}" data-widget-id="${b.id}" data-width-mode="${s.widthMode}" style="--widget-basis:calc(${s.width}% - var(--site-block-gap,24px) * ${(100-s.width)/100});--widget-fixed-width:${s.widthPixels}px;--metric-columns:${s.columns};--mobile-metric-columns:${Math.min(2,s.columns)}${backgroundStyle}">${inPreview&&options.widgetTools?options.widgetTools(b):''}<div class="cms-widget-content">${framed?`<div class="cms-text-frame-content ${textBackground}">${content}</div>`:content}</div></section>`;
     }).join('')+(mixedRow?'</div>':'');
     return `<div class="cms-block-grid">${content||'<div class="empty"><h3>На цій сторінці поки немає видимих блоків.</h3></div>'}</div>`;
   }

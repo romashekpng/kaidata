@@ -1,5 +1,5 @@
-import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=text-note-links-20261108';
-import {blockTableData,NOTE_SOURCES} from './cms-data.js?v=text-note-links-20261108';
+import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=text-frame-20261108';
+import {blockTableData,NOTE_SOURCES} from './cms-data.js?v=text-frame-20261108';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];

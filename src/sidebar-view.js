@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=text-note-links-20261108';
-import { icon } from './icons.js?v=text-note-links-20261108';
+import { SIDEBAR_DEFAULTS } from './data.js?v=text-frame-20261108';
+import { icon } from './icons.js?v=text-frame-20261108';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarMenuHeading(institution){
  const i={...SIDEBAR_DEFAULTS,...institution};
