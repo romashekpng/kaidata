@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {defaultCMSBlock,defaultChartBinding,validateCMSBlock} from '../src/cms-data.js';
+import {resolveChartData} from '../src/catalog-view.js';
+import {cmsBlockCSV,importCMSBlockCSV,cmsBlockXLSX,importCMSBlockXLSX,readCMSJSON} from '../src/cms-io.js';
+import ExcelJS from 'exceljs';
+const source={...defaultCMSBlock('table'),id:'source',columns:['Рік','Категорія','Серія','Сума'],rows:[['2024','A','X','2'],['2025','A','X','4'],['2025','A','X','6'],['2025','B','Y','—']]};
+const block=()=>validateCMSBlock({...defaultCMSBlock('chart'),binding:{...defaultChartBinding(),kind:'block',blockId:'source',groupColumn:'Категорія',seriesColumn:'Серія',valueColumns:['Сума'],periodMode:'year'}});
+const context=year=>({year,getBlock:id=>id==='source'?source:null,getTable:()=>({headers:source.columns,rows:source.rows})});
+test('chart aggregation and missing cells',()=>{for(const [operation,value]of Object.entries({count:'2',sum:'10',avg:'5',min:'4',max:'6'})){const b=block();b.binding.operation=operation;const r=resolveChartData(b,context(2025));assert.equal(r.error,'');assert.equal(r.table.rows[0][1],value);assert.equal(r.table.rows[1][2],operation==='count'?'1':'');}});
+test('chart periods, source errors, static data and legacy compatibility',()=>{const b=block();assert.equal(resolveChartData(b,context(2024)).table.rows[0][1],'2');b.binding.periodMode='fixed';b.binding.period='2024-2025';assert.deepEqual(resolveChartData(b,context(2021)),resolveChartData(b,context(2026)));assert.equal(resolveChartData(b,context(2026)).table.rows[0][1],'12');b.binding.periodMode='all';assert.equal(resolveChartData(b,context(2026)).table.rows[0][1],'12');b.binding.valueColumns=['Deleted'];assert.match(resolveChartData(b,context(2026)).error,/не знайдено/);assert(!validateCMSBlock(defaultCMSBlock('chart')).binding);assert.throws(()=>validateCMSBlock({...block(),binding:{...b.binding,operation:'eval'}}));});
+test('chart binding survives JSON CSV and XLSX round trips',async()=>{const b=block();assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),b);assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),b);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS),b);});

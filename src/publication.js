@@ -19,7 +19,7 @@ export function buildPublicationFiles(assets,data,site,mode,selectedTheme){
   const entry=/<script type="module" src="\.\/src\/app\.js(?:\?[^"<>]*)?"><\/script>/;
   if(!entry.test(index.data))throw new Error('Не вдалося знайти файл запуску сайта для підготовки версії відвідувачів.');
   index.data=index.data.replace(entry,'<script type="module" src="./src/viewer.js?v=catalog-links-20261110"><\/script>').replace(/\s*<dialog\b[^>]*id="manager"[^>]*>[\s\S]*?<\/dialog>/,'').replace('<html lang="uk"','<html data-publication="visitor" lang="uk"');
-  const referenced=new Set(cleanSite.pages.filter(p=>p.visible).flatMap(p=>p.blocks.filter(b=>b.visible&&['dataNote','catalog'].includes(b.type)&&b.binding.kind==='block').map(b=>b.binding.blockId)));
+  const referenced=new Set(cleanSite.pages.filter(p=>p.visible).flatMap(p=>p.blocks.filter(b=>b.visible&&['dataNote','catalog','chart'].includes(b.type)&&b.binding?.kind==='block').map(b=>b.binding.blockId)));
   cleanSite.pages=cleanSite.pages.filter(p=>p.visible||p.kind==='builtin'||p.blocks.some(b=>referenced.has(b.id))).map(p=>({...p,blocks:p.blocks.filter(b=>(p.visible&&b.visible)||referenced.has(b.id)).map(b=>{const block={...b,visible:p.visible&&b.visible};delete block.metricManualBackup;if(block.type==='analytics'&&block.dataMode!=='manual'){delete block.dataTable;delete block.dataPeriod;}return block;})}));
  }
  const instructions=mode==='editor'

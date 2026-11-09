@@ -39,3 +39,22 @@ export function renderCatalog(block,result,state={},previewLimit=0){
  const search=c.searchEnabled?`<label class="catalog-search"><span>Пошук</span><input type="search" data-catalog-query value="${e(state.query||'')}" placeholder="${e(c.searchPlaceholder)}" aria-label="${e(c.searchPlaceholder||'Пошук у каталозі')}"></label>`:'';
  return `<div class="data-catalog${c.emphasizeLinks?' catalog-link-emphasis':''}" data-catalog-id="${e(block.id)}"><div class="catalog-toolbar">${search}${filters}<button type="button" class="button secondary small" data-cms-action="catalog-reset">Скинути</button></div><div class="data-catalog-results"><div class="catalog-summary"><span>Знайдено <strong>${rows.length}</strong> записів</span>${!fullList&&!previewLimit?`<label class="catalog-page-size">Записів на сторінці<select data-catalog-page-size aria-label="Кількість записів на сторінці">${choices.map(n=>`<option value="${n}" ${n===selectedSize?'selected':''}>${n===0?'Всі':n}</option>`).join('')}</select></label>`:''}</div>${rows.length?`<table class="data-catalog-table"><thead><tr>${c.columns.map(col=>`<th scope="col" style="${col.width?'width:'+col.width+'px;':''}text-align:${col.align}">${e(col.label)}</th>`).join('')}</tr></thead><tbody>${rows.slice(start,start+size).map(row=>`<tr>${c.columns.map(col=>`<td data-label="${e(col.label)}" style="text-align:${col.align}"><div>${col.lines.map(line=>lineHTML(line,row,index)).join('')}</div></td>`).join('')}</tr>`).join('')}</tbody></table>`:'<div class="empty"><p>За цими параметрами записів не знайдено.</p></div>'}<div class="catalog-pagination"><span>${rows.length?start+1:0}–${Math.min(start+size,rows.length)} із ${rows.length}</span>${!fullList&&!previewLimit&&selectedSize!==0?`<div><button class="button secondary small" type="button" data-cms-action="catalog-prev" ${page===1?'disabled':''}>Назад</button><span data-catalog-page="${page}">${page} / ${pages}</span><button class="button secondary small" type="button" data-cms-action="catalog-next" ${page===pages?'disabled':''}>Далі</button></div>`:''}</div></div></div>`;
 }
+
+export function resolveChartData(block,context,all=false){
+ try{
+ const b=block.binding;
+ const source={...block,binding:{...b,kind:b.kind==='manual'?'upload':b.kind},dataTable:{headers:block.columns,rows:block.rows},catalog:{columns:[],filters:[],searchEnabled:false}};
+ const result=catalogSourceTable(source,context,all);if(all)return result;
+ const {headers,rows}=result.table;
+ const index=name=>{const i=headers.indexOf(name);if(i<0)throw new Error(`Колонку «${name}» не знайдено у джерелі.`);return i;};
+ const group=b.groupColumn?index(b.groupColumn):0,series=b.seriesColumn?index(b.seriesColumn):-1;
+ const number=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&!['—','-'].includes(s)&&Number.isFinite(Number(s))?Number(s):null;};
+ const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
+ if(!values.length&&b.operation!=='count')throw new Error('Оберіть числові колонки для розрахунку.');
+ const names=new Set(),groups=new Map();
+ for(const row of rows){const label=row[group]||'Без назви';if(!groups.has(label))groups.set(label,new Map());const cells=groups.get(label);
+ for(const i of b.operation==='count'?[-1]:values){const name=series>=0?`${row[series]||'Без назви'}${values.length>1?' · '+headers[i]:''}`:i<0?'Кількість':headers[i];names.add(name);if(!cells.has(name))cells.set(name,[]);const n=i<0?1:number(row[i]);if(n!==null)cells.get(name).push(n);}}
+ const calculate=ns=>!ns?.length?'':String(b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?Math.min(...ns):b.operation==='max'?Math.max(...ns):ns.reduce((a,n)=>a+n,0));
+ return {...result,table:{headers:[headers[group],...names],rows:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])}};
+ }catch(error){return {table:{headers:[],rows:[]},period:'',error:error.message};}
+}

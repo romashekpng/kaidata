@@ -1,4 +1,4 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-links-20261110';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-links-20261110';
 import {defaultCatalogBinding} from './catalog-schema.js?v=catalog-links-20261110';
 import { reportDate, currentReportingYear } from './data.js?v=catalog-links-20261110';
 import { createChartRenderer } from './chart-runtime.js?v=catalog-links-20261110';
@@ -36,6 +36,7 @@ export function createSiteView(options){
     const result=resolveCatalog(source,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
     return publications?{...result,period:options.getBlockPeriod(block)}:result;
   };
+  const chartData=(block,all=false)=>resolveChartData(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
   const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
   function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
@@ -82,7 +83,7 @@ export function createSiteView(options){
       const subtitleText=b.subtitle??(b.type==='analytics'?defaultBlockSubtitle(b.source):'');
       const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=subtitleText?`<p class="cms-widget-subtitle">${e(subtitleText)}</p>`:'';
       let body='',displayedTable=null,note=null;
-      if(isChart){try{validateCMSBlock(b);let table=editableTable(b);if(!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
+      if(isChart){try{validateCMSBlock(b);let table;if(b.type==='chart'&&b.binding){note=chartData(b);if(note.error)throw new Error(note.error);table=note.table;}else table=editableTable(b);if(!b.binding&&!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
         if(isMetricBlock(b))body=renderAnalyticMetrics(b,s);
         else if(b.source==='projects')body=renderProjectTable(editableTable(b),s,projectFilters.get(b.id),b.id,projectAsOf(b));
@@ -101,7 +102,7 @@ export function createSiteView(options){
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
-      const period=['catalog','dataNote'].includes(b.type)?note.period:b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const period=(['catalog','dataNote'].includes(b.type)||b.type==='chart'&&b.binding)?note?.period||'':b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
       const textBackground=`cms-text-background cms-text-bg-${s.background}`,framed=b.type==='text'&&s.showTextFrame,content=`${heading}${subtitle}${body}`;
@@ -175,5 +176,5 @@ export function createSiteView(options){
   root.addEventListener('input',event=>{if(event.target.matches('[data-publication-query]'))updatePublicationFilter(event.target.closest('.publication-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{for(const key of ['faculty','index','quartile'])if(event.target.matches(`[data-publication-${key}]`))updatePublicationFilter(event.target.closest('.publication-catalog'),key,event.target.value);});
  }
- return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,noteResult,noteTable,catalogTable,pageCatalogYears,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
+ return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,chartData,noteResult,noteTable,catalogTable,pageCatalogYears,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

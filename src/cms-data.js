@@ -18,6 +18,14 @@ export function validateNoteBinding(input={}){
  if(!Number.isInteger(out.decimals)||out.decimals<0||out.decimals>6)fail('Точність числа: від 0 до 6 знаків після коми.');
  return Object.fromEntries(Object.keys(defaultNoteBinding()).map(key=>[key,out[key]]));
 }
+export function defaultChartBinding(){return {kind:'manual',source:'publications',blockId:'',periodMode:'all',period:'',yearColumn:'',groupColumn:'',seriesColumn:'',valueColumns:[],operation:'sum'};}
+export function validateChartBinding(input){
+ if(!obj(input))fail('Некоректне джерело діаграми.');
+ const b={...defaultChartBinding(),...input},base=validateCatalogBinding({...b,kind:b.kind==='manual'?'upload':b.kind,source:'publications'});
+ if(!['manual','builtin','block'].includes(b.kind)||!Object.hasOwn(NOTE_SOURCES,b.source)||!['count','sum','avg','min','max'].includes(b.operation))fail('Перевірте джерело та розрахунок діаграми.');
+ if(!Array.isArray(b.valueColumns)||b.valueColumns.length>80)fail('Оберіть числові колонки діаграми.');
+ return {...base,kind:b.kind,source:b.source,groupColumn:str(b.groupColumn,'Групування',160),seriesColumn:str(b.seriesColumn,'Серії',160),valueColumns:[...new Set(b.valueColumns.map(v=>str(v,'Колонка',160)))],operation:b.operation};
+}
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
 export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрілка', external:'Зовнішнє посилання', chevron:'Шеврон' };
 export function defaultFeatureContent() { return {eyebrow:'ВІДКРИТА НАУКА',headline:'Знання мають бути доступними.',text:'Публікації, дослідження та винаходи університету — в одному просторі даних.',linkLabel:'Дослідити публікації',linkUrl:'#publications',icon:'globe',linkIcon:'arrow',openInNewTab:false}; }
@@ -276,6 +284,7 @@ export function validateCMSBlock(input) {
     out.rows = input.rows.map((row, n) => { if (!Array.isArray(row) || row.length !== out.columns.length) fail(`Рядок ${n + 1}: кількість клітинок не відповідає колонкам.`); return row.map(x => str(x, `Клітинка рядка ${n + 1}`, 4000)); });
     out.caption = str(input.caption, 'Примітка таблиці', 2000);
   }
+  if (input.type === 'chart' && input.binding) out.binding=validateChartBinding(input.binding);
   if (input.type === 'chart') { const table=validateBlockTable({headers:input.columns,rows:input.rows},true); Object.assign(out,{columns:table.headers,rows:table.rows}); }
   if (input.type === 'metrics') {
     if (!Array.isArray(input.items) || input.items.length > 12) fail('Показники: не більше 12 карток.');
