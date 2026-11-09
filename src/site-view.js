@@ -1,11 +1,11 @@
-import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=text-frame-20261108';
-import {defaultCatalogBinding} from './catalog-schema.js?v=text-frame-20261108';
-import { reportDate, currentReportingYear } from './data.js?v=text-frame-20261108';
-import { createChartRenderer } from './chart-runtime.js?v=text-frame-20261108';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=text-frame-20261108';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=text-frame-20261108';
-import { icon } from './icons.js?v=text-frame-20261108';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=text-frame-20261108';
+import {resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-links-20261110';
+import {defaultCatalogBinding} from './catalog-schema.js?v=catalog-links-20261110';
+import { reportDate, currentReportingYear } from './data.js?v=catalog-links-20261110';
+import { createChartRenderer } from './chart-runtime.js?v=catalog-links-20261110';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-links-20261110';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-links-20261110';
+import { icon } from './icons.js?v=catalog-links-20261110';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-links-20261110';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;

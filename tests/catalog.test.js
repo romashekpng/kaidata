@@ -24,3 +24,16 @@ test('legacy catalog sizes migrate without losing defaults and invalid choices c
  for(const pageSizes of[[],[20,20],[1],[NaN],[1001]])assert.throws(()=>validateCatalogConfig({...b.catalog,pageSizes}));assert.throws(()=>validateCatalogConfig({...b.catalog,pageSize:50,pageSizes:[20,0]}));
  assert.deepEqual(catalogPageSizes([0,25,100]),[25,100,0]);assert.equal(validateCatalogConfig({...b.catalog,pageSize:0}).pageSize,0);
 });
+
+test('catalog summary shows the count and page-size control without repeating the block period',()=>{
+ const b=own();b.settings={showAll:false};const html=renderCatalog(b,resolveCatalog(b,context(2025))),summary=html.match(/<div class="catalog-summary">([\s\S]*?)<\/div>/)[1];
+ assert(summary.includes('Записів на сторінці'));assert(summary.includes('Знайдено'));assert(!summary.includes('2025'));
+});
+
+test('catalog link emphasis is optional for old configs and survives all block transfer formats',async()=>{
+ const b=own(),old=structuredClone(b.catalog);delete old.emphasizeLinks;assert.equal(validateCatalogConfig(old).emphasizeLinks,false);
+ assert.throws(()=>validateCatalogConfig({...b.catalog,emphasizeLinks:'true'}));
+ b.catalog.emphasizeLinks=true;const html=renderCatalog(b,resolveCatalog(b,context()));assert(html.includes('data-catalog catalog-link-emphasis'));assert(html.includes('href="https://doi.org/10.1234/solar"'));assert(html.includes('href="https://scopus.com/doc/1"'));
+ assert.deepEqual(readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),b);assert.deepEqual(importCMSBlockCSV(cmsBlockCSV(b),b),b);assert.deepEqual(await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS),b);
+ b.catalog.emphasizeLinks=false;assert(!renderCatalog(b,resolveCatalog(b,context())).includes('catalog-link-emphasis'));
+});

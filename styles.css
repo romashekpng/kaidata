@@ -459,3 +459,6 @@ dialog{background:var(--surface)}
 
 /* Optional text frames use the same outer card as informational blocks. */
 .cms-widget.cms-text-background{border-color:transparent}.cms-text-frame-content{min-width:0;padding:var(--site-block-padding,22px);border-radius:var(--site-radius,10px);overflow-wrap:anywhere}
+
+/* Catalog controls stay at the right edge; link emphasis follows actual anchors. */
+.catalog-summary .catalog-page-size{margin-left:auto}.catalog-link-emphasis{--catalog-unlinked-color:#000}.catalog-link-emphasis .catalog-cell-line a{text-decoration:underline;text-underline-offset:2px}.catalog-link-emphasis .catalog-cell-line>span:not(.catalog-line-label),.catalog-link-emphasis .catalog-tags>span.catalog-tag{color:var(--catalog-unlinked-color)}:root[data-theme="dark"] .catalog-link-emphasis{--catalog-unlinked-color:var(--ink)}

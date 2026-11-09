@@ -11,7 +11,7 @@ const flag=(v,label)=>{if(typeof v!=='boolean')fail(`${label}: потрібне 
 export function defaultCatalogLine(field=''){return {field,label:'',format:'text',style:'text',linkField:'',fixedText:'',emptyText:'',tokenLinks:[]};}
 export function defaultCatalogBinding(){return {kind:'builtin',source:'publications',blockId:'',periodMode:'year',period:'',yearColumn:''};}
 export function defaultCatalogConfig(){return {
- searchEnabled:true,searchFields:['Назва','Автори'],searchPlaceholder:'Назва публікації або автор…',pageSize:20,pageSizes:[...DEFAULT_CATALOG_PAGE_SIZES],
+ emphasizeLinks:false,searchEnabled:true,searchFields:['Назва','Автори'],searchPlaceholder:'Назва публікації або автор…',pageSize:20,pageSizes:[...DEFAULT_CATALOG_PAGE_SIZES],
  columns:[{label:'Публікація',width:0,align:'left',lines:[{...defaultCatalogLine('Назва'),style:'title',linkField:'Посилання'},{...defaultCatalogLine('Автори'),style:'muted'}]},{label:'Тип',width:160,align:'left',lines:[defaultCatalogLine('Тип')]},{label:'Індексація',width:170,align:'left',lines:[{...defaultCatalogLine('Індексація'),format:'badges',emptyText:'Без індексації',tokenLinks:[{value:'Scopus',field:''},{value:'WoS',field:''}]}]},{label:'Квартиль',width:120,align:'left',lines:[{...defaultCatalogLine('Квартиль'),format:'quartile',emptyText:'Без квартиля'}]}],
  filters:[{label:'Тип',field:'Тип',multiple:false},{label:'Індексація',field:'Індексація',multiple:true},{label:'Квартиль',field:'Квартиль',multiple:false}]
 };}
@@ -30,7 +30,7 @@ export function validateCatalogTable(value){
 }
 export function validateCatalogConfig(value){
  if(!object(value)||!Array.isArray(value.columns)||!value.columns.length||value.columns.length>20)fail('Каталог: від 1 до 20 стовпчиків відображення.');
- const out={searchEnabled:flag(value.searchEnabled,'Пошук'),searchPlaceholder:text(value.searchPlaceholder,'Підказка пошуку',240),pageSize:value.pageSize};
+ const out={emphasizeLinks:flag(value.emphasizeLinks===undefined?false:value.emphasizeLinks,'Оформлення посилань'),searchEnabled:flag(value.searchEnabled,'Пошук'),searchPlaceholder:text(value.searchPlaceholder,'Підказка пошуку',240),pageSize:value.pageSize};
  if(!Number.isInteger(out.pageSize)||(out.pageSize!==0&&(out.pageSize<5||out.pageSize>1000)))fail('На сторінці: від 5 до 1000 записів або «Всі».');
  out.pageSizes=catalogPageSizes(value.pageSizes,out.pageSize);if(!out.pageSizes.includes(out.pageSize))fail('Кількість за замовчуванням має входити до варіантів для відвідувача.');
  if(!Array.isArray(value.searchFields)||value.searchFields.length>80)fail('Оберіть колонки для пошуку.');out.searchFields=[...new Set(value.searchFields.map(s=>text(s,'Колонка пошуку')).filter(Boolean))];
