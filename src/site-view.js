@@ -1,11 +1,11 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=chart-sort-20261110';
-import {defaultCatalogBinding} from './catalog-schema.js?v=chart-sort-20261110';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=chart-sort-20261110';
-import { createChartRenderer } from './chart-runtime.js?v=chart-sort-20261110';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-sort-20261110';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=chart-sort-20261110';
-import { icon } from './icons.js?v=chart-sort-20261110';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=chart-sort-20261110';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=chart-series-20261110';
+import {defaultCatalogBinding} from './catalog-schema.js?v=chart-series-20261110';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=chart-series-20261110';
+import { createChartRenderer } from './chart-runtime.js?v=chart-series-20261110';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-series-20261110';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=chart-series-20261110';
+import { icon } from './icons.js?v=chart-series-20261110';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=chart-series-20261110';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;

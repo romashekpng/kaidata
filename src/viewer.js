@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=chart-sort-20261110';
-import { createAnalytics } from './analytics.js?v=chart-sort-20261110';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=chart-sort-20261110';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=chart-sort-20261110';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=chart-sort-20261110';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=chart-sort-20261110';
-import { icon } from './icons.js?v=chart-sort-20261110';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=chart-series-20261110';
+import { createAnalytics } from './analytics.js?v=chart-series-20261110';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=chart-series-20261110';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=chart-series-20261110';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=chart-series-20261110';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=chart-series-20261110';
+import { icon } from './icons.js?v=chart-series-20261110';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

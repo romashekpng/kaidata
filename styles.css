@@ -462,3 +462,6 @@ dialog{background:var(--surface)}
 
 /* Catalog controls stay at the right edge; link emphasis follows actual anchors. */
 .catalog-summary .catalog-page-size{margin-left:auto}.catalog-link-emphasis{--catalog-unlinked-color:#000}.catalog-link-emphasis .catalog-cell-line a{text-decoration:underline;text-underline-offset:2px}.catalog-link-emphasis .catalog-cell-line>span:not(.catalog-line-label),.catalog-link-emphasis .catalog-tags>span.catalog-tag{color:var(--catalog-unlinked-color)}:root[data-theme="dark"] .catalog-link-emphasis{--catalog-unlinked-color:var(--ink)}
+
+#cms-widget-dialog .cms-chart-series-rule select[multiple]{min-height:140px;width:100%}#cms-widget-dialog .cms-series-visible{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}#cms-widget-dialog .cms-series-visible input{width:18px;min-height:18px;flex:0 0 18px}
+#cms-widget-dialog .cms-chart-value-option{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}#cms-widget-dialog .cms-chart-value-option input{width:18px;min-height:18px;flex:0 0 18px}

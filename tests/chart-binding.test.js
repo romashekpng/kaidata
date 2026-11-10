@@ -54,3 +54,21 @@ test('chart sort order persists through JSON, CSV and XLSX; legacy bindings keep
  for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),importCMSBlockCSV(cmsBlockCSV(b),b),await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS)])assert.equal(copy.binding.sortOrder,'valueDesc');
  delete b.binding.sortOrder;assert.equal(validateCMSBlock(b).binding.sortOrder,'source');
 });
+const rule=(name,values,visible=true)=>({name,column:'indexes',values,visible});
+const custom=()=>{const b=block();Object.assign(b.binding,{groupColumn:'Рік',seriesColumn:'',valueColumns:[],periodMode:'all',operation:'count',seriesRules:[rule('Індексовані',['Scopus','WoS','Scopus | WoS']),rule('Категорія Б',['Категорія Б']),rule('Порожні',[''],false)]});return b;};
+const customContext=year=>({...context(year),getBlock:()=>({...source,columns:['Рік','indexes','Сума'],rows:[['2024','Scopus','2'],['2024','WoS','3'],['2024','Scopus / WoS','4'],['2024','Категорія Б','5'],['2025','','6'],['2025','Категорія Б','7']]})});
+test('custom series match selected source values, count combinations once and omit hidden series',()=>{
+ const b=custom(),r=resolveChartData(b,customContext(2025));assert.equal(r.error,'');assert.deepEqual(r.table,{headers:['Рік','Індексовані','Категорія Б'],rows:[['2024','3','1'],['2025','0','1']]});
+ b.binding.seriesRules[2].visible=true;assert.equal(resolveChartData(b,customContext(2025)).table.rows[1][3],'1');
+ b.binding.seriesRules.forEach(r=>r.visible=false);assert.deepEqual(resolveChartData(b,customContext(2025)).table.rows,[]);
+});
+test('custom series respect periods and calculations without changing automatic series behavior',()=>{
+ const b=custom();Object.assign(b.binding,{periodMode:'year',operation:'sum',valueColumns:['Сума']});assert.deepEqual(resolveChartData(b,customContext(2024)).table.rows,[['2024','9','5']]);
+ b.binding.operation='avg';assert.equal(resolveChartData(b,customContext(2024)).table.rows[0][1],'3');
+ b.binding.periodMode='fixed';b.binding.period='2024';assert.deepEqual(resolveChartData(b,customContext(2021)),resolveChartData(b,customContext(2026)));
+ b.binding.seriesRules[0].column='Deleted';assert.match(resolveChartData(b,customContext(2024)).error,/не знайдено/);
+});
+test('custom rules persist through site/block JSON and CSV/XLSX and reject ambiguous duplicate names',async()=>{
+ const b=custom();for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),importCMSBlockCSV(cmsBlockCSV(b),b),await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS)])assert.deepEqual(copy.binding.seriesRules,b.binding.seriesRules);
+ b.binding.seriesRules[1].name=b.binding.seriesRules[0].name;assert.throws(()=>validateCMSBlock(b),/унікальними/);
+});

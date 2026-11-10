@@ -1,5 +1,5 @@
-import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=chart-sort-20261110';
-import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=chart-sort-20261110';
+import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=chart-series-20261110';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=chart-series-20261110';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];
@@ -60,16 +60,25 @@ export function resolveChartData(block,context,all=false){
  }else result=catalogSourceTable(source,context);
  const {headers,rows}=result.table;
  const index=name=>{const i=headers.indexOf(name);if(i<0)throw new Error(`Колонку «${name}» не знайдено у джерелі.`);return i;};
- const group=b.groupColumn?index(b.groupColumn):0,series=b.seriesColumn?index(b.seriesColumn):-1;
+ const group=b.groupColumn?index(b.groupColumn):0,series=!b.seriesRules.length&&b.seriesColumn?index(b.seriesColumn):-1;
+ const rules=b.seriesRules.filter(r=>r.visible).map(rule=>({...rule,index:index(rule.column)}));
+ const key=(value,column)=>{const text=String(value??'').trim();return /^(indexes|індексація)$/iu.test(column)?text.split(/\s*[|;/]\s*/u).map(v=>v.trim()).sort().join('|'):text;};
  const number=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&!['—','-'].includes(s)&&Number.isFinite(Number(s))?Number(s):null;};
  const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.filter(h=>!(wide&&!hasYear&&/^\d{4}$/.test(h)&&raw.headers.includes(h)&&!headers.includes(h))).map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
  if(!values.length&&b.operation!=='count'&&rows.length&&!(wide&&!hasYear))throw new Error('Оберіть числові колонки для розрахунку.');
  const names=new Set(),groups=new Map();
+ const ruleName=(rule,i)=>values.length>1?`${rule.name} · ${headers[i]}`:rule.name;
+ if(b.seriesRules.length)for(const rule of rules)for(const i of b.operation==='count'?[-1]:values)names.add(ruleName(rule,i));
  for(const row of rows){const label=row[group]||'Без назви';if(!groups.has(label))groups.set(label,new Map());const cells=groups.get(label);
+ if(b.seriesRules.length){
+  for(const rule of rules){if(!rule.values.some(value=>key(value,rule.column)===key(row[rule.index],rule.column)))continue;
+   for(const i of b.operation==='count'?[-1]:values){const name=ruleName(rule,i);if(!cells.has(name))cells.set(name,[]);const n=i<0?1:number(row[i]);if(n!==null)cells.get(name).push(n);}}
+  continue;
+ }
  for(const i of b.operation==='count'?[-1]:values){const name=series>=0?`${row[series]||'Без назви'}${values.length>1?' · '+headers[i]:''}`:i<0?'Кількість':headers[i];names.add(name);if(!cells.has(name))cells.set(name,[]);const n=i<0?1:number(row[i]);if(n!==null)cells.get(name).push(n);}}
- if(!rows.length||!values.length&&b.operation!=='count')return {...result,table:{headers:[headers[group]||'Назва',...(b.operation==='count'?['Кількість']:values.length?values.map(i=>headers[i]):['Значення'])],rows:[]}};
- const calculate=ns=>!ns?.length?'':String(b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?Math.min(...ns):b.operation==='max'?Math.max(...ns):ns.reduce((a,n)=>a+n,0));
- const table={headers:[headers[group],...names],rows:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])};
+ if(!rows.length||!values.length&&b.operation!=='count')return {...result,table:{headers:[headers[group]||'Назва',...(b.seriesRules.length?[...names]:b.operation==='count'?['Кількість']:values.length?values.map(i=>headers[i]):['Значення'])],rows:[]}};
+ const calculate=ns=>!ns?.length?(b.seriesRules.length&&b.operation==='count'?'0':''):String(b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?Math.min(...ns):b.operation==='max'?Math.max(...ns):ns.reduce((a,n)=>a+n,0));
+ const table={headers:[headers[group],...names],rows:b.seriesRules.length&&!rules.length?[]:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])};
  if(b.sortOrder!=='source'){
   const collator=new Intl.Collator('uk-UA',{sensitivity:'base'}),descending=['labelDesc','numberDesc','valueDesc'].includes(b.sortOrder),direction=descending?-1:1;
   const total=row=>{const ns=row.slice(1).map(number).filter(n=>n!==null);return ns.length?ns.reduce((a,n)=>a+n,0):null;};
