@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=catalog-links-20261110';
-import { convertMoneyBlock } from './money.js?v=catalog-links-20261110';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=catalog-links-20261110';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=chart-data-20261110';
+import { convertMoneyBlock } from './money.js?v=chart-data-20261110';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-data-20261110';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -285,7 +285,7 @@ export function validateCMSBlock(input) {
     out.caption = str(input.caption, 'Примітка таблиці', 2000);
   }
   if (input.type === 'chart' && input.binding) out.binding=validateChartBinding(input.binding);
-  if (input.type === 'chart') { const table=validateBlockTable({headers:input.columns,rows:input.rows},true); Object.assign(out,{columns:table.headers,rows:table.rows}); }
+  if (input.type === 'chart') { const table=validateBlockTable({headers:input.columns,rows:input.rows},!input.binding); Object.assign(out,{columns:table.headers,rows:table.rows}); }
   if (input.type === 'metrics') {
     if (!Array.isArray(input.items) || input.items.length > 12) fail('Показники: не більше 12 карток.');
     out.items = input.items.map(x => {
@@ -366,7 +366,7 @@ export function validateCMSBlock(input) {
     if(input.dataMode==='manual'&&!out.dataTable)fail('Для ручного режиму потрібні дані блоку.');
   }
   if((input.type==='chart'||(input.type==='analytics'&&CHART_SOURCES.includes(input.source)))&&[out.settings||defaultBlockSettings(input.source),...Object.values(out.settings?.librarySettings||{})].some(s=>['pie','donut','progress'].includes(s.chartType))){
-    const rows=input.type==='chart'?out.rows:out.dataTable?.rows;
+    const rows=input.type==='chart'?(out.binding?null:out.rows):out.dataTable?.rows;
     if(rows?.some(r=>r.slice(1).some(c=>Number(c.replace(',','.'))<0)))fail('Кругова діаграма та смуги прогресу не підтримують від’ємні значення.');
   }
   return out;

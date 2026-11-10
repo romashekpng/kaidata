@@ -1,5 +1,5 @@
-import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=catalog-links-20261110';
-import {blockTableData,NOTE_SOURCES} from './cms-data.js?v=catalog-links-20261110';
+import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=chart-data-20261110';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=chart-data-20261110';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];
@@ -42,19 +42,35 @@ export function renderCatalog(block,result,state={},previewLimit=0){
 
 export function resolveChartData(block,context,all=false){
  try{
- const b=block.binding;
+ const b=validateChartBinding(block.binding);
  const source={...block,binding:{...b,kind:b.kind==='manual'?'upload':b.kind},dataTable:{headers:block.columns,rows:block.rows},catalog:{columns:[],filters:[],searchEnabled:false}};
- const result=catalogSourceTable(source,context,all);if(all)return result;
+ let result=catalogSourceTable(source,context,true);if(all)return result;
+ const yearHeader=h=>/^(рік|year|publication year|рік публікації|дата|date)$/iu.test(h);
+ const raw=result.table;if(!b.yearColumn&&raw.rows.length&&raw.rows.every(r=>/^\d{4}$/.test(r[0])))source.binding.yearColumn=raw.headers[0];
+ const wide=raw.headers.some(h=>/^\d{4}$/.test(h)),hasYear=source.binding.yearColumn||raw.headers.some(yearHeader);
+ const linked=b.kind==='block'?context.getBlock(b.blockId):null,live=b.kind==='builtin'?b.source:linked?.type==='analytics'&&linked.dataMode!=='manual'?linked.source:null;
+ if(wide&&!hasYear){
+  const parts=b.periodMode==='fixed'?b.period.split('-').map(Number):[context.year],first=parts[0],last=parts[1]??first;
+  const selected=raw.headers.map((h,i)=>({h,i})).filter(({h})=>/^\d{4}$/.test(h)&&(b.periodMode==='all'||+h>=first&&+h<=last));
+  const keep=raw.headers.map((h,i)=>({h,i})).filter(({h})=>!/^\d{4}$/.test(h)||selected.some(c=>c.h===h));
+  result={table:{headers:keep.map(c=>c.h),rows:selected.length?raw.rows.map(r=>keep.map(c=>r[c.i])):[]},period:b.periodMode==='all'?selected.map(c=>c.h).filter((_,i,a)=>i===0||i===a.length-1).join('–'):b.periodMode==='fixed'?b.period.replace('-','–'):String(context.year),error:''};
+ }else if(live&&!hasYear&&(b.periodMode==='fixed'||b.periodMode==='all'&&['stats','fundingStats','patentStats'].includes(live))){
+  const parts=b.period.split('-').map(Number),years=b.periodMode==='all'?(context.years||[context.year]):Array.from({length:(parts[1]??parts[0])-parts[0]+1},(_,i)=>parts[0]+i),tables=years.map(year=>context.getTable(live,false,year));
+  result={table:{headers:raw.headers,rows:tables.flatMap(t=>t.rows.map(r=>raw.headers.map(h=>r[t.headers.indexOf(h)]??'')))},period:b.periodMode==='all'?years.filter((_,i)=>i===0||i===years.length-1).join('–'):b.period.replace('-','–'),error:''};
+ }else result=catalogSourceTable(source,context);
  const {headers,rows}=result.table;
  const index=name=>{const i=headers.indexOf(name);if(i<0)throw new Error(`Колонку «${name}» не знайдено у джерелі.`);return i;};
  const group=b.groupColumn?index(b.groupColumn):0,series=b.seriesColumn?index(b.seriesColumn):-1;
  const number=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&!['—','-'].includes(s)&&Number.isFinite(Number(s))?Number(s):null;};
- const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
- if(!values.length&&b.operation!=='count')throw new Error('Оберіть числові колонки для розрахунку.');
+ const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.filter(h=>!(wide&&!hasYear&&/^\d{4}$/.test(h)&&raw.headers.includes(h)&&!headers.includes(h))).map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
+ if(!values.length&&b.operation!=='count'&&rows.length&&!(wide&&!hasYear))throw new Error('Оберіть числові колонки для розрахунку.');
  const names=new Set(),groups=new Map();
  for(const row of rows){const label=row[group]||'Без назви';if(!groups.has(label))groups.set(label,new Map());const cells=groups.get(label);
  for(const i of b.operation==='count'?[-1]:values){const name=series>=0?`${row[series]||'Без назви'}${values.length>1?' · '+headers[i]:''}`:i<0?'Кількість':headers[i];names.add(name);if(!cells.has(name))cells.set(name,[]);const n=i<0?1:number(row[i]);if(n!==null)cells.get(name).push(n);}}
+ if(!rows.length||!values.length&&b.operation!=='count')return {...result,table:{headers:[headers[group]||'Назва',...(b.operation==='count'?['Кількість']:values.length?values.map(i=>headers[i]):['Значення'])],rows:[]}};
  const calculate=ns=>!ns?.length?'':String(b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?Math.min(...ns):b.operation==='max'?Math.max(...ns):ns.reduce((a,n)=>a+n,0));
- return {...result,table:{headers:[headers[group],...names],rows:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])}};
+ const table={headers:[headers[group],...names],rows:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])};
+ if(['pie','donut','progress'].includes(block.settings?.chartType)&&table.rows.some(row=>row.slice(1).some(v=>Number(v)<0)))throw new Error('Кругова діаграма та смуги прогресу не підтримують від’ємні значення.');
+ return {...result,table};
  }catch(error){return {table:{headers:[],rows:[]},period:'',error:error.message};}
 }

@@ -1,11 +1,11 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-links-20261110';
-import {defaultCatalogBinding} from './catalog-schema.js?v=catalog-links-20261110';
-import { reportDate, currentReportingYear } from './data.js?v=catalog-links-20261110';
-import { createChartRenderer } from './chart-runtime.js?v=catalog-links-20261110';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-links-20261110';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-links-20261110';
-import { icon } from './icons.js?v=catalog-links-20261110';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-links-20261110';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=chart-data-20261110';
+import {defaultCatalogBinding} from './catalog-schema.js?v=chart-data-20261110';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=chart-data-20261110';
+import { createChartRenderer } from './chart-runtime.js?v=chart-data-20261110';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=chart-data-20261110';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=chart-data-20261110';
+import { icon } from './icons.js?v=chart-data-20261110';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=chart-data-20261110';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -36,7 +36,7 @@ export function createSiteView(options){
     const result=resolveCatalog(source,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
     return publications?{...result,period:options.getBlockPeriod(block)}:result;
   };
-  const chartData=(block,all=false)=>resolveChartData(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable},all);
+  const chartData=(block,all=false)=>resolveChartData(block,{year:options.getYear(),years:reportingYears(options.getData()),getBlock:currentBlock,getTable:options.getBlockTable},all);
   const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
   function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
