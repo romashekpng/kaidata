@@ -1,6 +1,6 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=chart-series-20261110';
-import { icon } from './icons.js?v=chart-series-20261110';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=chart-series-20261110';
+import { formatMoney, convertMoneyTable } from './money.js?v=chart-tooltip-20261110';
+import { icon } from './icons.js?v=chart-tooltip-20261110';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=chart-tooltip-20261110';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
@@ -131,7 +131,7 @@ export function renderProjectTable(table,settings={},state={},blockId='',asOf){
  return `<div class="project-catalog" data-project-block="${esc(blockId)}"><div class="project-filter-toolbar"><label class="project-search">${icon('search')}<input type="search" data-project-query aria-label="Пошук грантових проєктів" placeholder="Пошук за назвою або програмою" maxlength="200" value="${esc(selected.query)}"></label><div class="project-programs" role="group" aria-label="Програми проєктів">${action('',`Всі програми (${projects.length})`)}${programs.map(program=>action(program,program)).join('')}</div><label class="project-program-filter"><span class="project-filter-caption">Програма</span><select data-project-program-select aria-label="Програма проєктів"><option value="">Всі програми</option>${programs.map(program=>`<option value="${esc(program)}" ${selected.program===program?'selected':''}>${esc(program)}</option>`).join('')}</select></label><label class="project-role-filter"><span class="project-filter-caption">Роль ЗВО</span><select data-project-role aria-label="Роль ЗВО"><option value="">Всі ролі ЗВО</option>${['Координатор','Партнер'].map(role=>`<option ${selected.role===role?'selected':''}>${role}</option>`).join('')}</select></label><div class="project-filter-summary"><button type="button" class="button secondary small project-reset" data-cms-action="project-reset" data-block-id="${esc(blockId)}" ${selected.query.trim()||selected.program||selected.role?'':'hidden'}>Скинути фільтри</button><div class="project-count-view"><span class="project-count" aria-live="polite" aria-atomic="true">Показано: <strong>${rows.length}</strong> з ${projects.length}</span>${switcher}</div></div></div><div class="project-results cms-data-scroll cms-card-scroll project-view-${view} ${settings.showAll?'show-all':''}" ${view==='table'&&rows.length?'tabindex="0" role="region" aria-label="Таблиця грантових проєктів"':''}>${results}</div></div>`;
 }
 function chartTooltip(table, row, active, total, settings) {
- return `${row[0]}\n${active.map(i=>`${table.headers[i+1]}: ${row[i+1]===''?'немає даних':format(num(row[i+1]))}`).join('\n')}${settings.tooltipTotal?`\nРазом: ${format(total)}`:''}`;
+ return `${row[0]}\n${active.filter(i=>Number.isFinite(num(row[i+1]))).map(i=>`${table.headers[i+1]}: ${row[i+1]===''?'немає даних':format(num(row[i+1]))}`).join('\n')}${settings.tooltipTotal?`\nРазом: ${format(total)}`:''}`;
 }
 function renderProgressChart(block, table, settings, colors, hidden, totals) {
  const active=table.headers.slice(1).map((_,i)=>i).filter(i=>!hidden.has(i)),max=Math.max(1,...totals),digits=Math.max(2,String(table.rows.length).length);
@@ -187,7 +187,7 @@ export function renderChartTable(block, table, hidden = []) {
   const max=Math.max(1,...all)*1.1,min=Math.min(0,...all)*1.1,y=value=>top+(max-value)/(max-min)*ph,step=pw/Math.max(1,table.rows.length),x=i=>left+step*(i+.5),baseline=y(0);
   const axes=Array.from({length:5},(_,i)=>{const value=min+(max-min)*i/4,at=y(value);return `<line x1="${left}" y1="${at}" x2="${width-right}" y2="${at}" class="cms-chart-gridline"/><text x="${left-8}" y="${at+4}" text-anchor="end" class="cms-chart-axis">${format(value)}</text>`;}).join('');
   const labels=table.rows.map((r,i)=>i%Math.max(1,Math.ceil(table.rows.length/14))===0?`<text x="${x(i)}" y="${height-20}" text-anchor="middle" class="cms-chart-axis">${esc(r[0].length>22?r[0].slice(0,20)+'…':r[0])}</text>`:'').join('');
-  const tooltip=(r,i)=>`${r[0]}\n${active.map(j=>`${table.headers[j+1]}: ${r[j+1]===''?'немає даних':format(num(r[j+1]))}`).join('\n')}${s.tooltipTotal?`\nРазом: ${format(totals[i])}`:''}`;
+  const tooltip=(r,i)=>`${r[0]}\n${active.filter(j=>Number.isFinite(num(r[j+1]))).map(j=>`${table.headers[j+1]}: ${r[j+1]===''?'немає даних':format(num(r[j+1]))}`).join('\n')}${s.tooltipTotal?`\nРазом: ${format(totals[i])}`:''}`;
   let marks='';
   if(s.chartType==='line'){
    marks=active.map(j=>{
