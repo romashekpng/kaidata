@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=chart-data-20261110';
-import { convertMoneyBlock } from './money.js?v=chart-data-20261110';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-data-20261110';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=chart-sort-20261110';
+import { convertMoneyBlock } from './money.js?v=chart-sort-20261110';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-sort-20261110';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -18,13 +18,15 @@ export function validateNoteBinding(input={}){
  if(!Number.isInteger(out.decimals)||out.decimals<0||out.decimals>6)fail('Точність числа: від 0 до 6 знаків після коми.');
  return Object.fromEntries(Object.keys(defaultNoteBinding()).map(key=>[key,out[key]]));
 }
-export function defaultChartBinding(){return {kind:'manual',source:'publications',blockId:'',periodMode:'all',period:'',yearColumn:'',groupColumn:'',seriesColumn:'',valueColumns:[],operation:'sum'};}
+export const CHART_SORTS={source:'Як у джерелі',labelAsc:'За алфавітом: А → Я',labelDesc:'За алфавітом: Я → А',numberAsc:'Підписи: за зростанням чисел',numberDesc:'Підписи: за спаданням чисел',valueAsc:'Значення: від меншого до більшого',valueDesc:'Значення: від більшого до меншого'};
+export function defaultChartBinding(){return {kind:'manual',source:'publications',blockId:'',periodMode:'all',period:'',yearColumn:'',groupColumn:'',seriesColumn:'',valueColumns:[],operation:'sum',sortOrder:'source'};}
 export function validateChartBinding(input){
  if(!obj(input))fail('Некоректне джерело діаграми.');
  const b={...defaultChartBinding(),...input},base=validateCatalogBinding({...b,kind:b.kind==='manual'?'upload':b.kind,source:'publications'});
  if(!['manual','builtin','block'].includes(b.kind)||!Object.hasOwn(NOTE_SOURCES,b.source)||!['count','sum','avg','min','max'].includes(b.operation))fail('Перевірте джерело та розрахунок діаграми.');
+ if(!Object.hasOwn(CHART_SORTS,b.sortOrder))fail('Оберіть порядок сортування діаграми.');
  if(!Array.isArray(b.valueColumns)||b.valueColumns.length>80)fail('Оберіть числові колонки діаграми.');
- return {...base,kind:b.kind,source:b.source,groupColumn:str(b.groupColumn,'Групування',160),seriesColumn:str(b.seriesColumn,'Серії',160),valueColumns:[...new Set(b.valueColumns.map(v=>str(v,'Колонка',160)))],operation:b.operation};
+ return {...base,kind:b.kind,source:b.source,groupColumn:str(b.groupColumn,'Групування',160),seriesColumn:str(b.seriesColumn,'Серії',160),valueColumns:[...new Set(b.valueColumns.map(v=>str(v,'Колонка',160)))],operation:b.operation,sortOrder:b.sortOrder};
 }
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
 export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрілка', external:'Зовнішнє посилання', chevron:'Шеврон' };

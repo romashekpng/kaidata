@@ -1,5 +1,5 @@
-import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=chart-data-20261110';
-import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=chart-data-20261110';
+import {validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=chart-sort-20261110';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=chart-sort-20261110';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];
@@ -70,6 +70,16 @@ export function resolveChartData(block,context,all=false){
  if(!rows.length||!values.length&&b.operation!=='count')return {...result,table:{headers:[headers[group]||'Назва',...(b.operation==='count'?['Кількість']:values.length?values.map(i=>headers[i]):['Значення'])],rows:[]}};
  const calculate=ns=>!ns?.length?'':String(b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?Math.min(...ns):b.operation==='max'?Math.max(...ns):ns.reduce((a,n)=>a+n,0));
  const table={headers:[headers[group],...names],rows:[...groups].map(([label,cells])=>[label,...[...names].map(name=>calculate(cells.get(name)))])};
+ if(b.sortOrder!=='source'){
+  const collator=new Intl.Collator('uk-UA',{sensitivity:'base'}),descending=['labelDesc','numberDesc','valueDesc'].includes(b.sortOrder),direction=descending?-1:1;
+  const total=row=>{const ns=row.slice(1).map(number).filter(n=>n!==null);return ns.length?ns.reduce((a,n)=>a+n,0):null;};
+  table.rows.sort((a,c)=>{
+   if(b.sortOrder.startsWith('label'))return direction*collator.compare(a[0],c[0]);
+   const left=b.sortOrder.startsWith('number')?number(a[0]):total(a),right=b.sortOrder.startsWith('number')?number(c[0]):total(c);
+   if(left===null||right===null)return left===right?0:left===null?1:-1;
+   return direction*(left-right);
+  });
+ }
  if(['pie','donut','progress'].includes(block.settings?.chartType)&&table.rows.some(row=>row.slice(1).some(v=>Number(v)<0)))throw new Error('Кругова діаграма та смуги прогресу не підтримують від’ємні значення.');
  return {...result,table};
  }catch(error){return {table:{headers:[],rows:[]},period:'',error:error.message};}

@@ -40,3 +40,17 @@ test('all-years metric sources aggregate the same annual snapshots for every pag
 test('negative values are checked after aggregation for the selected chart type',()=>{
  const b=block(),ctx={...context(2025),getBlock:()=>({...source,rows:[['2025','A','X','-4']]})};b.settings.chartType='bar';assert.equal(resolveChartData(b,ctx).error,'');b.settings.chartType='pie';assert.match(resolveChartData(b,ctx).error,/від’ємні/);b.binding.operation='count';assert.equal(resolveChartData(b,ctx).error,'');
 });
+test('chart sorting uses grouped totals, Ukrainian labels and numeric labels; missing values sort last',()=>{
+ const b=block();Object.assign(b.binding,{groupColumn:'Назва',seriesColumn:'',valueColumns:['Число'],periodMode:'all'});
+ const ctx={...context(2025),getBlock:()=>({...source,columns:['Назва','Число'],rows:[['Яблуко','4'],['Абрикос','2'],['Ірис',''],['Єнот','0'],['Яблуко','6']]})};
+ const labels=()=>resolveChartData(b,ctx).table.rows.map(r=>r[0]);
+ assert.deepEqual(labels(),['Яблуко','Абрикос','Ірис','Єнот']);
+ for(const [sortOrder,expected]of Object.entries({labelAsc:['Абрикос','Єнот','Ірис','Яблуко'],labelDesc:['Яблуко','Ірис','Єнот','Абрикос'],valueAsc:['Єнот','Абрикос','Яблуко','Ірис'],valueDesc:['Яблуко','Абрикос','Єнот','Ірис']})){b.binding.sortOrder=sortOrder;assert.deepEqual(labels(),expected);}
+ ctx.getBlock=()=>({...source,columns:['Назва','Число'],rows:[['10','4'],['2','2'],['2025','1'],['Без року','5']]});b.binding.sortOrder='numberAsc';assert.deepEqual(labels(),['2','10','2025','Без року']);b.binding.sortOrder='numberDesc';assert.deepEqual(labels(),['2025','10','2','Без року']);
+ assert.throws(()=>validateCMSBlock({...b,binding:{...b.binding,sortOrder:'invalid'}}));
+});
+test('chart sort order persists through JSON, CSV and XLSX; legacy bindings keep source order',async()=>{
+ const b=block();b.binding.sortOrder='valueDesc';assert.equal(validateCMSBlock(b).binding.sortOrder,'valueDesc');
+ for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),importCMSBlockCSV(cmsBlockCSV(b),b),await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS)])assert.equal(copy.binding.sortOrder,'valueDesc');
+ delete b.binding.sortOrder;assert.equal(validateCMSBlock(b).binding.sortOrder,'source');
+});

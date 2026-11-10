@@ -1,6 +1,6 @@
-import { scaleMoney } from './money.js?v=chart-data-20261110';
-import { validateSiteStyles } from './style-data.js?v=chart-data-20261110';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=chart-data-20261110';
+import { scaleMoney } from './money.js?v=chart-sort-20261110';
+import { validateSiteStyles } from './style-data.js?v=chart-sort-20261110';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=chart-sort-20261110';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
