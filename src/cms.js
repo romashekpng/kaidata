@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-align-20261111';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-align-20261111';
-import {patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=catalog-align-20261111';
-import {renderCatalog} from './catalog-view.js?v=catalog-align-20261111';
-import { createProjectReportsEditor } from './project-reports.js?v=catalog-align-20261111';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-align-20261111';
-import { createSiteView } from './site-view.js?v=catalog-align-20261111';
-import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-align-20261111';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-align-20261111';
-import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=catalog-align-20261111';
-import { validateBundle } from './data.js?v=catalog-align-20261111';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=catalog-number-20261111';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=catalog-number-20261111';
+import {CATALOG_ROW_NUMBER,patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=catalog-number-20261111';
+import {renderCatalog} from './catalog-view.js?v=catalog-number-20261111';
+import { createProjectReportsEditor } from './project-reports.js?v=catalog-number-20261111';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=catalog-number-20261111';
+import { createSiteView } from './site-view.js?v=catalog-number-20261111';
+import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=catalog-number-20261111';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=catalog-number-20261111';
+import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=catalog-number-20261111';
+import { validateBundle } from './data.js?v=catalog-number-20261111';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=catalog-align-20261111';
+import { icon } from './icons.js?v=catalog-number-20261111';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const recordCatalogBlock=block=>block?.type==='analytics'&&['publications','patents'].includes(block.source);
@@ -161,7 +161,7 @@ export function createCMS(options) {
   function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||'',presentationOnly:recordCatalogBlock(block)});}
   function refreshCatalogPreview(){if(catalogEditorBlock(widgetState?.block)&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog(block,view.catalogTable(block),{},5);}}
   function useCatalogTable(state,table){
-    const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
+    const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(field=>field&&field!==CATALOG_ROW_NUMBER),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
   }
   function textLinkFields(block,widget=true){
     const attr=key=>widget?`data-widget-text="${key}"`:`data-block-id="${block.id}" data-block-field="${key}"`;

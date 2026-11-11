@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';import ExcelJS from 'exceljs';
+import {defaultCMSBlock,validateCMSBlock} from '../src/cms-data.js';import {CATALOG_ROW_NUMBER,defaultCatalogLine,inferCatalogConfig} from '../src/catalog-schema.js';import {resolveCatalog,renderCatalog} from '../src/catalog-view.js';import {readCMSJSON,cmsBlockCSV,importCMSBlockCSV,cmsBlockXLSX,importCMSBlockXLSX} from '../src/cms-io.js';
+const table={headers:['Назва','Тип'],rows:Array.from({length:12},(_,i)=>['Record '+(i+1),i%2?'B':'A'])};
+function block(){const b=defaultCMSBlock('catalog');b.binding={...b.binding,kind:'upload',periodMode:'all'};b.dataTable=table;b.catalog=inferCatalogConfig(table.headers,'table');b.catalog.columns.unshift({label:'№',width:50,align:'center',lines:[defaultCatalogLine(CATALOG_ROW_NUMBER)]});b.catalog.pageSize=5;b.catalog.pageSizes=[5,20,0];b.catalog.filters=[{label:'Тип',field:'Тип',multiple:false}];b.settings={showAll:false};return validateCMSBlock(b);}
+const numbers=html=>[...html.matchAll(/<td data-label="№"[^>]*><div[^>]*><div[^>]*><span[^>]*>(\d+)<\/span>/g)].map(m=>Number(m[1]));
+test('automatic numbering follows filtered results and continues across pages without requiring a source column',()=>{
+ const b=block(),r=resolveCatalog(b,{year:2026});assert.equal(r.error,'');assert.deepEqual(numbers(renderCatalog(b,r)),[1,2,3,4,5]);assert.deepEqual(numbers(renderCatalog(b,r,{page:2})),[6,7,8,9,10]);assert.deepEqual(numbers(renderCatalog(b,r,{query:'Record 12',page:3})),[1]);assert.deepEqual(numbers(renderCatalog(b,r,{filters:{0:JSON.stringify('B')},page:2})),[6]);assert.deepEqual(numbers(renderCatalog(b,r,{query:'missing'})),[]);assert.deepEqual(numbers(renderCatalog(b,r,{},3)),[1,2,3]);assert.deepEqual(table.headers,['Назва','Тип']);
+});
+test('automatic number fields survive JSON, CSV/XLSX data import and do not alter raw exported columns',async()=>{
+ const b=block();for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:b}),'block',b),importCMSBlockCSV(cmsBlockCSV(b),b),await importCMSBlockXLSX(await cmsBlockXLSX(b,ExcelJS),b,ExcelJS)]){assert.equal(copy.catalog.columns[0].lines[0].field,CATALOG_ROW_NUMBER);assert.deepEqual(copy.dataTable.headers,table.headers);assert.equal(resolveCatalog(copy,{year:2026}).error,'');}
+});

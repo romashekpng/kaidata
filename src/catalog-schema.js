@@ -1,3 +1,4 @@
+export const CATALOG_ROW_NUMBER='@catalogRowNumber';
 export const CATALOG_SOURCES={publications:'Публікації сайта',patents:'Патенти сайта'};
 export const DEFAULT_CATALOG_PAGE_SIZES=Object.freeze([20,50,100,0]);
 export function catalogPageSizes(value,legacySize=20){
