@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=extra-columns-20261111';
-import { convertMoneyBlock } from './money.js?v=extra-columns-20261111';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=extra-columns-20261111';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=catalog-align-20261111';
+import { convertMoneyBlock } from './money.js?v=catalog-align-20261111';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=catalog-align-20261111';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};

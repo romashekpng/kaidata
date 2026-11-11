@@ -465,3 +465,6 @@ dialog{background:var(--surface)}
 
 #cms-widget-dialog .cms-chart-series-rule select[multiple]{min-height:140px;width:100%}#cms-widget-dialog .cms-series-visible{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}#cms-widget-dialog .cms-series-visible input{width:18px;min-height:18px;flex:0 0 18px}
 #cms-widget-dialog .cms-chart-value-option{display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:8px}#cms-widget-dialog .cms-chart-value-option input{width:18px;min-height:18px;flex:0 0 18px}
+
+/* Keep badge alignment consistent with column content and individual lines. */
+.catalog-cell-content .catalog-tags{justify-content:var(--catalog-line-justify,var(--catalog-content-justify,flex-start))}
