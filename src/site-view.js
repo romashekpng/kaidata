@@ -1,11 +1,11 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=catalog-number-20261111';
-import {defaultCatalogBinding} from './catalog-schema.js?v=catalog-number-20261111';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=catalog-number-20261111';
-import { createChartRenderer } from './chart-runtime.js?v=catalog-number-20261111';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=catalog-number-20261111';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=catalog-number-20261111';
-import { icon } from './icons.js?v=catalog-number-20261111';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=catalog-number-20261111';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=quartile-order-20261111';
+import {defaultCatalogBinding} from './catalog-schema.js?v=quartile-order-20261111';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=quartile-order-20261111';
+import { createChartRenderer } from './chart-runtime.js?v=quartile-order-20261111';
+import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=quartile-order-20261111';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=quartile-order-20261111';
+import { icon } from './icons.js?v=quartile-order-20261111';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=quartile-order-20261111';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;

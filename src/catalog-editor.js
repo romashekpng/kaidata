@@ -1,5 +1,5 @@
-import {CATALOG_ROW_NUMBER,CATALOG_SOURCES,defaultCatalogLine,inferCatalogConfig,catalogPageSizes} from './catalog-schema.js?v=catalog-number-20261111';
-import {renderCatalog} from './catalog-view.js?v=catalog-number-20261111';
+import {CATALOG_ROW_NUMBER,CATALOG_SOURCES,defaultCatalogLine,inferCatalogConfig,catalogPageSizes} from './catalog-schema.js?v=quartile-order-20261111';
+import {renderCatalog} from './catalog-view.js?v=quartile-order-20261111';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const button=(action,label,extra='')=>`<button type="button" class="button secondary small" data-cms-action="catalog-${action}" ${extra}>${label}</button>`;
 export function catalogEditorFields(block,{table,result,sources=[],sheets=[],sheet='',error='',presentationOnly=false}){

@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=catalog-number-20261111';
-import { EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=catalog-number-20261111';
-import { icon } from './icons.js?v=catalog-number-20261111';
-import { renderProjectCard } from './block-view.js?v=catalog-number-20261111';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=catalog-number-20261111';
+import { formatMoney } from './money.js?v=quartile-order-20261111';
+import { EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=quartile-order-20261111';
+import { icon } from './icons.js?v=quartile-order-20261111';
+import { renderProjectCard } from './block-view.js?v=quartile-order-20261111';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=quartile-order-20261111';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
