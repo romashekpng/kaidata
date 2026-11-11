@@ -1,14 +1,14 @@
-import { validateCatalogTable } from './catalog-schema.js?v=chart-tooltip-20261110';
-import { parseCSV, validateBundle } from './data.js?v=chart-tooltip-20261110';
-import { readXLSXWorkbook } from './spreadsheet.js?v=chart-tooltip-20261110';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=chart-tooltip-20261110';
+import { validateCatalogTable } from './catalog-schema.js?v=extra-columns-20261111';
+import { parseCSV, validateBundle } from './data.js?v=extra-columns-20261111';
+import { readXLSXWorkbook } from './spreadsheet.js?v=extra-columns-20261111';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=extra-columns-20261111';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
   if(current.type==='catalog')return validateCMSBlock({...current,binding:{...current.binding,kind:'upload'},dataTable:validateCatalogTable(table)});
   const { headers, rows } = table;
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');
-  if (!Array.isArray(rows) || rows.length > (current.type==='analytics'&&current.source==='publications'?25000:1000)) fail('Перевищено кількість рядків у блоці.');
+  if (!Array.isArray(rows) || rows.length > (current.type==='analytics'&&['publications','patents'].includes(current.source)?25000:1000)) fail('Перевищено кількість рядків у блоці.');
   const out = structuredClone(current);
   if (out.type === 'table' || out.type === 'chart') { out.columns = headers; out.rows = rows; }
   else if(out.type==='analytics'){

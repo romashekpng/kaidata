@@ -1,20 +1,20 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=chart-tooltip-20261110';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=chart-tooltip-20261110';
-import {inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=chart-tooltip-20261110';
-import {renderCatalog} from './catalog-view.js?v=chart-tooltip-20261110';
-import { createProjectReportsEditor } from './project-reports.js?v=chart-tooltip-20261110';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=chart-tooltip-20261110';
-import { createSiteView } from './site-view.js?v=chart-tooltip-20261110';
-import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=chart-tooltip-20261110';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=chart-tooltip-20261110';
-import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=chart-tooltip-20261110';
-import { validateBundle } from './data.js?v=chart-tooltip-20261110';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=extra-columns-20261111';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=extra-columns-20261111';
+import {patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=extra-columns-20261111';
+import {renderCatalog} from './catalog-view.js?v=extra-columns-20261111';
+import { createProjectReportsEditor } from './project-reports.js?v=extra-columns-20261111';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=extra-columns-20261111';
+import { createSiteView } from './site-view.js?v=extra-columns-20261111';
+import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=extra-columns-20261111';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=extra-columns-20261111';
+import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=extra-columns-20261111';
+import { validateBundle } from './data.js?v=extra-columns-20261111';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=chart-tooltip-20261110';
+import { icon } from './icons.js?v=extra-columns-20261111';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
-const publicationBlock=block=>block?.type==='analytics'&&block.source==='publications';
-const catalogEditorBlock=block=>block?.type==='catalog'||publicationBlock(block);
+const recordCatalogBlock=block=>block?.type==='analytics'&&['publications','patents'].includes(block.source);
+const catalogEditorBlock=block=>block?.type==='catalog'||recordCatalogBlock(block);
 const CMS_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 export function createCMS(options) {
   const e = escapeCMS;
@@ -155,10 +155,10 @@ export function createCMS(options) {
     widgetState.block.settings=resolvedSettings(block);
     if(kind==='edit')widgetState.table=isMetricBlock(block)?metricColorTable(editableTable(block)):editableTable(block);
     if(kind==='edit'&&block.type==='chart'&&block.binding&&block.binding.kind!=='manual'){const result=view.chartData(block);if(result.error)throw new Error(result.error);widgetState.table=result.table;widgetState.block.binding={...defaultChartBinding(),periodMode:result.period?'fixed':'all',period:result.period.replace('–','-')};}
-    if(kind==='settings'&&publicationBlock(widgetState.block)&&!widgetState.block.catalog)widgetState.block.catalog=publicationCatalogConfig(editableTable(widgetState.block).headers,widgetState.block.settings.publicationTitleLinks);
+    if(kind==='settings'&&recordCatalogBlock(widgetState.block)&&!widgetState.block.catalog)widgetState.block.catalog=widgetState.block.source==='publications'?publicationCatalogConfig(editableTable(widgetState.block).headers,widgetState.block.settings.publicationTitleLinks):patentCatalogConfig(editableTable(widgetState.block).headers);
     renderWidgetDialog();
   }
-  function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||'',presentationOnly:publicationBlock(block)});}
+  function catalogFields(block){return catalogEditorFields(block,{table:view.catalogTable(block,true).table,result:view.catalogTable(block),sources:noteSourceOptions(block.id),sheets:widgetState?.catalogSheets||[],sheet:widgetState?.catalogSheet||'',error:widgetState?.catalogError||'',presentationOnly:recordCatalogBlock(block)});}
   function refreshCatalogPreview(){if(catalogEditorBlock(widgetState?.block)&&$('#cms-catalog-preview')){const block=widgetState.block;$('#cms-catalog-preview').innerHTML=renderCatalog(block,view.catalogTable(block),{},5);}}
   function useCatalogTable(state,table){
     const old=state.block,fields=old.catalog.columns.flatMap(col=>col.lines.map(line=>line.field)).filter(Boolean),remap=old.binding.kind!=='upload'||!old.dataTable||fields.some(field=>!table.headers.includes(field));old.binding={...old.binding,kind:'upload'};old.dataTable=table;if(old.binding.yearColumn&&!table.headers.includes(old.binding.yearColumn))old.binding.yearColumn='';if(remap)old.catalog=inferCatalogConfig(table.headers);
@@ -278,7 +278,7 @@ export function createCMS(options) {
       if(block.type==='table')body+=`<label>Примітка таблиці<input data-widget-text="caption" value="${e(block.caption)}" maxlength="2000"></label>`;
       if(block.type==='banner')body+=`<div class="form-grid"><label>Оформлення<select data-widget-text="tone">${[['green','Зелене'],['blue','Синє'],['amber','Тепле'],['dark','Темне']].map(([v,t])=>`<option value="${v}" ${block.tone===v?'selected':''}>${t}</option>`).join('')}</select></label><label>Текст кнопки<input data-widget-text="linkLabel" value="${e(block.linkLabel)}"></label><label>Посилання<input data-widget-text="linkUrl" value="${e(block.linkUrl)}"></label></div>`;
       if(block.type==='analytics'&&block.source==='projects')body+=`<fieldset><legend>Картки грантових проєктів</legend>${check('showProjectGlobe','Показувати земну кулю для міжнародних проєктів')}${check('showProjectFlag','Показувати прапор України для українських проєктів')}<p class="cms-field-help">Вимкніть обидва пункти, щоб приховати позначення. Для ручних даних колонка «Міжнародний»: true — міжнародний, false — український; порожнє значення — тип не вказано. Смуга внизу картки показує часовий прогрес за датами виконання.</p></fieldset>`;
-      if(publicationBlock(block))body+=`<p class="cms-field-help">Додаткові колонки (DOI, посилання Scopus / WoS та інші) зберігаються у вихідних даних. Нижче виберіть, які з них показувати, шукати й фільтрувати. Назву статті можна пов’язати з колонкою DOI. Зміна оформлення не змінює дані для розрахунку показників.</p>${catalogFields(block)}`;
+      if(recordCatalogBlock(block))body+=`<p class="cms-field-help">Додаткові колонки зберігаються у вихідних даних. Нижче виберіть, які з них показувати, шукати й фільтрувати. Зміна оформлення не змінює дані для розрахунку показників.</p>${catalogFields(block)}`;
       if(metric&&block.type==='analytics'&&block.dataMode==='manual')body+=`<div class="notice"><span>Можна повернути автоматичні показники, іконки та порівняння. Кольори збережуться; ручні дані залишаться доступними в ручному режимі.</span></div>${button('widget-metric-live','Відновити автоматичні картки зі збереженням кольорів')}`;
       if(cards)body+=`<fieldset><legend>Картки показників</legend>${check('autoColumns','Без обмеження кількості карток по ширині','Картки автоматично заповнюють доступну ширину блоку й переносяться на наступний рядок. Фіксована кількість карток не застосовується.')}${field('Кількість карток по ширині','columns','number',`min="1" max="6" step="1" ${s.autoColumns?'disabled':''}`)}<p class="cms-field-help">Для фіксованої кількості: від 1 до 6 карток у рядку. На телефоні — не більше двох.</p></fieldset>`;
       if(['table','list','metrics','chart','analytics','catalog'].includes(block.type))body+=`<fieldset><legend>Відображення вмісту</legend>${check('showAll','Показувати весь список (без прокрутки)','За замовчуванням увімкнено для нових блоків. Весь вміст показується без вертикальної прокрутки; у каталозі також вимикається поділ на сторінки.')}</fieldset>`;
@@ -489,9 +489,9 @@ export function createCMS(options) {
       if(name==='widget-width-preset'){state.block.settings.width=+el.dataset.width;state.block.settings.widthMode='percent';}
       if(name==='widget-add-color'&&widgetSettings().customColors.length<12){storeWidgetSetting('customColors',[...widgetSettings().customColors,'#3479c6']);storeWidgetSetting('palette','custom');}
       if(name==='widget-remove-color'&&widgetSettings().customColors.length>1){storeWidgetSetting('customColors',widgetSettings().customColors.slice(0,-1));storeWidgetSetting('palette','custom');}
-      if(name==='widget-add-row'){if(table.rows.length>=(publicationBlock(state.block)?25000:1000))throw new Error(publicationBlock(state.block)?'До 25 000 рядків.':'До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}
+      if(name==='widget-add-row'){if(table.rows.length>=(recordCatalogBlock(state.block)?25000:1000))throw new Error(recordCatalogBlock(state.block)?'До 25 000 рядків.':'До 1000 рядків.');table.rows.push(table.headers.map(()=>''));state.page=Math.floor((table.rows.length-1)/20);}
       if(name==='widget-delete-row'){table.rows.splice(+el.dataset.row,1);state.page=Math.min(state.page,Math.max(0,Math.ceil(table.rows.length/20)-1));}
-      if(name==='widget-add-column'){if(table.headers.length>=(publicationBlock(state.block)?80:isMetricBlock(state.block)?14:12))throw new Error(publicationBlock(state.block)?'До 80 колонок даних.':'До 12 колонок даних.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
+      if(name==='widget-add-column'){if(table.headers.length>=(recordCatalogBlock(state.block)?80:isMetricBlock(state.block)?14:12))throw new Error(recordCatalogBlock(state.block)?'До 80 колонок даних.':'До 12 колонок даних.');let n=table.headers.length+1;while(table.headers.includes('Колонка '+n))n++;table.headers.push('Колонка '+n);table.rows.forEach(r=>r.push(''));}
       if(name==='widget-delete-column'){
         const minimum=state.block.type==='chart'||CHART_SOURCES.includes(state.block.source)?2:1;if(table.headers.length<=minimum)throw new Error(`Залиште хоча б ${minimum} колонки.`);
         table.headers.splice(+el.dataset.col,1);table.rows.forEach(r=>r.splice(+el.dataset.col,1));

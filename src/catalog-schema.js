@@ -56,3 +56,9 @@ export function publicationCatalogConfig(headers,titleLinks=true){
  if(faculty)c.filters.unshift({label:'Факультет',field:faculty,multiple:false});
  c.pageSize=10;c.pageSizes=[10,20,50,100,0];return c;
 }
+
+export function patentCatalogConfig(headers){
+ const c=inferCatalogConfig(headers,'table'),title=c.columns.find(col=>col.label==='Назва');
+ if(title){title.lines[0].style='title';if(headers.includes('Посилання'))title.lines[0].linkField='Посилання';}
+ c.columns=c.columns.filter(col=>col.label!=='Посилання');return c;
+}

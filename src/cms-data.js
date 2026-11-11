@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=chart-tooltip-20261110';
-import { convertMoneyBlock } from './money.js?v=chart-tooltip-20261110';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=chart-tooltip-20261110';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=extra-columns-20261111';
+import { convertMoneyBlock } from './money.js?v=extra-columns-20261111';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=extra-columns-20261111';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -361,8 +361,8 @@ export function validateCMSBlock(input) {
     }
     if(input.dataMode!==undefined&&!['live','manual'].includes(input.dataMode))fail('Невідоме джерело даних блоку.');
     if(input.dataMode!==undefined)out.dataMode=input.dataMode;
-    if(input.dataTable!==undefined)out.dataTable=isMetricBlock(input)?validateMetricDataTable(input.dataTable):input.source==='publications'?validateCatalogTable(input.dataTable):validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
-    if(input.source==='publications'&&input.catalog!==undefined)out.catalog=validateCatalogConfig(input.catalog);
+    if(input.dataTable!==undefined)out.dataTable=isMetricBlock(input)?validateMetricDataTable(input.dataTable):['publications','patents'].includes(input.source)?validateCatalogTable(input.dataTable):validateBlockTable(input.dataTable,CHART_SOURCES.includes(input.source));
+    if(['publications','patents'].includes(input.source)&&input.catalog!==undefined)out.catalog=validateCatalogConfig(input.catalog);
     if(input.source==='projects'&&out.dataTable){const c=out.dataTable.headers.indexOf('Виконання, %');if(c>=0)for(const row of out.dataTable.rows)if(row[c]!=='')row[c]=String(normalizeProjectProgress(row[c])??'');}
     if(input.source==='publications'&&out.dataTable){
       const column=out.dataTable.headers.findIndex(header=>/^(квартиль|quartile)$/iu.test(header.trim()));

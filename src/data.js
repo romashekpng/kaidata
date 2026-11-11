@@ -1,6 +1,6 @@
-import { scaleMoney } from './money.js?v=chart-tooltip-20261110';
-import { validateSiteStyles } from './style-data.js?v=chart-tooltip-20261110';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=chart-tooltip-20261110';
+import { scaleMoney } from './money.js?v=extra-columns-20261111';
+import { validateSiteStyles } from './style-data.js?v=extra-columns-20261111';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=extra-columns-20261111';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
@@ -15,8 +15,9 @@ export const CSV_HEADERS = {
   patents: ['id', 'title', 'number', 'date', 'authors', 'faculty', 'url'],
   revenues: ['year', 'source', 'amountThousandUAH'],
 };
-export function datasetColumns(data,dataset){return [...CSV_HEADERS[dataset],...(dataset==='publications'?data.publicationColumns||[]:[])];}
-export function datasetValue(record,field,dataset){return dataset==='publications'&&!CSV_HEADERS.publications.includes(field)?record.extraFields?.[field]??'':record[field];}
+export const EXTRA_COLUMN_KEYS={publications:'publicationColumns',projects:'projectColumns',patents:'patentColumns',revenues:'revenueColumns'};
+export function datasetColumns(data,dataset){return [...CSV_HEADERS[dataset],...(data[EXTRA_COLUMN_KEYS[dataset]]||[])];}
+export function datasetValue(record,field,dataset){return !CSV_HEADERS[dataset].includes(field)?record.extraFields?.[field]??'':record[field];}
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 function fail(message) { throw new Error(message); }
 function text(v, field, max = 2000) {
@@ -103,31 +104,34 @@ export function validateBundle(input) {
     else {const max=['sidebarStatus','sidebarBrandText','sidebarMenuTitle'].includes(key)?240:1000;if(typeof value!=='string'||value.length>max)fail(`institution.${key}: текст до ${max} символів або порожнє поле.`);out.institution[key]=value.trim();}
   }
   if(i.styles!==undefined)out.institution.styles=validateSiteStyles(i.styles);
-  if(input.publicationColumns!==undefined&&!Array.isArray(input.publicationColumns))fail('publicationColumns: потрібен список додаткових колонок.');
-  const publicationColumns=[...(input.publicationColumns||[])];
-  for(const record of Array.isArray(input.publications)?input.publications:[]){
-    if(record?.extraFields!==undefined){if(!isObject(record.extraFields))fail('extraFields: потрібен об’єкт додаткових полів публікації.');for(const key of Object.keys(record.extraFields))if(!publicationColumns.includes(key))publicationColumns.push(key);}
+  const additional={};
+  for(const dataset of DATASETS){
+    const field=EXTRA_COLUMN_KEYS[dataset];
+    if(input[field]!==undefined&&!Array.isArray(input[field]))fail(`${field}: потрібен список додаткових колонок.`);
+    const columns=[...(input[field]||[])];
+    for(const record of Array.isArray(input[dataset])?input[dataset]:[]){if(record?.extraFields!==undefined){if(!isObject(record.extraFields))fail(`${dataset}: extraFields має бути об’єктом.`);for(const key of Object.keys(record.extraFields))if(!columns.includes(key))columns.push(key);}}
+    if(columns.length>80-CSV_HEADERS[dataset].length||new Set(columns).size!==columns.length||columns.some(h=>typeof h!=='string'||!h.trim()||h!==h.trim()||h.length>160||/^[=+@\-\t\r]/.test(h)||CSV_HEADERS[dataset].includes(h)||['__proto__','prototype','constructor'].includes(h)))fail(`${dataset}: до 80 колонок разом з основними; додаткові заголовки мають бути непорожніми та унікальними.`);
+    additional[dataset]=columns;if(columns.length)out[field]=columns;
   }
-  if(publicationColumns.length>80-CSV_HEADERS.publications.length||new Set(publicationColumns).size!==publicationColumns.length||publicationColumns.some(h=>typeof h!=='string'||!h.trim()||h!==h.trim()||h.length>160||/^[=+@\-\t\r]/.test(h)||CSV_HEADERS.publications.includes(h)||['__proto__','prototype','constructor'].includes(h)))fail('Публікації: до 80 колонок разом з основними; додаткові заголовки мають бути непорожніми та унікальними.');
-  if(publicationColumns.length)out.publicationColumns=publicationColumns;
   for (const key of DATASETS) {
     if (!Array.isArray(input[key]) || input[key].length > 25000) fail(`${key}: потрібен масив, не більше 25 000 записів.`);
     const ids = new Set();
     out[key] = input[key].map((r, n) => {
       const f = name => `${key}, рядок ${n + 1}, ${name}`;
       if (!isObject(r)) fail(`${key}, рядок ${n + 1}: очікується об’єкт.`);
-      let common = {};
+      const columns=additional[key],extraFields=Object.fromEntries(columns.map(h=>{const value=r.extraFields&&Object.hasOwn(r.extraFields,h)?r.extraFields[h]:'';if(!['string','number','boolean'].includes(typeof value)||typeof value==='number'&&!Number.isFinite(value)||String(value??'').length>10000)fail(`${f(h)}: потрібен текст до 10 000 символів.`);return [h,String(value??'').trim()];}));
+      let common = columns.length?{extraFields}:{};
       if (key !== 'revenues') {
         const id = text(r.id, f('id'), 100);
         if (ids.has(id)) fail(`${f('id')}: повторюється «${id}».`); ids.add(id);
-        common = { id, title: text(r.title, f('title')), url: url(r.url, f('url')) };
+        common = { ...common, id, title: text(r.title, f('title')), url: url(r.url, f('url')) };
       }
       if (key === 'publications') {
         if (!Array.isArray(r.indexes) || r.indexes.some(x => !['Scopus', 'WoS'].includes(x)) || new Set(r.indexes).size !== r.indexes.length) fail(`${f('indexes')}: масив із Scopus та/або WoS, або [].`);
         const quartile=normalizeQuartile(r.quartile,f('quartile'));
         if (quartile && !r.indexes.length) fail(`${f('quartile')}: квартиль потребує індексації.`);
-        const extraFields=Object.fromEntries(publicationColumns.map(h=>{const value=r.extraFields&&Object.hasOwn(r.extraFields,h)?r.extraFields[h]:'';if(!['string','number','boolean'].includes(typeof value)||typeof value==='number'&&!Number.isFinite(value)||String(value??'').length>10000)fail(`${f(h)}: потрібен текст до 10 000 символів.`);return [h,String(value??'').trim()];}));
-        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile, type: text(r.type, f('type')),...(publicationColumns.length?{extraFields}:{}) };
+
+        return { ...common, authors: text(r.authors, f('authors')), year: year(r.year, f('year')), faculty: text(r.faculty, f('faculty')), department: text(r.department, f('department')), indexes: [...r.indexes], quartile, type: text(r.type, f('type')) };
       }
       if (key === 'projects') {
         const startDate = date(r.startDate, f('startDate')), endDate = date(r.endDate, f('endDate'));
@@ -150,7 +154,7 @@ export function validateBundle(input) {
         return { ...common, program: text(r.program, f('program')), startDate, endDate, role: r.role, international: r.international, faculty: optional(r.faculty, f('faculty')), funding,...(progressByYear.length?{progressByYear}:{} ) };
       }
       if (key === 'patents') return { ...common, number: text(r.number, f('number'), 100), date: date(r.date, f('date')), authors: text(r.authors, f('authors')), faculty: text(r.faculty, f('faculty')) };
-      return { year: year(r.year, f('year')), source: text(r.source, f('source')), amountThousandUAH: financialAmount(r, f('amountThousandUAH')) };
+      return { ...common, year: year(r.year, f('year')), source: text(r.source, f('source')), amountThousandUAH: financialAmount(r, f('amountThousandUAH')) };
     });
   }
   return out;
@@ -208,22 +212,23 @@ export function importTable({ headers, records }, dataset, current) {
   const missing = CSV_HEADERS[dataset].filter(h => !headers.includes(h)&&!(dataset==='projects'&&h==='progressByYear')&&!(dataset==='revenues'&&h==='amountThousandUAH'&&headers.includes('amountUAH')));
   if (missing.length) fail(`Відсутні колонки: ${missing.join(', ')}.`);
   const extra = headers.filter(h => !CSV_HEADERS[dataset].includes(h)&&!(dataset==='revenues'&&h==='amountUAH'));
-  if (extra.length&&dataset!=='publications') fail(`Невідомі колонки: ${extra.join(', ')}.`);
+
   const numeric = (s, field) => { if (!s.trim()) fail(`${field}: порожнє числове поле.`); const cleaned = s.replace(/[\s\u00a0]/g, '').replace(',', '.'); if (!/^\d+(\.\d+)?$/.test(cleaned)) fail(`${field}: некоректне число.`); return Number(cleaned); };
   const converted = records.map((r, n) => {
     const x = { ...r }; const f = field => `${dataset}, рядок ${n + 2}, ${field}`;
-    if ('year' in x) x.year = numeric(x.year, f('year'));
+    if (CSV_HEADERS[dataset].includes('year')) x.year = numeric(x.year, f('year'));
     if (dataset==='revenues'&&'amountThousandUAH' in x) x.amountThousandUAH = numeric(x.amountThousandUAH, f('amountThousandUAH'));
     if (dataset==='revenues'&&'amountUAH' in x) x.amountUAH = numeric(x.amountUAH, f('amountUAH'));
-    if (dataset === 'publications') { x.indexes = x.indexes ? x.indexes.split('|').map(s => s.trim()) : []; x.quartile = x.quartile || null;x.extraFields=Object.fromEntries(extra.map(h=>[h,r[h]])); }
+    if (dataset === 'publications') { x.indexes = x.indexes ? x.indexes.split('|').map(s => s.trim()) : []; x.quartile = x.quartile || null; }
     if (dataset === 'projects') {
       if (!['true', 'false'].includes(x.international)) fail(`${f('international')}: true або false.`);
       x.international = x.international === 'true';
       try { x.funding = JSON.parse(x.funding || '[]');if(x.progressByYear)x.progressByYear=JSON.parse(x.progressByYear);else delete x.progressByYear; } catch { fail(`${f('funding')}: некоректний JSON-масив.`); }
     }
+    if(extra.length)x.extraFields=Object.fromEntries(extra.map(h=>[h,r[h]]));
     return x;
   });
-  return validateBundle({ ...current, updatedAt: new Date().toISOString().slice(0, 10),...(dataset==='publications'?{publicationColumns:extra}:{}), [dataset]: converted });
+  return validateBundle({ ...current, updatedAt: new Date().toISOString().slice(0, 10),[EXTRA_COLUMN_KEYS[dataset]]:extra, [dataset]: converted });
 }
 export function toCSV(data, dataset) {
   data=validateBundle(data);

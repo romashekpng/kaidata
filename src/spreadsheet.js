@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=chart-tooltip-20261110';
+import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=extra-columns-20261111';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const OPTIONAL_SETTINGS=Object.keys(SIDEBAR_DEFAULTS).map(key=>'institution.'+key);
@@ -38,7 +38,7 @@ function cellText(cell, location) {
   return String(value).trim();
 }
 function readTable(sheet, dataset) {
-  if (sheet.rowCount > 25001 || sheet.columnCount > (dataset==='publications'?80:CSV_HEADERS[dataset].length)) fail(`${sheet.name}: забагато рядків або колонок.`);
+  if (sheet.rowCount > 25001 || sheet.columnCount > 80) fail(`${sheet.name}: забагато рядків або колонок.`);
   const headers = [];
   for (let c = 1; c <= sheet.columnCount; c++) headers.push(cellText(sheet.getCell(1, c), `${sheet.name}, заголовок ${c}`));
   if (!headers.length || headers.some(h => !h) || new Set(headers).size !== headers.length) fail(`${sheet.name}: порожні або повторювані заголовки.`);
