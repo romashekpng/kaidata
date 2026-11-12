@@ -1,0 +1,37 @@
+import {catalogTokens} from './catalog-view.js?v=data-metrics-20261112';
+import {NOTE_SOURCES,FEATURE_ICONS,TEXT_BACKGROUNDS,defaultDataMetricCard} from './cms-data.js?v=data-metrics-20261112';
+const dataMetricEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function dataMetricsEditor(block,{sources,getTable,preview}){
+ const e=dataMetricEscape,button=(action,label,attrs='')=>`<button type="button" class="button secondary small" data-cms-action="data-metric-${action}" ${attrs}>${label}</button>`;
+ const cards=block.cards.map((card,i)=>{
+  const source=getTable(card),table=source.table,headers=table.headers,base=`cards.${i}`,get=path=>path.split('.').reduce((value,k)=>value?.[k],card),attr=path=>`data-data-metric="${base}.${path}"`;
+  const field=(path,label,type='text',extra='')=>`<label>${label}<input type="${type}" ${attr(path)} value="${e(get(path))}" ${extra}></label>`;
+  const select=(path,label,options)=>{const value=path==='binding.valueColumns'?card.binding.valueColumns[0]||'':get(path),choices={...options};if(value&&!Object.hasOwn(choices,value))choices[value]=value+' (відсутнє у джерелі)';return `<label>${label}<select ${attr(path)}>${Object.entries(choices).map(([v,title])=>`<option value="${e(v)}" ${value===v?'selected':''}>${e(title)}</option>`).join('')}</select></label>`;};
+  const columns={'':'Автоматично',...Object.fromEntries(headers.map(h=>[h,h]))},blockOptions={'':'Оберіть таблицю',...Object.fromEntries(sources.map(s=>[s.id,s.label]))};
+  return `<details class="catalog-column-editor data-metric-editor" open><summary>Картка ${i+1}: ${e(card.label)}</summary><div class="catalog-editor-actions">${button('move','↑',`data-card="${i}" data-to="${i-1}" ${i===0?'disabled':''}`)}${button('move','↓',`data-card="${i}" data-to="${i+1}" ${i===block.cards.length-1?'disabled':''}`)}${button('remove','Видалити',`data-card="${i}" ${block.cards.length===1?'disabled':''}`)}</div><label class="checkbox-label"><input type="checkbox" ${attr('visible')} ${card.visible?'checked':''}>Показувати картку</label><div class="form-grid">${field('label','Назва картки','text','maxlength="240"')}${field('note','Підпис під числом','text','maxlength="2000" placeholder="Наприклад: за {period} рік"')}${field('unit','Одиниця виміру (підпис)')}${field('decimals','Знаків після коми','number','min="0" max="6" step="1"')}${select('icon','Іконка',FEATURE_ICONS)}${select('background','Фон',TEXT_BACKGROUNDS)}${field('backgroundColor','Власний колір фону','color')}${field('emptyText','Текст за відсутності значення')}</div><p class="cms-field-help">У назві й підписі доступні {value}, {period}, {unit}, {source}. Зміна тексту не вимикає автоматичний розрахунок. Одиниця виміру — підпис, без перерахунку чисел.</p><fieldset><legend>Джерело та період даних</legend>${select('binding.kind','Звідки брати дані',{builtin:'Таблиці аналітики сайта',block:'Таблиця / діаграма на сторінках'})}${card.binding.kind==='builtin'?select('binding.source','Таблиця-джерело',{...NOTE_SOURCES,publications:'Публікації (вихідні записи)'}):select('binding.blockId','Таблиця-джерело',blockOptions)}${select('binding.periodMode','Період даних',{year:'За вибраним роком сторінки',fixed:'Фіксований рік або період',all:'За всі роки'})}${card.binding.periodMode==='fixed'?field('binding.period','Рік або діапазон','text','placeholder="2021-2026"'):''}${select('binding.yearColumn','Колонка року / дати',columns)}${select('binding.operation','Розрахунок',{count:'Кількість записів',sum:'Сума',avg:'Середнє',min:'Мінімум',max:'Максимум'})}${card.binding.operation!=='count'?select('binding.valueColumns','Колонка значень',{'':'Автоматично / усі числові',...Object.fromEntries(headers.map(h=>[h,h]))}):''}<p class="cms-field-help">Розрахунок застосовується до рядків обраної таблиці після відбору за періодом та умовами. Для підрахунку публікацій обирайте вихідні записи.</p></fieldset><fieldset><legend>Умови відбору</legend>${card.filters.map((f,j)=>{
+   const values=[...new Set([...table.rows.flatMap(r=>f.match==='tokens'?catalogTokens(r[headers.indexOf(f.column)]??''):[r[headers.indexOf(f.column)]??'']),...f.values])].sort((a,b)=>a.localeCompare(b,'uk'));
+   return `<div class="catalog-line-editor"><div class="form-grid">${select(`filters.${j}.column`,'Колонка ознаки',Object.fromEntries(headers.map(h=>[h,h])))}${select(`filters.${j}.match`,'Як порівнювати',{exact:'Повне значення клітинки',tokens:'Містить хоча б одну мітку'})}</div><label>Значення (без вибору — усі)<select multiple size="5" ${attr(`filters.${j}.values`)}>${values.map(value=>`<option value="${e(value)}" ${f.values.includes(value)?'selected':''}>${e(value||'(порожнє значення)')}</option>`).join('')}</select></label>${button('filter-remove','Прибрати умову',`data-card="${i}" data-filter="${j}"`)}</div>`;
+  }).join('')}${button('filter-add','+ Умова',`data-card="${i}" ${card.filters.length>=12?'disabled':''}`)}<p class="cms-field-help">Усі умови виконуються одночасно. Усередині однієї умови достатньо будь-якого вибраного значення. Для Scopus / WoS режим міток рахує публікацію один раз.</p></fieldset>${source.error?`<p class="form-error">${e(source.error)}</p>`:''}</details>`;
+ }).join('');
+ return `${cards}${button('add','+ Картка',block.cards.length>=12?'disabled':'')}<fieldset><legend>Попередній перегляд результату</legend><div id="cms-data-metrics-preview" aria-live="polite" inert>${preview}</div></fieldset>`;
+}
+export function updateDataMetricField(block,el,year){
+ const path=el.dataset.dataMetric?.split('.');if(!path||path[0]!=='cards'||path.some(k=>['__proto__','constructor','prototype'].includes(k)))return {handled:false};
+ let target=block;for(const key of path.slice(0,-1)){target=target?.[key];if(target===undefined)return {handled:false};}const key=path.at(-1),value=el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value;
+ target[key]=key==='values'?[...el.selectedOptions].map(o=>o.value):key==='valueColumns'?(value?[value]:[]):value;
+ const card=block.cards[+path[1]],source=['kind','source','blockId'].includes(key)&&path[2]==='binding';
+ if(source){card.binding.yearColumn='';card.binding.valueColumns=[];card.filters=[];}
+ if(['column','match'].includes(key)&&path[2]==='filters')target.values=[];
+ if(key==='periodMode'&&value==='fixed'&&!card.binding.period)card.binding.period=String(year);
+ if(key==='backgroundColor')card.background='custom';
+ return {handled:true,rerender:source||['periodMode','operation','column','match'].includes(key)};
+}
+export function dataMetricEditorAction(block,name,el,getTable){
+ const i=Number(el.dataset.card),card=block.cards[i];
+ if(name==='add'&&block.cards.length<12){const next=defaultDataMetricCard();next.label='Показник '+(block.cards.length+1);block.cards.push(next);return true;}
+ if(name==='remove'&&card&&block.cards.length>1){block.cards.splice(i,1);return true;}
+ if(name==='move'&&card){const to=Number(el.dataset.to);if(to>=0&&to<block.cards.length)[block.cards[i],block.cards[to]]=[block.cards[to],block.cards[i]];return true;}
+ if(name==='filter-add'&&card&&card.filters.length<12){const table=getTable(card).table;if(!table.headers.length)throw new Error('Спочатку оберіть таблицю-джерело.');card.filters.push({column:table.headers[0],match:'exact',values:[]});return true;}
+ if(name==='filter-remove'&&card){card.filters.splice(Number(el.dataset.filter),1);return true;}
+ return false;
+}

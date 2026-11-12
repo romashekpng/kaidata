@@ -1,11 +1,12 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=shared-period-20261112';
-import {defaultCatalogBinding} from './catalog-schema.js?v=shared-period-20261112';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=shared-period-20261112';
-import { createChartRenderer } from './chart-runtime.js?v=shared-period-20261112';
-import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=shared-period-20261112';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=shared-period-20261112';
-import { icon } from './icons.js?v=shared-period-20261112';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=shared-period-20261112';
+import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=data-metrics-20261112';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=data-metrics-20261112';
+import {defaultCatalogBinding} from './catalog-schema.js?v=data-metrics-20261112';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=data-metrics-20261112';
+import { createChartRenderer } from './chart-runtime.js?v=data-metrics-20261112';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=data-metrics-20261112';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=data-metrics-20261112';
+import { icon } from './icons.js?v=data-metrics-20261112';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=data-metrics-20261112';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPeriodBar(page,years,year){
  if(page&&page.showYear===false)return '';
@@ -33,6 +34,7 @@ export function createSiteView(options){
   function resolvedSettings(block) { return chartSettingsForLibrary(block.settings,block.settings?.chartLibrary||'echarts',block.source); }
   function projectAsOf(block){return reportDate(block.dataMode==='manual'&&/^\d{4}$/.test(block.dataPeriod||'')?+block.dataPeriod:resolvedSettings(block).allYears?currentReportingYear():options.getYear());}
   function editableTable(block) {
+    if(block.type==='dataMetrics')return dataMetricsResult(block).table;
     if(block.type==='catalog')return catalogTable(block,true).table;
     if(block.type==='analytics'){
       if(block.dataMode==='manual')return structuredClone(block.dataTable);
@@ -47,6 +49,9 @@ export function createSiteView(options){
     return publications?{...result,period:options.getBlockPeriod(block)}:result;
   };
   const chartData=(block,all=false)=>resolveChartData(block,{year:options.getYear(),years:reportingYears(options.getData()),getBlock:currentBlock,getTable:options.getBlockTable},all);
+  const metricContext=()=>({year:options.getYear(),years:reportingYears(options.getData()),getBlock:currentBlock,getTable:options.getBlockTable});
+  const dataMetricsResult=block=>resolveDataMetrics(block,metricContext());
+  const dataMetricsTable=card=>dataMetricSource(card,metricContext());
   const noteResult=block=>resolveDataNote(block,{year:options.getYear(),getBlock:currentBlock,getTable:options.getBlockTable});
   function noteTable(block){return noteTableSource(block,{getBlock:currentBlock,getTable:options.getBlockTable}).table(options.getYear(),true);}
   function repairMetricSnapshots(site){
@@ -111,9 +116,10 @@ export function createSiteView(options){
       else if(b.type==='text')body=renderTextBlock(b);
       else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
       else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
+      else if(b.type==='dataMetrics'){note=dataMetricsResult(b);body=renderDataMetrics(b,note);}
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
-      const period=(['catalog','dataNote'].includes(b.type)||b.type==='chart'&&b.binding)?note?.period||'':b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const period=(['catalog','dataNote','dataMetrics'].includes(b.type)||b.type==='chart'&&b.binding)?note?.period||'':b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
       const title=b.title?`<h2>${e(blockTitleWithPeriod(b.title,period,s))}</h2>`:'';
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
@@ -188,5 +194,5 @@ export function createSiteView(options){
   root.addEventListener('input',event=>{if(event.target.matches('[data-publication-query]'))updatePublicationFilter(event.target.closest('.publication-catalog'),'query',event.target.value);});
   root.addEventListener('change',event=>{for(const key of ['faculty','index','quartile'])if(event.target.matches(`[data-publication-${key}]`))updatePublicationFilter(event.target.closest('.publication-catalog'),key,event.target.value);});
  }
- return {resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,chartData,noteResult,noteTable,catalogTable,pageCatalogYears,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
+ return {dataMetricsResult,dataMetricsTable,resolvedSettings,editableTable,repairMetricSnapshots,renderBlocks,chartData,noteResult,noteTable,catalogTable,pageCatalogYears,updateProjectFilter,handleAction,bindInputs,clearLegend:id=>hiddenSeries.delete(id)};
 }

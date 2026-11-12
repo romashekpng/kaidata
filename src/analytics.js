@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=shared-period-20261112';
-import { EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=shared-period-20261112';
-import { icon } from './icons.js?v=shared-period-20261112';
-import { renderProjectCard } from './block-view.js?v=shared-period-20261112';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=shared-period-20261112';
+import { formatMoney } from './money.js?v=data-metrics-20261112';
+import { EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=data-metrics-20261112';
+import { icon } from './icons.js?v=data-metrics-20261112';
+import { renderProjectCard } from './block-view.js?v=data-metrics-20261112';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=data-metrics-20261112';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
@@ -134,6 +134,7 @@ function analyticsTable(source, allYears = false, reportYear = year) {
     for(const column of extra){let label=column;while(headers.includes(label))label+=' (додаткове поле)';headers.push(label);}
     return table(headers,(allYears?data.publications:s.publications).map(p=>[p.title,p.authors,p.year,p.faculty,p.indexes.join(' / '),p.quartile||'Без квартиля',p.type,p.url,p.id,p.department,...extra.map(h=>p.extraFields?.[h]??'')]));
   }
+  if(source==='revenues'){const headers=['Рік','Джерело','Надходження, тис. грн'],extra=data.revenueColumns||[];for(const column of extra){let label=column;while(headers.includes(label))label+=' (додаткове поле)';headers.push(label);}return table(headers,data.revenues.filter(r=>selected===null||r.year===selected).map(r=>[r.year,r.source,r.amountThousandUAH,...extra.map(h=>r.extraFields?.[h]??'')]));}
   if(source==='patents'){const headers=['Назва','Номер','Дата','Автори','Факультет','Посилання'],extra=data[EXTRA_COLUMN_KEYS.patents]||[];for(const column of extra){let label=column;while(headers.includes(label))label+=' (додаткове поле)';headers.push(label);}return table(headers,(allYears?data.patents:s.patents).map(p=>[p.title,p.number,p.date,p.authors,p.faculty,p.url,...extra.map(h=>p.extraFields?.[h]??'')]));}
   if(source==='projects'){const extra=data.projectColumns||[],headers=['Назва','Програма','Початок','Завершення','Роль','Надходження, тис. грн','Посилання','Міжнародний','Виконання, %'];for(const column of extra){let label=column;while(headers.includes(label))label+=' (додаткове поле)';headers.push(label);}return table(headers,(allYears?data.projects.filter(p=>+p.startDate.slice(0,4)<=currentReportingYear()):s.projects).map(p=>[p.title,p.program,p.startDate,p.endDate,p.role,projectReceipts(p,selected),p.url,p.international,p.progressByYear?.find(r=>r.year===(selected??currentReportingYear()))?.percent??'',...extra.map(h=>p.extraFields?.[h]??'')]));}
   return table(['Текст'],[[source==='insight'?'Знання мають бути доступними.':data.institution.sourceNote]]);

@@ -1,6 +1,6 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=shared-period-20261112';
-import { icon } from './icons.js?v=shared-period-20261112';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=shared-period-20261112';
+import { formatMoney, convertMoneyTable } from './money.js?v=data-metrics-20261112';
+import { icon } from './icons.js?v=data-metrics-20261112';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=data-metrics-20261112';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
@@ -64,7 +64,7 @@ export function renderMetricTable(table, settings) {
  const get=(r,name,i)=>r[table.headers.indexOf(name)]??r[i]??'';
  return `<div class="cms-data-scroll cms-card-scroll ${settings.showAll?'show-all':''}"><div class="stats-grid cms-metric-grid" style="--metric-columns:${settings.columns}">${table.rows.map(r=>{
   const colors=validateMetricBackground(get(r,'background'),get(r,'backgroundColor')),colored=colors.background!=='default';
-  return `<article class="stat-card ${colored?`cms-card-background cms-text-bg-${colors.background}`:''}" ${colors.background==='custom'?`style="${customBackgroundStyle(colors.backgroundColor)}"`:''}><div class="stat-top">${esc(get(r,'label',0))}</div><div class="stat-value">${esc(get(r,'value',1))}<small>${esc(get(r,'unit',2))}</small></div><div class="muted">${esc(get(r,'note',3))}</div></article>`;
+  return `<article class="stat-card ${colored?`cms-card-background cms-text-bg-${colors.background}`:''}" ${colors.background==='custom'?`style="${customBackgroundStyle(colors.backgroundColor)}"`:''}><div class="stat-top"><span>${esc(get(r,'label',0))}</span>${table.headers.includes('icon')&&get(r,'icon')&&get(r,'icon')!=='none'?`<span class="stat-icon">${icon(get(r,'icon'))}</span>`:''}</div><div class="stat-value">${esc(get(r,'value',1))}<small>${esc(get(r,'unit',2))}</small></div><div class="muted">${esc(get(r,'note',3))}</div></article>`;
  }).join('')}</div></div>`;
 }
 function projectISODate(value){

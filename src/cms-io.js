@@ -1,10 +1,15 @@
-import { validateCatalogTable } from './catalog-schema.js?v=shared-period-20261112';
-import { parseCSV, validateBundle } from './data.js?v=shared-period-20261112';
-import { readXLSXWorkbook } from './spreadsheet.js?v=shared-period-20261112';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=shared-period-20261112';
+import { validateCatalogTable } from './catalog-schema.js?v=data-metrics-20261112';
+import { parseCSV, validateBundle } from './data.js?v=data-metrics-20261112';
+import { readXLSXWorkbook } from './spreadsheet.js?v=data-metrics-20261112';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=data-metrics-20261112';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {
+  if(current.type==='dataMetrics'){
+    if(!Array.isArray(table.headers)||table.headers.length!==2||!['label','configuration'].every(h=>table.headers.includes(h))||!Array.isArray(table.rows))fail('Для карток з даними потрібні колонки label, configuration з експорту блока.');
+    const cards=table.rows.map(row=>{try{const parsed=JSON.parse(row[table.headers.indexOf('configuration')]);if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))fail('Некоректна конфігурація картки.');return {...parsed,label:row[table.headers.indexOf('label')]};}catch{fail('Некоректні налаштування картки у колонці configuration.');}});
+    return validateCMSBlock({...current,cards});
+  }
   if(current.type==='catalog')return validateCMSBlock({...current,binding:{...current.binding,kind:'upload'},dataTable:validateCatalogTable(table)});
   const { headers, rows } = table;
   if (!Array.isArray(headers) || !headers.length || headers.some(x => typeof x !== 'string' || !x.trim()) || new Set(headers).size !== headers.length) fail('Потрібні непорожні унікальні заголовки колонок.');

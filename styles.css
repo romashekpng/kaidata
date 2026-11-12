@@ -468,3 +468,7 @@ dialog{background:var(--surface)}
 
 /* Keep badge alignment consistent with column content and individual lines. */
 .catalog-cell-content .catalog-tags{justify-content:var(--catalog-line-justify,var(--catalog-content-justify,flex-start))}
+
+#cms-widget-dialog .data-metric-editor select[multiple]{width:100%;min-height:140px}#cms-widget-dialog .data-metric-editor>.checkbox-label{display:flex;flex-direction:row;align-items:center;gap:8px}#cms-widget-dialog .data-metric-editor>.checkbox-label input{width:18px;min-height:18px;flex:0 0 18px}
+
+.cms-metric-grid .stat-top>span:first-child{min-width:0;overflow-wrap:anywhere}.cms-metric-grid .stat-value{overflow-wrap:anywhere}

@@ -1,5 +1,5 @@
-import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=shared-period-20261112';
-import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=shared-period-20261112';
+import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=data-metrics-20261112';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=data-metrics-20261112';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];
@@ -60,14 +60,20 @@ export function resolveChartData(block,context,all=false){
   const parts=b.period.split('-').map(Number),years=b.periodMode==='all'?(context.years||[context.year]):Array.from({length:(parts[1]??parts[0])-parts[0]+1},(_,i)=>parts[0]+i),tables=years.map(year=>context.getTable(live,false,year));
   result={table:{headers:raw.headers,rows:tables.flatMap(t=>t.rows.map(r=>raw.headers.map(h=>r[t.headers.indexOf(h)]??'')))},period:b.periodMode==='all'?years.filter((_,i)=>i===0||i===years.length-1).join('–'):b.period.replace('-','–'),error:''};
  }else result=catalogSourceTable(source,context);
- const {headers,rows}=result.table;
+ const headers=result.table.headers,rows=context.filterRows?context.filterRows(result.table):result.table.rows;
  const index=name=>{const i=headers.indexOf(name);if(i<0)throw new Error(`Колонку «${name}» не знайдено у джерелі.`);return i;};
- const group=b.groupColumn?index(b.groupColumn):0,series=!b.seriesRules.length&&b.seriesColumn?index(b.seriesColumn):-1;
+ const group=context.scalar?-1:b.groupColumn?index(b.groupColumn):0,series=!b.seriesRules.length&&b.seriesColumn?index(b.seriesColumn):-1;
  const rules=b.seriesRules.filter(r=>r.visible).map(rule=>({...rule,index:index(rule.column)}));
  const key=(value,column)=>{const text=String(value??'').trim();return /^(indexes|індексація)$/iu.test(column)?text.split(/\s*[|;/]\s*/u).map(v=>v.trim()).sort().join('|'):text;};
  const number=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&!['—','-'].includes(s)&&Number.isFinite(Number(s))?Number(s):null;};
- const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.filter(h=>!(wide&&!hasYear&&/^\d{4}$/.test(h)&&raw.headers.includes(h)&&!headers.includes(h))).map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
+ const values=b.operation==='count'?[]:b.valueColumns.length?b.valueColumns.filter(h=>!(wide&&!hasYear&&/^\d{4}$/.test(h)&&raw.headers.includes(h)&&!headers.includes(h))).map(index):headers.map((_,i)=>i).filter(i=>i!==group&&i!==series&&(!context.scalar||i!==headers.indexOf(source.binding.yearColumn)&&!yearHeader(headers[i]))&&!/^(рік|year|дата|date)$/iu.test(headers[i])&&rows.some(r=>number(r[i])!==null));
  if(!values.length&&b.operation!=='count'&&rows.length&&!(wide&&!hasYear))throw new Error('Оберіть числові колонки для розрахунку.');
+ if(context.scalar){
+  const ns=rows.flatMap(row=>values.map(i=>number(row[i]))).filter(n=>n!==null);
+  const value=b.operation==='count'?rows.length:!ns.length?null:b.operation==='avg'?ns.reduce((a,n)=>a+n,0)/ns.length:b.operation==='min'?ns.reduce((a,n)=>Math.min(a,n)):b.operation==='max'?ns.reduce((a,n)=>Math.max(a,n)):ns.reduce((a,n)=>a+n,0);
+  if(value!==null&&!Number.isFinite(value))throw new Error('Результат розрахунку перевищує допустимий числовий діапазон.');
+  return {...result,number:value,table:{headers:['Показник','Значення'],rows:[['Показник',value===null?'':String(value)]]}};
+ }
  const names=new Set(),groups=new Map();
  const ruleName=(rule,i)=>values.length>1?`${rule.name} · ${headers[i]}`:rule.name;
  if(b.seriesRules.length)for(const rule of rules)for(const i of b.operation==='count'?[-1]:values)names.add(ruleName(rule,i));
