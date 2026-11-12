@@ -1,12 +1,22 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=title-period-20261112';
-import {defaultCatalogBinding} from './catalog-schema.js?v=title-period-20261112';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=title-period-20261112';
-import { createChartRenderer } from './chart-runtime.js?v=title-period-20261112';
-import { blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=title-period-20261112';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=title-period-20261112';
-import { icon } from './icons.js?v=title-period-20261112';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=title-period-20261112';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=page-display-20261112';
+import {defaultCatalogBinding} from './catalog-schema.js?v=page-display-20261112';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=page-display-20261112';
+import { createChartRenderer } from './chart-runtime.js?v=page-display-20261112';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=page-display-20261112';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=page-display-20261112';
+import { icon } from './icons.js?v=page-display-20261112';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=page-display-20261112';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+export function renderPeriodBar(page,years,year){
+ if(page&&page.showYear===false)return '';
+ const p={...defaultPageDisplay(),...page},e=escapeView,available=years.length?years:[year];
+ return `<div class="period-bar${p.stickyYear!==false?' period-bar-sticky':''}"><div class="period-label">${icon('calendar')}${p.periodTitle?`<strong>${e(p.periodTitle)}</strong>`:''}${p.periodDescription?`<span>${e(p.periodDescription)}</span>`:''}</div><div class="year-tabs" role="group" aria-label="Звітний рік">${available.slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}<select class="year-select${years.length>8?' year-select-extra':''}" aria-label="Звітний рік" id="all-years">${available.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select></div></div>`;
+}
+export function renderDemoNotice(page,enabled){
+ const p={...defaultPageDisplay(),...page},e=escapeView;
+ if(!enabled||!p.showDemoNotice||!p.demoNoticeTitle&&!p.demoNoticeText&&!p.demoNoticeAction)return '';
+ return `<div class="notice demo-notice">${icon('info')}<span>${p.demoNoticeTitle?`<strong>${e(p.demoNoticeTitle)}</strong> `:''}${e(p.demoNoticeText).replaceAll('\n','<br>')}</span>${p.demoNoticeAction?`<button data-action="import">${e(p.demoNoticeAction)} ${icon('arrow')}</button>`:''}</div>`;
+}
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
  const update=()=>{

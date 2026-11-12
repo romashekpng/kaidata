@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=title-period-20261112';
-import { icon } from './icons.js?v=title-period-20261112';
+import { SIDEBAR_DEFAULTS } from './data.js?v=page-display-20261112';
+import { icon } from './icons.js?v=page-display-20261112';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarMenuHeading(institution){
  const i={...SIDEBAR_DEFAULTS,...institution};

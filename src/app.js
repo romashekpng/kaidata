@@ -1,15 +1,15 @@
-import { observePeriodHeader } from './site-view.js?v=title-period-20261112';
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=title-period-20261112';
-import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=title-period-20261112';
-import { formatMoney } from './money.js?v=title-period-20261112';
-import { createAnalytics } from './analytics.js?v=title-period-20261112';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=title-period-20261112';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=title-period-20261112';
-import { icon } from './icons.js?v=title-period-20261112';
+import { renderPeriodBar, renderDemoNotice, observePeriodHeader } from './site-view.js?v=page-display-20261112';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=page-display-20261112';
+import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=page-display-20261112';
+import { formatMoney } from './money.js?v=page-display-20261112';
+import { createAnalytics } from './analytics.js?v=page-display-20261112';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=page-display-20261112';
+import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=page-display-20261112';
+import { icon } from './icons.js?v=page-display-20261112';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=title-period-20261112';
-import { createCMS } from './cms.js?v=title-period-20261112';
-import { cmsRoute } from './cms-data.js?v=title-period-20261112';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=page-display-20261112';
+import { createCMS } from './cms.js?v=page-display-20261112';
+import { cmsRoute } from './cms-data.js?v=page-display-20261112';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -126,8 +126,8 @@ function header(cmsPage = null) {
   const [eyebrow, title, sub] = cmsPage ? [cmsPage.eyebrow,cmsPage.heading,cmsPage.description] : titles[route];
   const years = [...new Set([...reportingYears(data),year,...(cmsPage?cms.pageCatalogYears(cmsPage):[])])].sort((a,b)=>a-b);
   return `<div class="page-heading"><div>${eyebrow?`<div class="eyebrow"><span></span>${e(eyebrow)}</div>`:''}<h1>${e(title)}</h1><p>${e(sub)}</p></div></div>
-  ${!cmsPage || cmsPage.showYear ? `<div class="period-bar${cmsPage?.stickyYear!==false?' period-bar-sticky':''}"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length ? years : [year]).slice(-8).map(y => `<button data-year="${y}" class="${year === y ? 'selected' : ''}" aria-pressed="${year === y}">${y}</button>`).join('')}<select class="year-select${years.length>8?' year-select-extra':''}" aria-label="Звітний рік" id="all-years">${years.map(y => `<option ${y === year ? 'selected' : ''}>${y}</option>`).join('')}</select></div></div>` : ''}
-  ${route==='admin' && data.demo && (!cmsPage || cmsPage.blocks.some(b=>b.visible && ['analytics','existing'].includes(b.type))) ? `<div class="notice demo-notice">${icon('info')}<span><strong>Демонстраційний набір.</strong> Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.</span><button data-action="import">Додати свої дані ${icon('arrow')}</button></div>` : ''}`;
+  ${renderPeriodBar(cmsPage,years,year)}
+  ${renderDemoNotice(cmsPage,route==='admin'&&data.demo&&(!cmsPage||cmsPage.blocks.some(b=>b.visible&&['analytics','existing'].includes(b.type))))}`;
 }
 let observedReportingYear=currentReportingYear();
 function refreshReportingCalendar(){if(!data||!cms)return;const current=currentReportingYear();if(current===observedReportingYear)return;if(year===observedReportingYear)year=current;observedReportingYear=current;render();}

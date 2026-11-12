@@ -1,0 +1,16 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {readFile} from 'node:fs/promises';
+import {validateCMSPage,validateSite,defaultPageDisplay} from '../src/cms-data.js';import {readCMSJSON} from '../src/cms-io.js';import {renderPeriodBar,renderDemoNotice} from '../src/site-view.js';import {PUBLICATION_ASSETS,buildPublicationFiles} from '../src/publication.js';
+const site=JSON.parse(await readFile(new URL('../data/pages.json',import.meta.url),'utf8'));
+test('legacy pages retain current labels and notices; per-page fields persist through JSON',()=>{
+ const p=validateCMSPage(site.pages[0]);for(const [key,value]of Object.entries(defaultPageDisplay()))assert.equal(p[key],value);
+ Object.assign(p,{periodTitle:'Рік звіту',periodDescription:'Виберіть період',showDemoNotice:false,demoNoticeTitle:'Приклад',demoNoticeText:'Власне повідомлення',demoNoticeAction:'Завантажити дані'});const copy=readCMSJSON(JSON.stringify({pageVersion:1,page:p}),'page');assert.deepEqual(copy,p);assert.deepEqual(validateSite({...site,pages:[p,...site.pages.slice(1)]}).pages[0],p);assert.throws(()=>validateCMSPage({...p,showDemoNotice:'false'}));assert.throws(()=>validateCMSPage({...p,periodTitle:'x'.repeat(241)}));
+});
+test('custom period labels are escaped, optional and independent of year/sticky controls',()=>{
+ const p={...defaultPageDisplay(),showYear:true,stickyYear:false,periodTitle:'<Рік>',periodDescription:'A & B'},html=renderPeriodBar(p,[2024,2025],2025);assert(html.includes('&lt;Рік&gt;'));assert(html.includes('A &amp; B'));assert(!html.includes('period-bar-sticky'));assert(html.includes('data-year="2025" class="selected"'));assert.equal(renderPeriodBar({...p,showYear:false},[2025],2025),'');assert(!renderPeriodBar({...p,periodTitle:'',periodDescription:''},[],2025).includes('<strong>'));
+});
+test('demo message can be edited or hidden without changing dataset status',()=>{
+ const p={...defaultPageDisplay(),demoNoticeTitle:'<Приклад>',demoNoticeText:'Рядок 1\nРядок 2 & 3',demoNoticeAction:'Імпортувати'},html=renderDemoNotice(p,true);assert(html.includes('&lt;Приклад&gt;'));assert(html.includes('Рядок 1<br>Рядок 2 &amp; 3'));assert(html.includes('Імпортувати'));assert.equal(renderDemoNotice(p,false),'');assert.equal(renderDemoNotice({...p,showDemoNotice:false},true),'');assert(!renderDemoNotice({...p,demoNoticeAction:''},true).includes('<button'));assert.equal(p.showDemoNotice,true);
+});
+test('editor and visitor publication bundles preserve per-page labels and notice configuration',async()=>{
+ const pages=structuredClone(site);Object.assign(pages.pages[0],{periodTitle:'Роки досліджень',periodDescription:'Обрати рік',showDemoNotice:false,demoNoticeText:'Тест'});const data=JSON.parse(await readFile(new URL('../data/demo.json',import.meta.url),'utf8'));const assets=Object.fromEntries(await Promise.all(PUBLICATION_ASSETS.map(async name=>[name,await readFile(new URL('../'+name,import.meta.url),'utf8')])));for(const mode of ['editor','visitor']){const files=buildPublicationFiles(assets,data,pages,mode),saved=JSON.parse(files.find(f=>f.name==='data/pages.json').data).pages[0];assert.equal(saved.periodTitle,'Роки досліджень');assert.equal(saved.showDemoNotice,false);assert.equal(saved.demoNoticeText,'Тест');}
+});

@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=title-period-20261112';
-import { createAnalytics } from './analytics.js?v=title-period-20261112';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=title-period-20261112';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=title-period-20261112';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=title-period-20261112';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=title-period-20261112';
-import { icon } from './icons.js?v=title-period-20261112';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=page-display-20261112';
+import { createAnalytics } from './analytics.js?v=page-display-20261112';
+import { renderPeriodBar, createSiteView, observePeriodHeader } from './site-view.js?v=page-display-20261112';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=page-display-20261112';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=page-display-20261112';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=page-display-20261112';
+import { icon } from './icons.js?v=page-display-20261112';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));
@@ -34,7 +34,7 @@ function renderShell(){
 }
 function header(p){
  const years=[...new Set([...reportingYears(data),year,...view.pageCatalogYears(p)])].sort((a,b)=>a-b);
- return `<div class="page-heading"><div>${p.eyebrow?`<div class="eyebrow"><span></span>${e(p.eyebrow)}</div>`:''}<h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${p.showYear?`<div class="period-bar${p.stickyYear?' period-bar-sticky':''}"><div class="period-label">${icon('calendar')}<strong>Звітний період</strong><span>Оберіть рік для перегляду</span></div><div class="year-tabs" role="group" aria-label="Звітний рік">${(years.length?years:[year]).slice(-8).map(y=>`<button data-year="${y}" class="${year===y?'selected':''}" aria-pressed="${year===y}">${y}</button>`).join('')}<select class="year-select${years.length>8?' year-select-extra':''}" aria-label="Звітний рік" id="all-years">${years.map(y=>`<option ${year===y?'selected':''}>${y}</option>`).join('')}</select></div></div>`:''}`;
+ return `<div class="page-heading"><div>${p.eyebrow?`<div class="eyebrow"><span></span>${e(p.eyebrow)}</div>`:''}<h1>${e(p.heading)}</h1><p>${e(p.description)}</p></div></div>${renderPeriodBar(p,years,year)}`;
 }
 let observedReportingYear=currentReportingYear();
 function refreshReportingCalendar(){if(!data||!cms)return;const current=currentReportingYear();if(current===observedReportingYear)return;if(year===observedReportingYear)year=current;observedReportingYear=current;render();}

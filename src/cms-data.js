@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=title-period-20261112';
-import { convertMoneyBlock } from './money.js?v=title-period-20261112';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=title-period-20261112';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=page-display-20261112';
+import { convertMoneyBlock } from './money.js?v=page-display-20261112';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=page-display-20261112';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -382,11 +382,18 @@ export function validateCMSBlock(input) {
   }
   return out;
 }
+export function defaultPageDisplay(){return {
+ periodTitle:'Звітний період',periodDescription:'Оберіть рік для перегляду',showDemoNotice:true,
+ demoNoticeTitle:'Демонстраційний набір.',demoNoticeText:'Усі показники та записи умовні. Завантажте дані вашого університету для формування звітності.',demoNoticeAction:'Додати свої дані'
+};}
 export function validateCMSPage(input) {
   if (!obj(input) || !['builtin', 'custom'].includes(input.kind)) fail('Некоректна сторінка.');
   const out = { id: id(input.id, 'ID сторінки'), kind: input.kind, title: str(input.title, 'Назва сторінки', 120, true), heading: str(input.heading, 'Заголовок сторінки', 200, true), description: str(input.description, 'Опис сторінки', 2000), slug: str(input.slug, 'Адреса сторінки', 64, true), visible: bool(input.visible, 'Видимість сторінки'), showYear: bool(input.showYear, 'Фільтр року') };
   out.eyebrow = str(input.eyebrow === undefined ? 'НАУКОВА ДІЯЛЬНІСТЬ' : input.eyebrow, 'Надзаголовок', 240);
   out.stickyYear = bool(input.stickyYear === undefined ? true : input.stickyYear, 'Закріплення звітного періоду');
+  const display=defaultPageDisplay();
+  for(const [key,max]of [['periodTitle',240],['periodDescription',1000],['demoNoticeTitle',240],['demoNoticeText',4000],['demoNoticeAction',160]])out[key]=str(input[key]===undefined?display[key]:input[key],key,max);
+  out.showDemoNotice=bool(input.showDemoNotice===undefined?display.showDemoNotice:input.showDemoNotice,'Повідомлення про демонстраційний набір');
   if (!/^[a-z0-9][a-z0-9-]{0,63}$/.test(out.slug)) fail('Адреса: малі латинські літери, цифри й дефіс, до 64 символів.');
   if (out.kind === 'builtin' && (!Object.hasOwn(CORE_PAGES, out.id) || out.slug !== out.id)) fail('Не можна змінювати системну адресу вбудованої сторінки.');
   if (out.kind === 'custom' && Object.hasOwn(CORE_PAGES, out.id)) fail('ID сторінки зарезервований.');
