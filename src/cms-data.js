@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=page-display-20261112';
-import { convertMoneyBlock } from './money.js?v=page-display-20261112';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=page-display-20261112';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=shared-period-20261112';
+import { convertMoneyBlock } from './money.js?v=shared-period-20261112';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=shared-period-20261112';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -416,6 +416,12 @@ export function validateSite(input) {
   const updatedAt = str(input.updatedAt, 'Дата оновлення', 40, true);
   if (!Number.isFinite(Date.parse(updatedAt))) fail('Некоректна дата оновлення сайта.');
   const result = { siteVersion: 1, updatedAt, pages };
+  if(input.sharedPeriodText!==undefined){
+    if(!obj(input.sharedPeriodText))fail('Некоректні спільні написи звітного періоду.');
+    const shared={enabled:bool(input.sharedPeriodText.enabled,'Спільні написи звітного періоду'),periodTitle:str(input.sharedPeriodText.periodTitle,'Спільна назва звітного періоду',240),periodDescription:str(input.sharedPeriodText.periodDescription,'Спільний опис звітного періоду',1000)};
+    result.sharedPeriodText=shared;
+    if(shared.enabled)for(const page of pages){page.periodTitle=shared.periodTitle;page.periodDescription=shared.periodDescription;}
+  }
   if (new TextEncoder().encode(JSON.stringify(result)).length > 5 * 1024 * 1024) fail('Вміст сторінок перевищує 5 МБ.');
   return result;
 }

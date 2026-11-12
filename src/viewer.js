@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=page-display-20261112';
-import { createAnalytics } from './analytics.js?v=page-display-20261112';
-import { renderPeriodBar, createSiteView, observePeriodHeader } from './site-view.js?v=page-display-20261112';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=page-display-20261112';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=page-display-20261112';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=page-display-20261112';
-import { icon } from './icons.js?v=page-display-20261112';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=shared-period-20261112';
+import { createAnalytics } from './analytics.js?v=shared-period-20261112';
+import { renderPeriodBar, createSiteView, observePeriodHeader } from './site-view.js?v=shared-period-20261112';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=shared-period-20261112';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=shared-period-20261112';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=shared-period-20261112';
+import { icon } from './icons.js?v=shared-period-20261112';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

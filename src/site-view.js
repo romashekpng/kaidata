@@ -1,11 +1,11 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=page-display-20261112';
-import {defaultCatalogBinding} from './catalog-schema.js?v=page-display-20261112';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=page-display-20261112';
-import { createChartRenderer } from './chart-runtime.js?v=page-display-20261112';
-import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=page-display-20261112';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=page-display-20261112';
-import { icon } from './icons.js?v=page-display-20261112';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=page-display-20261112';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=shared-period-20261112';
+import {defaultCatalogBinding} from './catalog-schema.js?v=shared-period-20261112';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=shared-period-20261112';
+import { createChartRenderer } from './chart-runtime.js?v=shared-period-20261112';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=shared-period-20261112';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=shared-period-20261112';
+import { icon } from './icons.js?v=shared-period-20261112';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=shared-period-20261112';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPeriodBar(page,years,year){
  if(page&&page.showYear===false)return '';
