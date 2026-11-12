@@ -1,5 +1,5 @@
-import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=quartile-order-20261111';
-import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=quartile-order-20261111';
+import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=title-period-20261112';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=title-period-20261112';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];

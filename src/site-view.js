@@ -1,11 +1,11 @@
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=quartile-order-20261111';
-import {defaultCatalogBinding} from './catalog-schema.js?v=quartile-order-20261111';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=quartile-order-20261111';
-import { createChartRenderer } from './chart-runtime.js?v=quartile-order-20261111';
-import { chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=quartile-order-20261111';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=quartile-order-20261111';
-import { icon } from './icons.js?v=quartile-order-20261111';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=quartile-order-20261111';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=title-period-20261112';
+import {defaultCatalogBinding} from './catalog-schema.js?v=title-period-20261112';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=title-period-20261112';
+import { createChartRenderer } from './chart-runtime.js?v=title-period-20261112';
+import { blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=title-period-20261112';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=title-period-20261112';
+import { icon } from './icons.js?v=title-period-20261112';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=title-period-20261112';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function observePeriodHeader(){
  const topbar=document.getElementById('topbar');if(!topbar)return;
@@ -81,7 +81,7 @@ export function createSiteView(options){
     const content=page.blocks.filter(b=>b.visible&&!(b.type==='analytics'&&family[b.source]&&!enabled.includes(family[b.source]))).map(b=>{
       const s=resolvedSettings(b),isChart=b.type==='chart'||(b.type==='analytics'&&CHART_SOURCES.includes(b.source));
       const subtitleText=b.subtitle??(b.type==='analytics'?defaultBlockSubtitle(b.source):'');
-      const title=b.title?`<h2>${e(b.title)}</h2>`:'',subtitle=subtitleText?`<p class="cms-widget-subtitle">${e(subtitleText)}</p>`:'';
+      const subtitle=subtitleText?`<p class="cms-widget-subtitle">${e(subtitleText)}</p>`:'';
       let body='',displayedTable=null,note=null;
       if(isChart){try{validateCMSBlock(b);let table;if(b.type==='chart'&&b.binding){note=chartData(b);if(note.error)throw new Error(note.error);table=note.table;}else table=editableTable(b);if(!b.binding&&!s.allYears&&table.rows.length&&table.rows.every(r=>/^\d{4}$/.test(r[0])))table={...table,rows:table.rows.filter(r=>+r[0]===options.getYear())};displayedTable=table;const hidden=[...(hiddenSeries.get(b.id)||[])];body=renderChartTable({...b,settings:s},table,hidden);if(table.rows.length){const payload=e(JSON.stringify({title:b.title,settings:s,table,hidden}));body=body.replace('<div class="cms-chart-graphic">',`<div class="cms-chart-graphic" data-library-chart="${payload}">`);}}catch(err){body=`<p class="form-error">${e(err.message)}</p>`;}}
       else if(b.type==='analytics'){
@@ -104,6 +104,7 @@ export function createSiteView(options){
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';
       const period=(['catalog','dataNote'].includes(b.type)||b.type==='chart'&&b.binding)?note?.period||'':b.type==='feature'?'':options.getBlockPeriod(b,displayedTable||(b.dataMode==='manual'?b.dataTable:['table','metrics'].includes(b.type)?editableTable(b):null));
+      const title=b.title?`<h2>${e(blockTitleWithPeriod(b.title,period,s))}</h2>`:'';
       const heading=title||period?`<div class="cms-widget-heading">${title}${period?`<span class="cms-widget-period" aria-label="Період даних">${e(period)}</span>`:''}</div>`:'';
       const mixed=s.widthMode!=='percent',rowPrefix=mixed&&!mixedRow?'<div class="cms-mixed-width-row">':!mixed&&mixedRow?'</div>':'';mixedRow=mixed;
       const textBackground=`cms-text-background cms-text-bg-${s.background}`,framed=b.type==='text'&&s.showTextFrame,content=`${heading}${subtitle}${body}`;

@@ -1,16 +1,16 @@
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=quartile-order-20261111';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=quartile-order-20261111';
-import {CATALOG_ROW_NUMBER,patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=quartile-order-20261111';
-import {renderCatalog} from './catalog-view.js?v=quartile-order-20261111';
-import { createProjectReportsEditor } from './project-reports.js?v=quartile-order-20261111';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=quartile-order-20261111';
-import { createSiteView } from './site-view.js?v=quartile-order-20261111';
-import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=quartile-order-20261111';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=quartile-order-20261111';
-import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=quartile-order-20261111';
-import { validateBundle } from './data.js?v=quartile-order-20261111';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=title-period-20261112';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=title-period-20261112';
+import {CATALOG_ROW_NUMBER,patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=title-period-20261112';
+import {renderCatalog} from './catalog-view.js?v=title-period-20261112';
+import { createProjectReportsEditor } from './project-reports.js?v=title-period-20261112';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=title-period-20261112';
+import { createSiteView } from './site-view.js?v=title-period-20261112';
+import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=title-period-20261112';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=title-period-20261112';
+import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=title-period-20261112';
+import { validateBundle } from './data.js?v=title-period-20261112';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=quartile-order-20261111';
+import { icon } from './icons.js?v=title-period-20261112';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const recordCatalogBlock=block=>block?.type==='analytics'&&['publications','patents'].includes(block.source);
@@ -264,6 +264,7 @@ export function createCMS(options) {
     else if(kind==='settings'){
       const cards=metric;
       body=`<div class="form-grid"><label>Заголовок<input data-widget-text="title" value="${e(block.title)}" maxlength="240"></label><label>Підзаголовок<input data-widget-text="subtitle" value="${e(block.subtitle??(block.type==='analytics'?defaultBlockSubtitle(block.source):''))}" maxlength="2000"></label></div>`;
+      if(block.type!=='feature')body+=`<div class="form-grid">${check('titlePeriod','Додавати період даних')}<label>Розділові знаки<select data-widget-setting="titlePeriodStyle" ${s.titlePeriod?'':'disabled'}><option value="comma" ${s.titlePeriodStyle==='comma'?'selected':''}>Кома: назва, 2026</option><option value="parentheses" ${s.titlePeriodStyle==='parentheses'?'selected':''}>Дужки: назва (2026)</option></select></label></div><p class="cms-field-help">До заголовка додається той самий рік або діапазон, що відображається праворуч у блоці. Період оновлюється разом із даними.</p>`;
       if(block.type==='feature')body+=`<fieldset><legend>Вміст картки</legend>${featureContentFields(block)}</fieldset>${featureAppearanceFields(block)}`;
       if(block.type==='catalog')body+=catalogFields(block);
       if(block.type==='dataNote')body+=`<fieldset><legend>Вміст примітки</legend>${noteContentFields(block)}</fieldset>${textLinkFields(block)}${noteBindingFields(block)}`;
@@ -347,6 +348,7 @@ export function createCMS(options) {
     }
     if(el.dataset.featureStyle){const key=el.dataset.featureStyle;state.block.appearance={...state.block.appearance,[key]:el.type==='checkbox'?el.checked:el.type==='number'?Number(el.value):el.value};if(key==='autoHeight')$('#cms-widget-dialog [data-feature-style="minHeight"]').disabled=el.checked;if(key==='backgroundColor'){state.block.appearance.background='custom';$('#cms-widget-dialog [data-feature-style="background"]').value='custom';}}
     if(el.dataset.widgetSetting){const key=el.dataset.widgetSetting;storeWidgetSetting(key,el.type==='checkbox'?el.checked:el.type==='number'||key==='segmentPercentageDecimals'?Number(el.value):el.value);}
+    if(el.dataset.widgetSetting==='titlePeriod')$('#cms-widget-dialog [data-widget-setting="titlePeriodStyle"]').disabled=!el.checked;
     if(el.dataset.widgetSetting==='widthMode'){for(const mode of ['percent','fixed','auto'])$('#cms-widget-dialog [data-width-'+mode+']').hidden=mode!==el.value;}
     if(el.dataset.widgetSetting==='autoColumns')$('#cms-widget-dialog [data-widget-setting="columns"]').disabled=el.checked;
     if(['segmentPercentages','segmentPercentageDecimals'].includes(el.dataset.widgetSetting)){

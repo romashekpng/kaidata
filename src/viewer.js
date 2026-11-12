@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=quartile-order-20261111';
-import { createAnalytics } from './analytics.js?v=quartile-order-20261111';
-import { createSiteView, observePeriodHeader } from './site-view.js?v=quartile-order-20261111';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=quartile-order-20261111';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=quartile-order-20261111';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=quartile-order-20261111';
-import { icon } from './icons.js?v=quartile-order-20261111';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=title-period-20261112';
+import { createAnalytics } from './analytics.js?v=title-period-20261112';
+import { createSiteView, observePeriodHeader } from './site-view.js?v=title-period-20261112';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=title-period-20261112';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=title-period-20261112';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=title-period-20261112';
+import { icon } from './icons.js?v=title-period-20261112';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

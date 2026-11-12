@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=quartile-order-20261111';
-import { convertMoneyBlock } from './money.js?v=quartile-order-20261111';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=quartile-order-20261111';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=title-period-20261112';
+import { convertMoneyBlock } from './money.js?v=title-period-20261112';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=title-period-20261112';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -136,8 +136,13 @@ export const BLOCK_WIDTH_MODES = {percent:'У відсотках',fixed:'Фік�
 export function blockWidthLabel(settings = {}) {
  return settings.widthMode==='fixed'?`${settings.widthPixels??250} px`:settings.widthMode==='auto'?'Авто':`${settings.width??100}%`;
 }
+export function blockTitleWithPeriod(title,period,settings={}){
+ const dataPeriod=String(period??'').trim();
+ if(!title||!settings.titlePeriod||!dataPeriod)return title;
+ return settings.titlePeriodStyle==='parentheses'?`${title} (${dataPeriod})`:`${title}, ${dataPeriod}`;
+}
 export function defaultBlockSettings(source = '') {
- return { chartLibrary:'echarts', showTextFrame:false, publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, widthMode:'percent', widthPixels:250, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:['faculties','projectChart','programs'].includes(source)?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
+ return { titlePeriod:false,titlePeriodStyle:'comma',chartLibrary:'echarts', showTextFrame:false, publicationTitleLinks:true, showProjectGlobe:true, showProjectFlag:true, background:'default', backgroundColor:'#25395d', width:100, widthMode:'percent', widthPixels:250, autoColumns:true, columns:source==='fundingStats'?2:source==='patentStats'?1:3, showAll:true, showChartData:false, legendCentered:['publicationChart','quartiles'].includes(source), palette:source==='faculties'?'custom':'blue', customColors:source==='faculties'?['#4fa99d']:['#3479c6','#309b70','#7d54a5','#d86f2c','#a9b5c3'], legend:['faculties','projectChart','programs'].includes(source)?'none':['publicationChart','quartiles'].includes(source)?'bottom':'top', chartType:source==='quartiles'?'donut':source==='faculties'?'progress':source==='programs'?'horizontal':'stacked', totalLabels:true, tooltipTotal:true, segmentValues:false, segmentPercentages:source==='quartiles', segmentPercentageDecimals:1, smallPercentagesAsDecimal:true, numbering:true, wrapLabels:false, period:'', allYears:['publicationChart','funding','projectChart','fundingTable'].includes(source), height:320 };
 }
 export function defaultBlockSubtitle(source) {
  if(source==='projectChart')return 'Кількість проєктів за роками';
@@ -182,7 +187,8 @@ function validateFlatBlockSettings(input = {}, source = '') {
  if(!Object.hasOwn(CHART_LIBRARIES,out.chartLibrary))throw new Error('Невідома бібліотека для діаграм.');
  if(!Object.hasOwn(TEXT_BACKGROUNDS,out.background)||typeof out.backgroundColor!=='string'||!/^#[0-9a-f]{6}$/i.test(out.backgroundColor))throw new Error('Фон блоку: виберіть колір теми або колір у форматі #RRGGBB.');
  for (const [key,min,max] of [['width',1,100],['columns',1,6],['height',180,800]]) if (!Number.isFinite(out[key]) || out[key]<min || out[key]>max || (key!=='width'&&!Number.isInteger(out[key]))) throw new Error(`Некоректне значення ${key}: від ${min} до ${max}.`);
- for(const key of ['showTextFrame','autoColumns','publicationTitleLinks','legendCentered','showProjectGlobe','showProjectFlag','showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','smallPercentagesAsDecimal','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ for(const key of ['titlePeriod','showTextFrame','autoColumns','publicationTitleLinks','legendCentered','showProjectGlobe','showProjectFlag','showAll','showChartData','totalLabels','tooltipTotal','segmentValues','segmentPercentages','smallPercentagesAsDecimal','allYears','numbering','wrapLabels']) if(typeof out[key]!=='boolean')throw new Error(`Налаштування ${key}: потрібне true або false.`);
+ if(!['comma','parentheses'].includes(out.titlePeriodStyle))throw new Error('Оберіть оформлення періоду в заголовку: кома або дужки.');
  if(![0,1].includes(out.segmentPercentageDecimals))throw new Error('Округлення відсотків: 0 або 1 знак після коми.');
  out.period=normalizeBlockPeriod(out.period);
  if(!['top','bottom','right','none'].includes(out.legend)||!Object.hasOwn(CHART_TYPES,out.chartType)||(!Object.hasOwn(BLOCK_PALETTES,out.palette)&&out.palette!=='custom'))throw new Error('Невідома легенда, палітра або тип графіка.');
