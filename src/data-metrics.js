@@ -1,6 +1,7 @@
-import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=import-affiliations-20261113';
-import {resolveChartData,catalogTokens} from './catalog-view.js?v=import-affiliations-20261113';
-import {renderMetricTable} from './block-view.js?v=import-affiliations-20261113';
+import {isAffiliationColumn,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
+import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=affiliation-lists-20261113';
+import {resolveChartData,catalogTokens} from './catalog-view.js?v=affiliation-lists-20261113';
+import {renderMetricTable} from './block-view.js?v=affiliation-lists-20261113';
 export function dataMetricSource(card,context){return resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},context,true);}
 export function resolveDataMetrics(block,context){
  const headers=['label','value','unit','note','background','backgroundColor','icon'],results=[];
@@ -9,7 +10,7 @@ export function resolveDataMetrics(block,context){
   try{
    const card=validateDataMetricCard(input),filterRows=table=>{
     const conditions=card.filters.map(f=>{const index=table.headers.indexOf(f.column);if(index<0)throw new Error(`Колонку умови «${f.column}» не знайдено.`);return {...f,index};});
-    return table.rows.filter(row=>conditions.every(f=>{if(!f.values.length)return true;return f.match==='tokens'?catalogTokens(row[f.index]).some(token=>f.values.some(v=>catalogTokens(v).includes(token))):f.values.includes(String(row[f.index]??'').trim());}));
+    return table.rows.filter(row=>conditions.every(f=>{if(!f.values.length)return true;if(isAffiliationColumn(f.column))return f.values.some(value=>affiliationMatches(row[f.index],value));return f.match==='tokens'?catalogTokens(row[f.index]).some(token=>f.values.some(v=>catalogTokens(v).includes(token))):f.values.includes(String(row[f.index]??'').trim());}));
    };
    const result=resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},{...context,scalar:true,filterRows});
    if(result.error)throw new Error(result.error);

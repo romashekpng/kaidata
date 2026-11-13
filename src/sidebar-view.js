@@ -1,5 +1,5 @@
-import { SIDEBAR_DEFAULTS } from './data.js?v=import-affiliations-20261113';
-import { icon } from './icons.js?v=import-affiliations-20261113';
+import { SIDEBAR_DEFAULTS } from './data.js?v=affiliation-lists-20261113';
+import { icon } from './icons.js?v=affiliation-lists-20261113';
 const sidebarEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function sidebarMenuHeading(institution){
  const i={...SIDEBAR_DEFAULTS,...institution};

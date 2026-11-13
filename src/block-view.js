@@ -1,6 +1,7 @@
-import { formatMoney, convertMoneyTable } from './money.js?v=import-affiliations-20261113';
-import { icon } from './icons.js?v=import-affiliations-20261113';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=import-affiliations-20261113';
+import {affiliationValues,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
+import { formatMoney, convertMoneyTable } from './money.js?v=affiliation-lists-20261113';
+import { icon } from './icons.js?v=affiliation-lists-20261113';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=affiliation-lists-20261113';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);
@@ -41,10 +42,10 @@ export function publicationsFromTable(table){
  });
 }
 export function filterPublications(records,state={}){
- const faculties=[...new Set(records.map(r=>r.faculty).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'uk'));
+ const faculties=[...new Set(records.flatMap(r=>affiliationValues(r.faculty)))].sort((a,b)=>a.localeCompare(b,'uk'));
  const selected={query:String(state.query||'').slice(0,200),faculty:faculties.includes(state.faculty)?state.faculty:'',index:['Scopus','WoS','none'].includes(state.index)?state.index:'',quartile:['Q1','Q2','Q3','Q4','none'].includes(state.quartile)?state.quartile:''};
  const query=selected.query.trim().toLocaleLowerCase('uk-UA');
- const rows=records.filter(r=>(!query||`${r.title} ${r.authors}`.toLocaleLowerCase('uk-UA').includes(query))&&(!selected.faculty||r.faculty===selected.faculty)&&(!selected.index||(selected.index==='none'?!r.indexes.length:r.indexes.includes(selected.index)))&&(!selected.quartile||(selected.quartile==='none'?!r.quartile:r.quartile===selected.quartile))).sort((a,b)=>a.title.localeCompare(b.title,'uk'));
+ const rows=records.filter(r=>(!query||`${r.title} ${r.authors}`.toLocaleLowerCase('uk-UA').includes(query))&&(!selected.faculty||affiliationMatches(r.faculty,selected.faculty))&&(!selected.index||(selected.index==='none'?!r.indexes.length:r.indexes.includes(selected.index)))&&(!selected.quartile||(selected.quartile==='none'?!r.quartile:r.quartile===selected.quartile))).sort((a,b)=>a.title.localeCompare(b.title,'uk'));
  selected.page=Math.max(1,Math.min(Math.ceil(rows.length/10)||1,Math.floor(Number(state.page)||1)));
  return {faculties,selected,rows};
 }

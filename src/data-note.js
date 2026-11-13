@@ -1,4 +1,5 @@
-import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=import-affiliations-20261113';
+import {isAffiliationColumn,affiliationValues,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
+import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=affiliation-lists-20261113';
 const noteNumber=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)&&Number.isFinite(Number(s))?Number(s):null;};
 export function notePeriod(binding,year){
  const text=binding.periodMode==='fixed'?binding.period:String(year),parts=text.split('-').map(Number),first=parts[0],last=parts[1]??first;
@@ -23,7 +24,7 @@ export function resolveDataNote(note,context){
    const numbers=[],cells=[],names=[];let rowCount=0;
    for(const year of period.years){
     const table=source.table(year),yearColumn=noteYearColumn(table),wide=table.headers.some(h=>/^\d{4}$/.test(h));
-    let rows=table.rows.filter(row=>(yearColumn<0||Number(String(row[yearColumn]).slice(0,4))===year)&&(!binding.row||String(row[0]).trim()===binding.row));
+    let rows=table.rows.filter(row=>(yearColumn<0||Number(String(row[yearColumn]).slice(0,4))===year)&&(!binding.row||(isAffiliationColumn(table.headers[0])?affiliationMatches(row[0],binding.row):String(row[0]).trim()===binding.row)));
     const unitColumn=table.headers.indexOf('unit');if(unitColumn>=0&&!binding.row&&!['count','distinct'].includes(binding.operation)&&new Set(rows.map(row=>row[unitColumn])).size>1)throw new Error('Показники мають різні одиниці виміру. Виберіть рядок конкретної картки.');
     const allColumns=binding.column==='*';let column=binding.column&&!allColumns?table.headers.indexOf(binding.column):-1;
     if(binding.column&&!allColumns&&column<0)throw new Error(`Колонку «${binding.column}» не знайдено у джерелі.`);
@@ -33,7 +34,7 @@ export function resolveDataNote(note,context){
     if(wide&&column<0)rows=[];
     if(column<0&&binding.operation==='value'&&!wide)column=0;
     if(!allColumns&&!['count','distinct'].includes(binding.operation)&&column<0&&!wide)throw new Error('У джерелі немає числової колонки. Виберіть колонку вручну.');
-    for(const row of rows){rowCount++;names.push(String(row[0]));const indexes=allColumns&&!wide?table.headers.map((_,i)=>i).filter(i=>i>0&&i!==yearColumn):column>=0?[column]:[];for(const i of indexes){cells.push(String(row[i]??''));const n=noteNumber(row[i]);if(n!==null)numbers.push(n);}}
+    for(const row of rows){rowCount++;names.push(...(isAffiliationColumn(table.headers[0])?affiliationValues(row[0]):[String(row[0])]));const indexes=allColumns&&!wide?table.headers.map((_,i)=>i).filter(i=>i>0&&i!==yearColumn):column>=0?[column]:[];for(const i of indexes){cells.push(String(row[i]??''));const n=noteNumber(row[i]);if(n!==null)numbers.push(n);}}
     if(!source.live&&yearColumn<0&&!wide)break;
    }
    if(binding.operation==='count')number=rowCount;

@@ -1,6 +1,6 @@
-import { scaleMoney } from './money.js?v=import-affiliations-20261113';
-import { validateSiteStyles } from './style-data.js?v=import-affiliations-20261113';
-import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=import-affiliations-20261113';
+import { scaleMoney } from './money.js?v=affiliation-lists-20261113';
+import { validateSiteStyles } from './style-data.js?v=affiliation-lists-20261113';
+import { DEFAULT_SIDEBAR_LOGO, validateSidebarLogo } from './branding-data.js?v=affiliation-lists-20261113';
 export const DATASETS = ['publications', 'projects', 'patents', 'revenues'];
 export const BLOCKS = { publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const SIDEBAR_DEFAULTS = Object.freeze({
@@ -18,6 +18,9 @@ export const CSV_HEADERS = {
 export const EXTRA_COLUMN_KEYS={publications:'publicationColumns',projects:'projectColumns',patents:'patentColumns',revenues:'revenueColumns'};
 export function datasetColumns(data,dataset){return [...CSV_HEADERS[dataset],...(data[EXTRA_COLUMN_KEYS[dataset]]||[])];}
 export function datasetValue(record,field,dataset){return !CSV_HEADERS[dataset].includes(field)?record.extraFields?.[field]??'':record[field];}
+export function isAffiliationColumn(column){return /^(faculty|faculties|departments?|факультет(?:и|ів)?|кафедр(?:а|и)?)$/iu.test(String(column??'').trim());}
+export function affiliationValues(value){return [...new Set(String(value??'').split(';').map(v=>v.trim()).filter(Boolean))];}
+export function affiliationMatches(value,selected){const text=String(selected??'').trim();return String(value??'').trim()===text||affiliationValues(value).includes(text);}
 export const AFFILIATION_DEFAULTS={faculty:'Факультет',department:'Кафедра'};
 const isObject = v => v !== null && typeof v === 'object' && !Array.isArray(v);
 function fail(message) { throw new Error(message); }
@@ -252,6 +255,6 @@ export function toCSV(data, dataset) {
   }).join(';'))].join('\r\n');
 }
 export function groupCount(rows, key) {
-  const counts = new Map(); rows.forEach(x => counts.set(x[key], (counts.get(x[key]) || 0) + 1));
+  const counts = new Map();rows.forEach(x=>{for(const value of isAffiliationColumn(key)?affiliationValues(x[key]):[x[key]])counts.set(value,(counts.get(value)||0)+1);});
   return [...counts].sort((a, b) => b[1] - a[1]);
 }

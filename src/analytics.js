@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=import-affiliations-20261113';
-import { EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=import-affiliations-20261113';
-import { icon } from './icons.js?v=import-affiliations-20261113';
-import { renderProjectCard } from './block-view.js?v=import-affiliations-20261113';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=import-affiliations-20261113';
+import { formatMoney } from './money.js?v=affiliation-lists-20261113';
+import { affiliationValues,affiliationMatches, EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=affiliation-lists-20261113';
+import { icon } from './icons.js?v=affiliation-lists-20261113';
+import { renderProjectCard } from './block-view.js?v=affiliation-lists-20261113';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=affiliation-lists-20261113';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
@@ -78,11 +78,11 @@ function overview() {
 }
 function toolbar(kind) {
   const pub = kind === 'publications';
-  const faculties = [...new Set(data[kind].filter(x=>pub ? x.year===year : +x.date.slice(0,4)===year).map(x=>x.faculty))].sort();
+  const faculties = [...new Set(data[kind].filter(x=>pub ? x.year===year : +x.date.slice(0,4)===year).flatMap(x=>affiliationValues(x.faculty)))].sort();
   return `<div class="table-toolbar"><label class="search-field">${icon('search')}<input id="search" type="search" placeholder="${pub ? 'Назва публікації або автор…' : 'Назва, номер патенту або автор…'}" value="${e(query)}" aria-label="Пошук ${pub ? 'публікацій' : 'патентів'}"></label><select id="faculty-filter" aria-label="Факультет"><option value="">Усі факультети</option>${faculties.map(f=>`<option value="${e(f)}" ${f===faculty?'selected':''}>${e(f)}</option>`).join('')}</select>${pub ? `<select id="index-filter" aria-label="Індексація"><option value="">Уся індексація</option>${['Scopus','WoS','none'].map(v=>`<option value="${v}" ${v===indexFilter?'selected':''}>${v==='none'?'Без індексації':v==='WoS'?'Web of Science':v}</option>`).join('')}</select><select id="quartile-filter" aria-label="Квартиль"><option value="">Усі квартилі</option>${['Q1','Q2','Q3','Q4','none'].map(q=>`<option value="${q}" ${q===quartile?'selected':''}>${q==='none'?'Без квартиля':q}</option>`).join('')}</select>` : ''}</div>`;
 }
 function filteredRows(kind) {
-  return data[kind].filter(x=>(kind==='publications'?x.year===year:+x.date.slice(0,4)===year) && (!faculty||x.faculty===faculty) && (!query||`${x.title} ${x.authors} ${x.number||''}`.toLocaleLowerCase('uk').includes(query.toLocaleLowerCase('uk'))) && (kind!=='publications'||((!quartile || (quartile==='none'?!x.quartile:x.quartile===quartile))&&(!indexFilter||(indexFilter==='none'?!x.indexes.length:x.indexes.includes(indexFilter)))))).sort((a,b)=>kind==='patents'?b.date.localeCompare(a.date):a.title.localeCompare(b.title,'uk'));
+  return data[kind].filter(x=>(kind==='publications'?x.year===year:+x.date.slice(0,4)===year) && (!faculty||affiliationMatches(x.faculty,faculty)) && (!query||`${x.title} ${x.authors} ${x.number||''}`.toLocaleLowerCase('uk').includes(query.toLocaleLowerCase('uk'))) && (kind!=='publications'||((!quartile || (quartile==='none'?!x.quartile:x.quartile===quartile))&&(!indexFilter||(indexFilter==='none'?!x.indexes.length:x.indexes.includes(indexFilter)))))).sort((a,b)=>kind==='patents'?b.date.localeCompare(a.date):a.title.localeCompare(b.title,'uk'));
 }
 function tableBody(kind, showAll = cms?.getPage(route)?.blocks.find(b=>b.type==='analytics'&&b.source===kind)?.settings?.showAll || false) {
   const rows = filteredRows(kind), pages = Math.max(1,Math.ceil(rows.length/10)); page = Math.min(page,pages);
