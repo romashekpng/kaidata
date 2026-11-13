@@ -1,6 +1,6 @@
-import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=data-metrics-20261112';
-import {resolveChartData,catalogTokens} from './catalog-view.js?v=data-metrics-20261112';
-import {renderMetricTable} from './block-view.js?v=data-metrics-20261112';
+import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=import-affiliations-20261113';
+import {resolveChartData,catalogTokens} from './catalog-view.js?v=import-affiliations-20261113';
+import {renderMetricTable} from './block-view.js?v=import-affiliations-20261113';
 export function dataMetricSource(card,context){return resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},context,true);}
 export function resolveDataMetrics(block,context){
  const headers=['label','value','unit','note','background','backgroundColor','icon'],results=[];

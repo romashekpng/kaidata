@@ -472,3 +472,5 @@ dialog{background:var(--surface)}
 #cms-widget-dialog .data-metric-editor select[multiple]{width:100%;min-height:140px}#cms-widget-dialog .data-metric-editor>.checkbox-label{display:flex;flex-direction:row;align-items:center;gap:8px}#cms-widget-dialog .data-metric-editor>.checkbox-label input{width:18px;min-height:18px;flex:0 0 18px}
 
 .cms-metric-grid .stat-top>span:first-child{min-width:0;overflow-wrap:anywhere}.cms-metric-grid .stat-value{overflow-wrap:anywhere}
+
+.import-affiliation-repair{margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:8px;min-width:0}.import-affiliation-choice{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5}.import-affiliation-choice input{width:18px;min-height:18px;flex:0 0 18px;margin-top:2px}.import-affiliation-repair p{font-size:13px;margin:10px 0 0}

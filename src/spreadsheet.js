@@ -1,4 +1,4 @@
-import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=data-metrics-20261112';
+import { DATASETS, CSV_HEADERS, SIDEBAR_DEFAULTS, datasetColumns, datasetValue, importTable, validateBundle } from './data.js?v=import-affiliations-20261113';
 export const SHEET_NAMES = { settings: 'Університет', publications: 'Публікації', projects: 'Проєкти', patents: 'Патенти', revenues: 'Надходження' };
 const SETTINGS = ['schemaVersion', 'demo', 'updatedAt', 'institution.name', 'institution.shortName', 'institution.subtitle', 'institution.website', 'institution.accent', 'institution.sourceNote', 'institution.blocks'];
 const OPTIONAL_SETTINGS=Object.keys(SIDEBAR_DEFAULTS).map(key=>'institution.'+key);
@@ -79,13 +79,13 @@ export async function readXLSXWorkbook(buffer, engine = globalThis.ExcelJS) {
   if (!book.worksheets.length) fail('XLSX не містить аркушів.');
   return book;
 }
-export async function importXLSX(buffer, target, current, engine = globalThis.ExcelJS) {
+export async function importXLSX(buffer, target, current, engine = globalThis.ExcelJS,options={}) {
   const book = await readXLSXWorkbook(buffer, engine);
   if (target !== 'bundle') {
     if (!DATASETS.includes(target)) fail('Оберіть таблицю для імпорту XLSX.');
     const sheet = findSheet(book, target) || (book.worksheets.length === 1 ? book.worksheets[0] : null);
     if (!sheet) fail(`Не знайдено аркуш «${SHEET_NAMES[target]}». Використайте приклад або книгу з одним аркушем.`);
-    return importTable(readTable(sheet, target), target, current);
+    return importTable(readTable(sheet, target), target, current,options);
   }
   const settings = findSheet(book, 'settings');
   if (!settings || book.worksheets.length !== 5) fail('Повна XLSX-книга має містити 5 аркушів: Університет, Публікації, Проєкти, Патенти, Надходження. Для однієї таблиці змініть обсяг імпорту.');
@@ -94,10 +94,10 @@ export async function importXLSX(buffer, target, current, engine = globalThis.Ex
   for (const key of DATASETS) {
     const sheet = findSheet(book, key);
     if (!sheet) fail(`Відсутній аркуш «${SHEET_NAMES[key]}».`);
-    next = importTable(readTable(sheet, key), key, next);
+    next = importTable(readTable(sheet, key), key, next,options);
   }
   // A complete workbook retains the original reporting date, as JSON does.
-  return validateBundle({ ...next, updatedAt: metadata.updatedAt });
+  return validateBundle({ ...next, updatedAt: metadata.updatedAt },options);
 }
 function styleSheet(sheet, columns) {
   sheet.views = [{ state: 'frozen', ySplit: 1 }];

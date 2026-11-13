@@ -1,15 +1,15 @@
-import { renderPeriodBar, renderDemoNotice, observePeriodHeader } from './site-view.js?v=data-metrics-20261112';
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=data-metrics-20261112';
-import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=data-metrics-20261112';
-import { formatMoney } from './money.js?v=data-metrics-20261112';
-import { createAnalytics } from './analytics.js?v=data-metrics-20261112';
-import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=data-metrics-20261112';
-import { BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=data-metrics-20261112';
-import { icon } from './icons.js?v=data-metrics-20261112';
+import { renderPeriodBar, renderDemoNotice, observePeriodHeader } from './site-view.js?v=import-affiliations-20261113';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=import-affiliations-20261113';
+import { DEFAULT_SIDEBAR_LOGO, MAX_SIDEBAR_LOGO_LENGTH, validateSidebarLogo } from './branding-data.js?v=import-affiliations-20261113';
+import { formatMoney } from './money.js?v=import-affiliations-20261113';
+import { createAnalytics } from './analytics.js?v=import-affiliations-20261113';
+import { STYLE_FIELDS, defaultSiteStyles, validateSiteStyles, siteStyleVariables } from './style-data.js?v=import-affiliations-20261113';
+import { AFFILIATION_DEFAULTS, BLOCKS, DATASETS, CSV_HEADERS, validateBundle, reportingYears, currentReportingYear, summarize, importCSV, toCSV } from './data.js?v=import-affiliations-20261113';
+import { icon } from './icons.js?v=import-affiliations-20261113';
 import './vendor/exceljs.min.js';
-import { importXLSX, toXLSX } from './spreadsheet.js?v=data-metrics-20261112';
-import { createCMS } from './cms.js?v=data-metrics-20261112';
-import { cmsRoute } from './cms-data.js?v=data-metrics-20261112';
+import { importXLSX, toXLSX } from './spreadsheet.js?v=import-affiliations-20261113';
+import { createCMS } from './cms.js?v=import-affiliations-20261113';
+import { cmsRoute } from './cms-data.js?v=import-affiliations-20261113';
 const $ = s => document.querySelector(s);
 const e = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const fmt = v => new Intl.NumberFormat('uk-UA').format(v);
@@ -27,6 +27,7 @@ const pageTitles = { overview: 'Огляд', ...BLOCKS };
 let cms;
 let data, demo, year, route = 'overview', query = '', faculty = '', quartile = '', indexFilter = '', projectStatus = 'all', page = 1;
 let importTicket = 0;
+let importRepairContext=null;
 let exportTarget = 'bundle';
 let pending = null, managerTab = 'import', storageAvailable = true;
 let toastTimer;
@@ -149,7 +150,7 @@ function exportContent() {
   return `<form id="export-form"><div class="import-description"><h3>Завантажте дані у зручному форматі</h3><p>CSV — окрема таблиця. XLSX — таблиця або повна книга Excel. JSON — повний набір для резервної копії та публікації.</p></div><label class="import-type">Формат<select id="export-format" name="format"><option value="xlsx">XLSX · Excel</option><option value="csv">CSV · UTF-8</option><option value="json">JSON</option></select></label><label class="import-type">Обсяг експорту<select id="export-type" name="target"><option value="bundle">Повний набір і налаштування</option>${DATASETS.map(k=>`<option value="${k}" ${exportTarget===k?'selected':''}>${e(({revenues:'Надходження',...BLOCKS})[k])}</option>`).join('')}</select></label><label id="filtered-export-label" class="checkbox-label"><input type="checkbox" name="filtered" checked>Лише ${year} рік і поточні фільтри, усі сторінки</label><p class="transfer-scope" id="export-scope"></p><div id="export-error" class="form-error" role="alert"></div><div class="dialog-actions"><span>Файл формується у браузері</span><button class="button primary" type="submit">${icon('download')}Завантажити файл</button></div></form>`;
 }
 function updateImportControls() {
-  importTicket++;pending=null;$('#import-result').innerHTML='';$('#file-input').value='';
+  importTicket++;pending=null;importRepairContext=null;$('#import-result').innerHTML='';$('#file-input').value='';
   const format=$('#import-format').value, target=$('#import-type');
   target.disabled=format==='json';target.options[0].disabled=format==='csv';
   if(format==='json')target.value='bundle';
@@ -225,7 +226,7 @@ function openManager(tab='import') {
   closeMenu();
   if(managerTab==='styles')applySiteStyles(data.institution.styles);
   if(tab==='styles'){styleDraft=structuredClone(data.institution.styles||defaultSiteStyles());editingStyleId=styleDraft.defaultPreset;}else styleDraft=null;
-  importTicket++;brandingTicket++;pending=null;managerTab=tab;
+  importTicket++;brandingTicket++;pending=null;importRepairContext=null;managerTab=tab;
   const titles={styles:'Стилі сайта',import:'Керування даними',settings:'Налаштування університету',format:'Формат даних і методологія',export:'Експорт даних'};
   $('#manager').innerHTML=`<div class="dialog-heading"><div><div class="eyebrow">ВАША ПЛАТФОРМА АНАЛІТИКИ</div><h2 id="dialog-title">${titles[tab]}</h2></div><button class="icon-button" data-action="close-dialog" aria-label="Закрити">${icon('close')}</button></div><div class="dialog-tabs">${[['import','Імпорт'],['export','Експорт'],['settings','Університет'],['styles','Стилі'],['format','Формат і правила']].map(([t,label])=>`<button data-tab="${t}" class="${tab===t?'selected':''}">${label}</button>`).join('')}</div><div class="dialog-body">${managerContent()}</div>`;
   if(!$('#manager').open) $('#manager').showModal();
@@ -233,26 +234,30 @@ function openManager(tab='import') {
   if(tab==='export')updateExportControls();
   if(tab==='styles')previewStyleDraft();
 }
-async function readImport(file) {
+function affiliationRepairChoice(checked){
+ return `<fieldset class="import-affiliation-repair"><legend>Заповнити незаповнені faculty та department?</legend><label class="import-affiliation-choice"><input type="checkbox" id="fill-missing-affiliations" ${checked?'checked':''}><span>Для незаповнених полів використовувати: ${Object.entries(AFFILIATION_DEFAULTS).map(([key,value])=>`<strong>${e(key)}</strong> — «${e(value)}»`).join('; ')}.</span></label><p class="muted">Застосовується лише до порожніх або відсутніх полів. Після перевірки підтвердьте імпорт кнопкою «Застосувати імпорт».</p></fieldset>`;
+}
+async function readImport(file,fillMissingAffiliations=false) {
   if(!file)return;
   const ticket = ++importTicket;
   pending=null; const result=$('#import-result'); result.innerHTML='';
+  const type=$('#import-type').value,format=$('#import-format').value,importOptions={fillMissingAffiliations};
+  importRepairContext={file,type,format};
   try {
     if(file.size>5*1024*1024)throw new Error('Файл перевищує 5 МБ. Розділіть дані на окремі CSV-набори.');
-    const type=$('#import-type').value, format=$('#import-format').value;
     if(!file.name.toLowerCase().endsWith('.'+format)) throw new Error(`Оберіть файл .${format} або змініть формат імпорту.`);
     result.innerHTML='<p class="muted">Перевіряємо файл…</p>';
     let next;
-    if(format==='xlsx') next=await importXLSX(await file.arrayBuffer(),type,data);
+    if(format==='xlsx') next=await importXLSX(await file.arrayBuffer(),type,data,undefined,importOptions);
     else {
       const source=await file.text();
-      if(format==='json'){let raw;try{raw=JSON.parse(source.replace(/^\uFEFF/,''));}catch{throw new Error('JSON не вдалося прочитати. Перевірте коми, лапки та структуру файлу.');}next=validateBundle(raw);}
-      else next=importCSV(source,type,data);
+      if(format==='json'){let raw;try{raw=JSON.parse(source.replace(/^\uFEFF/,''));}catch{throw new Error('JSON не вдалося прочитати. Перевірте коми, лапки та структуру файлу.');}next=validateBundle(raw,importOptions);}
+      else next=importCSV(source,type,data,importOptions);
     }
     if(ticket!==importTicket||!$('#manager').open||managerTab!=='import'||!result.isConnected||$('#import-type').value!==type||$('#import-format').value!==format)return;
     pending=next;
-    result.innerHTML=`<div class="import-preview"><h3>${icon('check')}Формат перевірено</h3><p><strong>${e(file.name)}</strong> · ${e(next.institution.shortName)} · ${reportingYears(next).length} звітних років</p><div class="dataset-counts">${datasetCounts(next)}</div><p>${type==='bundle'?'Буде замінено весь набір даних і налаштування університету.':`Буде замінено всі записи таблиці «${e(({revenues:'Надходження',...BLOCKS})[type])}» за всі роки. Інші таблиці та позначка демонстрації збережуться.`}</p>${next.demo?'<p class="muted">Набір залишається демонстраційним. Для власних даних імпортуйте повний JSON або XLSX із demo: false, замінивши всі умовні записи.</p>':''}<button class="button primary" data-action="apply-import">${icon('check')}Застосувати імпорт</button></div>`;
-  }catch(err){if(ticket!==importTicket||!result.isConnected)return;result.innerHTML=`<div class="form-error error-box" role="alert"><strong>Імпорт не застосовано</strong><p>${e(err.message)}</p></div>`;}
+    result.innerHTML=`<div class="import-preview"><h3>${icon('check')}Формат перевірено</h3><p><strong>${e(file.name)}</strong> · ${e(next.institution.shortName)} · ${reportingYears(next).length} звітних років</p><div class="dataset-counts">${datasetCounts(next)}</div><p>${type==='bundle'?'Буде замінено весь набір даних і налаштування університету.':`Буде замінено всі записи таблиці «${e(({revenues:'Надходження',...BLOCKS})[type])}» за всі роки. Інші таблиці та позначка демонстрації збережуться.`}</p>${next.demo?'<p class="muted">Набір залишається демонстраційним. Для власних даних імпортуйте повний JSON або XLSX із demo: false, замінивши всі умовні записи.</p>':''}${fillMissingAffiliations?affiliationRepairChoice(true):''}<button class="button primary" data-action="apply-import">${icon('check')}Застосувати імпорт</button></div>`;
+  }catch(err){if(ticket!==importTicket||!result.isConnected||!$('#manager').open||managerTab!=='import'||$('#import-type').value!==type||$('#import-format').value!==format)return;result.innerHTML=`<div class="form-error error-box" role="alert"><strong>Імпорт не застосовано</strong><p>${e(err.message)}</p></div>${err.code==='MISSING_AFFILIATION'||fillMissingAffiliations?affiliationRepairChoice(fillMissingAffiliations):''}`;}
 }
 function afterDataChange() { const years=reportingYears(data);if(!years.includes(year))year=years.at(-1)||currentReportingYear();resetFilters();render(); }
 async function handleAction(action,target) {
@@ -270,7 +275,7 @@ async function handleAction(action,target) {
   if(action==='template'){const key=target.dataset.dataset;download(`${key}-example.csv`,toCSV({...demo,[key]:demo[key].slice(0,2)},key),'text/csv;charset=utf-8');}
   if(action==='csv-export'){exportTarget=target.dataset.dataset;openManager('export');}
   if(action==='xlsx-template'){try{const key=target.dataset.dataset;const example={...demo,[key]:demo[key].slice(0,2)};download(`${key}-example.xlsx`,await toXLSX(example,key),XLSX_MIME);}catch(err){toast(err.message);}}
-  if(action==='apply-import'&&pending){persist(pending);pending=null;afterDataChange();$('#manager').close();toast(storageAvailable?'Дані імпортовано та збережено в цьому браузері.':'Дані імпортовано. Експортуйте JSON для збереження.');}
+  if(action==='apply-import'&&pending){persist(pending);pending=null;importRepairContext=null;afterDataChange();$('#manager').close();toast(storageAvailable?'Дані імпортовано та збережено в цьому браузері.':'Дані імпортовано. Експортуйте JSON для збереження.');}
   if(action==='reset'){$('.dialog-body').innerHTML=`<div class="reset-confirm">${icon('info')}<h3>Відновити початковий набір?</h3><p>Локальні дані й налаштування будуть замінені набором із сервера. Спочатку збережіть резервну копію.</p><div class="dialog-actions"><button class="button secondary" data-action="backup-export">Експортувати копію</button><button class="button secondary" data-action="import">Скасувати</button><button class="button primary" data-action="confirm-reset">Відновити</button></div></div>`;pending=null;}
   if(action==='confirm-reset'){persist(structuredClone(demo));afterDataChange();$('#manager').close();toast('Початковий набір відновлено.');}
   if(action==='clear-filters'){resetFilters();render();}
@@ -296,6 +301,7 @@ document.addEventListener('change',ev=>{
   if(el.name==='showSidebarScroll'&&el.closest('#settings-form'))$('#sidebar-auto-hide-option').hidden=!el.checked;
   if(el.id==='sidebar-logo-input')readSidebarLogo(el.files[0]);
   if(el.id==='file-input')readImport(el.files[0]);
+  if(el.id==='fill-missing-affiliations'&&importRepairContext){const ctx=importRepairContext;if($('#import-type').value===ctx.type&&$('#import-format').value===ctx.format)readImport(ctx.file,el.checked);}
   if(el.id==='import-type'||el.id==='import-format')updateImportControls();
   if(el.id==='export-format'||el.id==='export-type')updateExportControls();
 });
@@ -313,7 +319,7 @@ document.addEventListener('input',ev=>{
   }
   previewStyleDraft();
 });
-$('#manager').addEventListener('close',()=>{applySiteStyles(data.institution.styles);styleDraft=null;});
+$('#manager').addEventListener('close',()=>{importTicket++;pending=null;importRepairContext=null;applySiteStyles(data.institution.styles);styleDraft=null;});
 $('#manager').addEventListener('cancel',()=>applySiteStyles(data.institution.styles));
 document.addEventListener('submit',ev=>{
   if(ev.target.id==='site-styles-form'){

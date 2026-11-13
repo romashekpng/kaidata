@@ -1,12 +1,12 @@
-import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=data-metrics-20261112';
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=data-metrics-20261112';
-import {defaultCatalogBinding} from './catalog-schema.js?v=data-metrics-20261112';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=data-metrics-20261112';
-import { createChartRenderer } from './chart-runtime.js?v=data-metrics-20261112';
-import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=data-metrics-20261112';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=data-metrics-20261112';
-import { icon } from './icons.js?v=data-metrics-20261112';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=data-metrics-20261112';
+import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=import-affiliations-20261113';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=import-affiliations-20261113';
+import {defaultCatalogBinding} from './catalog-schema.js?v=import-affiliations-20261113';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=import-affiliations-20261113';
+import { createChartRenderer } from './chart-runtime.js?v=import-affiliations-20261113';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=import-affiliations-20261113';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=import-affiliations-20261113';
+import { icon } from './icons.js?v=import-affiliations-20261113';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=import-affiliations-20261113';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPeriodBar(page,years,year){
  if(page&&page.showYear===false)return '';
