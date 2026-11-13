@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=affiliation-lists-20261113';
-import { affiliationValues,affiliationMatches, EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=affiliation-lists-20261113';
-import { icon } from './icons.js?v=affiliation-lists-20261113';
-import { renderProjectCard } from './block-view.js?v=affiliation-lists-20261113';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=affiliation-lists-20261113';
+import { formatMoney } from './money.js?v=catalog-italic-20261113';
+import { affiliationValues,affiliationMatches, EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=catalog-italic-20261113';
+import { icon } from './icons.js?v=catalog-italic-20261113';
+import { renderProjectCard } from './block-view.js?v=catalog-italic-20261113';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=catalog-italic-20261113';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;

@@ -1,5 +1,5 @@
-import {catalogFieldValues} from './catalog-view.js?v=affiliation-lists-20261113';
-import {NOTE_SOURCES,FEATURE_ICONS,TEXT_BACKGROUNDS,defaultDataMetricCard} from './cms-data.js?v=affiliation-lists-20261113';
+import {catalogFieldValues} from './catalog-view.js?v=catalog-italic-20261113';
+import {NOTE_SOURCES,FEATURE_ICONS,TEXT_BACKGROUNDS,defaultDataMetricCard} from './cms-data.js?v=catalog-italic-20261113';
 const dataMetricEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function dataMetricsEditor(block,{sources,getTable,preview}){
  const e=dataMetricEscape,button=(action,label,attrs='')=>`<button type="button" class="button secondary small" data-cms-action="data-metric-${action}" ${attrs}>${label}</button>`;

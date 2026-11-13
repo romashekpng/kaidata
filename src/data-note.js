@@ -1,5 +1,5 @@
-import {isAffiliationColumn,affiliationValues,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
-import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=affiliation-lists-20261113';
+import {isAffiliationColumn,affiliationValues,affiliationMatches} from './data.js?v=catalog-italic-20261113';
+import { validateNoteBinding, blockTableData, NOTE_SOURCES } from './cms-data.js?v=catalog-italic-20261113';
 const noteNumber=value=>{const s=String(value??'').trim().replace(/[\s\u00a0\u202f]/g,'').replace(',','.');return s&&/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(s)&&Number.isFinite(Number(s))?Number(s):null;};
 export function notePeriod(binding,year){
  const text=binding.periodMode==='fixed'?binding.period:String(year),parts=text.split('-').map(Number),first=parts[0],last=parts[1]??first;

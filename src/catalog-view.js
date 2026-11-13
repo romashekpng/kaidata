@@ -1,6 +1,6 @@
-import {isAffiliationColumn,affiliationValues,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
-import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=affiliation-lists-20261113';
-import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=affiliation-lists-20261113';
+import {isAffiliationColumn,affiliationValues,affiliationMatches} from './data.js?v=catalog-italic-20261113';
+import {CATALOG_ROW_NUMBER,validateCatalogTable,validateCatalogBinding,catalogPageSizes} from './catalog-schema.js?v=catalog-italic-20261113';
+import {validateChartBinding,blockTableData,NOTE_SOURCES} from './cms-data.js?v=catalog-italic-20261113';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export const catalogToken=value=>/^web\s*of\s*science$|^wos$/i.test(value.trim())?'WoS':/^scopus$/i.test(value.trim())?'Scopus':value.trim();
 export const catalogTokens=value=>[...new Set(String(value).split(/\s*(?:[;|,\n]|\s*\/\s*)\s*/).map(catalogToken).filter(Boolean))];

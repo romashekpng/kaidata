@@ -1,7 +1,7 @@
-import { validateCatalogTable } from './catalog-schema.js?v=affiliation-lists-20261113';
-import { parseCSV, validateBundle } from './data.js?v=affiliation-lists-20261113';
-import { readXLSXWorkbook } from './spreadsheet.js?v=affiliation-lists-20261113';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=affiliation-lists-20261113';
+import { validateCatalogTable } from './catalog-schema.js?v=catalog-italic-20261113';
+import { parseCSV, validateBundle } from './data.js?v=catalog-italic-20261113';
+import { readXLSXWorkbook } from './spreadsheet.js?v=catalog-italic-20261113';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=catalog-italic-20261113';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {

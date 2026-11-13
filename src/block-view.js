@@ -1,7 +1,7 @@
-import {affiliationValues,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
-import { formatMoney, convertMoneyTable } from './money.js?v=affiliation-lists-20261113';
-import { icon } from './icons.js?v=affiliation-lists-20261113';
-import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=affiliation-lists-20261113';
+import {affiliationValues,affiliationMatches} from './data.js?v=catalog-italic-20261113';
+import { formatMoney, convertMoneyTable } from './money.js?v=catalog-italic-20261113';
+import { icon } from './icons.js?v=catalog-italic-20261113';
+import { formatSegmentPercentage, isHorizontalChartType, BLOCK_PALETTES, defaultBlockSettings, validateMetricBackground, customBackgroundStyle, validateCMSBlock, safeCMSLink } from './cms-data.js?v=catalog-italic-20261113';
 const esc = value => String(value ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num = value => value===''?null:Number(String(value).replace(',','.'));
 const format = value => new Intl.NumberFormat('uk-UA',{maximumFractionDigits:5}).format(value);

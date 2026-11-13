@@ -3,7 +3,7 @@ import {defaultCMSBlock,validateCMSBlock} from '../src/cms-data.js';import {infe
 const table={headers:['Номер'],rows:[['146770']]};
 const block=()=>validateCMSBlock({...defaultCMSBlock('catalog'),binding:{...defaultCMSBlock('catalog').binding,kind:'upload',periodMode:'all'},dataTable:table,catalog:inferCatalogConfig(table.headers,'table')});
 test('catalog heading, content and individual line alignment are independent and survive transfers',async()=>{
- const b=block(),col=b.catalog.columns[0];col.align='center';col.contentAlign='right';col.lines[0].align='left';col.lines[0].format='badges';const valid=validateCMSBlock(b),html=renderCatalog(valid,{table,error:''});assert.match(html,/<th[^>]*text-align:center/);assert.match(html,/<td[^>]*text-align:right/);assert(html.includes('--catalog-content-justify:flex-end'));assert(html.includes('--catalog-line-justify:flex-start'));
+ const b=block(),col=b.catalog.columns[0];col.align='center';col.contentAlign='right';col.lines[0].align='left';col.lines[0].style='mutedItalic';col.lines[0].format='badges';const valid=validateCMSBlock(b),html=renderCatalog(valid,{table,error:''});assert(html.includes('catalog-cell-mutedItalic'));assert.match(html,/<th[^>]*text-align:center/);assert.match(html,/<td[^>]*text-align:right/);assert(html.includes('--catalog-content-justify:flex-end'));assert(html.includes('--catalog-line-justify:flex-start'));
  for(const restored of [readCMSJSON(JSON.stringify({blockVersion:1,block:valid}),'block',valid),importCMSBlockCSV(cmsBlockCSV(valid),valid),await importCMSBlockXLSX(await cmsBlockXLSX(valid,ExcelJS),valid,ExcelJS)])assert.deepEqual(restored.catalog,valid.catalog);
 });
 test('legacy catalogs retain inherited alignment; invalid alignments are rejected',()=>{

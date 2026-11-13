@@ -1,7 +1,7 @@
-import {isAffiliationColumn,affiliationMatches} from './data.js?v=affiliation-lists-20261113';
-import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=affiliation-lists-20261113';
-import {resolveChartData,catalogTokens} from './catalog-view.js?v=affiliation-lists-20261113';
-import {renderMetricTable} from './block-view.js?v=affiliation-lists-20261113';
+import {isAffiliationColumn,affiliationMatches} from './data.js?v=catalog-italic-20261113';
+import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=catalog-italic-20261113';
+import {resolveChartData,catalogTokens} from './catalog-view.js?v=catalog-italic-20261113';
+import {renderMetricTable} from './block-view.js?v=catalog-italic-20261113';
 export function dataMetricSource(card,context){return resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},context,true);}
 export function resolveDataMetrics(block,context){
  const headers=['label','value','unit','note','background','backgroundColor','icon'],results=[];
