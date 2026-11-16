@@ -1,6 +1,6 @@
-import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=catalog-italic-20261113';
-import { convertMoneyBlock } from './money.js?v=catalog-italic-20261113';
-import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=catalog-italic-20261113';
+import { defaultCatalogBinding, defaultCatalogConfig, validateCatalogBinding, validateCatalogConfig, validateCatalogTable } from './catalog-schema.js?v=metric-percent-20261116';
+import { convertMoneyBlock } from './money.js?v=metric-percent-20261116';
+import { normalizeQuartile, normalizeProjectProgress } from './data.js?v=metric-percent-20261116';
 export const CORE_PAGES = { overview: 'Огляд', publications: 'Публікації', projects: 'Грантові проєкти', patents: 'Патенти', funding: 'Фінансування' };
 export const BLOCK_TYPES = { text: 'Текст', table: 'Таблиця', list: 'Список', banner: 'Банер', feature: 'Інформаційна картка', dataNote: 'Примітка з даними', catalog: 'Каталог даних', metrics: 'Картки показників', dataMetrics:'Картки показників з даними', chart: 'Графік / діаграма', analytics: 'Аналітичний блок', existing: 'Наявна сторінка аналітики' };
 export const NOTE_SOURCES = {revenues:'Надходження (вихідні записи)',funding:'Надходження на науку',publicationChart:'Публікації за роками',quartiles:'Публікації в Scopus / Web of Science за квартилями',faculties:'Внесок факультетів',projectChart:'Проєкти за роками',programs:'Кошти за програмами',fundingSources:'Джерела фінансування',fundingTable:'Надходження за джерелами',patentFaculties:'Патенти за факультетами',stats:'Основні показники',fundingStats:'Показники фінансування',patentStats:'Показники патентів',publications:'Каталог публікацій',projects:'Грантові проєкти',patents:'Реєстр патентів'};
@@ -31,15 +31,18 @@ export function validateChartBinding(input){
  if(new Set(seriesRules.map(r=>r.name)).size!==seriesRules.length)fail('Назви власних серій мають бути унікальними.');
  return {...base,kind:b.kind,source:b.source,groupColumn:str(b.groupColumn,'Групування',160),seriesColumn:str(b.seriesColumn,'Серії',160),valueColumns:[...new Set(b.valueColumns.map(v=>str(v,'Колонка',160)))],operation:b.operation,sortOrder:b.sortOrder,seriesRules};
 }
-export function defaultDataMetricCard(){return {label:'Наукових публікацій',note:'{period}',unit:'',decimals:0,emptyText:'—',visible:true,icon:'book',background:'default',backgroundColor:'#25395d',binding:{...defaultChartBinding(),kind:'builtin',source:'publications',periodMode:'year',operation:'count'},filters:[]};}
+export function defaultMetricNoteCalculation(){return {mode:'manual',decimals:1,useCardFilters:true,numeratorFilters:[],denominatorFilters:[]};}
+export function defaultDataMetricCard(){return {label:'Наукових публікацій',note:'{period}',unit:'',decimals:0,emptyText:'—',visible:true,icon:'book',background:'default',backgroundColor:'#25395d',binding:{...defaultChartBinding(),kind:'builtin',source:'publications',periodMode:'year',operation:'count'},filters:[],noteCalculation:defaultMetricNoteCalculation()};}
 export function validateDataMetricCard(input){
  if(!obj(input))fail('Некоректна картка з даними.');const c={...defaultDataMetricCard(),...input},binding=validateChartBinding(c.binding);
  if(!['builtin','block'].includes(binding.kind))fail('Оберіть таблицю аналітики або блок-джерело картки.');
- if(!Array.isArray(c.filters)||c.filters.length>12)fail('До 12 умов відбору на картку.');
- const filters=c.filters.map(f=>{if(!obj(f)||!['exact','tokens'].includes(f.match)||!Array.isArray(f.values)||f.values.length>1000)fail('Перевірте умови відбору картки.');return {column:str(f.column,'Колонка умови',160,true),match:f.match,values:[...new Set(f.values.map(v=>str(v,'Значення умови',1000)))]};});
+ const validateFilters=items=>{if(!Array.isArray(items)||items.length>12)fail('До 12 умов відбору на розрахунок.');return items.map(f=>{if(!obj(f)||!['exact','tokens'].includes(f.match)||!Array.isArray(f.values)||f.values.length>1000)fail('Перевірте умови відбору картки.');return {column:str(f.column,'Колонка умови',160,true),match:f.match,values:[...new Set(f.values.map(v=>str(v,'Значення умови',1000)))]};});};
+ const filters=validateFilters(c.filters),raw=c.noteCalculation;if(!obj(raw))fail('Перевірте розрахунок підпису.');const calc={...defaultMetricNoteCalculation(),...raw};
+ if(!['manual','delta','share'].includes(calc.mode)||!Number.isInteger(calc.decimals)||calc.decimals<0||calc.decimals>6||typeof calc.useCardFilters!=='boolean')fail('Перевірте режим і точність розрахунку підпису.');
+ const noteCalculation={mode:calc.mode,decimals:calc.decimals,useCardFilters:calc.useCardFilters,numeratorFilters:validateFilters(calc.numeratorFilters),denominatorFilters:validateFilters(calc.denominatorFilters)};
  if(!Number.isInteger(c.decimals)||c.decimals<0||c.decimals>6)fail('Точність показника: від 0 до 6 знаків.');
  if(!Object.hasOwn(FEATURE_ICONS,c.icon))fail('Оберіть іконку картки.');
- return {label:str(c.label,'Назва картки',240,true),note:str(c.note,'Підпис картки',2000),unit:str(c.unit,'Одиниця',100),decimals:c.decimals,emptyText:str(c.emptyText,'Порожнє значення',100),visible:bool(c.visible,'Видимість картки'),icon:c.icon,...validateMetricBackground(c.background,c.backgroundColor),binding:{...binding,groupColumn:'',seriesColumn:'',seriesRules:[],sortOrder:'source'},filters};
+ return {label:str(c.label,'Назва картки',240,true),note:str(c.note,'Підпис картки',2000),unit:str(c.unit,'Одиниця',100),decimals:c.decimals,emptyText:str(c.emptyText,'Порожнє значення',100),visible:bool(c.visible,'Видимість картки'),icon:c.icon,...validateMetricBackground(c.background,c.backgroundColor),binding:{...binding,groupColumn:'',seriesColumn:'',seriesRules:[],sortOrder:'source'},filters,noteCalculation};
 }
 export const FEATURE_ICONS = { none:'Без іконки', globe:'Глобус', book:'Книга', award:'Нагорода', layers:'Шари', trend:'Зростання', wallet:'Фінансування', info:'Інформація', file:'Документ' };
 export const FEATURE_LINK_ICONS = { none:'Без іконки', arrow:'Стрілка', external:'Зовнішнє посилання', chevron:'Шеврон' };
