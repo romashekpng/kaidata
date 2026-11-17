@@ -1,7 +1,7 @@
-import {isAffiliationColumn,affiliationMatches} from './data.js?v=metric-percent-20261116';
-import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=metric-percent-20261116';
-import {resolveChartData,catalogTokens} from './catalog-view.js?v=metric-percent-20261116';
-import {renderMetricTable} from './block-view.js?v=metric-percent-20261116';
+import {isAffiliationColumn,affiliationMatches} from './data.js?v=table-zebra-20261117';
+import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=table-zebra-20261117';
+import {resolveChartData,catalogTokens} from './catalog-view.js?v=table-zebra-20261117';
+import {renderMetricTable} from './block-view.js?v=table-zebra-20261117';
 export function dataMetricSource(card,context){return resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},context,true);}
 function metricFilterRows(filters){return table=>{
  const conditions=filters.map(f=>{const index=table.headers.indexOf(f.column);if(index<0)throw new Error(`Колонку умови «${f.column}» не знайдено.`);return {...f,index};});

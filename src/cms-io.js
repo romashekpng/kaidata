@@ -1,7 +1,7 @@
-import { validateCatalogTable } from './catalog-schema.js?v=metric-percent-20261116';
-import { parseCSV, validateBundle } from './data.js?v=metric-percent-20261116';
-import { readXLSXWorkbook } from './spreadsheet.js?v=metric-percent-20261116';
-import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=metric-percent-20261116';
+import { validateCatalogTable } from './catalog-schema.js?v=table-zebra-20261117';
+import { parseCSV, validateBundle } from './data.js?v=table-zebra-20261117';
+import { readXLSXWorkbook } from './spreadsheet.js?v=table-zebra-20261117';
+import { validateCMSBlock, validateCMSPage, validateSite, isMetricBlock, metricDataEqual, metricAppearanceFromTable, blockTableData, defaultTextLink } from './cms-data.js?v=table-zebra-20261117';
 const fail = message => { throw new Error(message); };
 export function blockTable(block){return blockTableData(block);}
 export function tableToCMSBlock(table, current) {

@@ -54,3 +54,8 @@ test('табличний вигляд використовує відфільт�
  assert(html.includes('https://example.com/project'));assert(!html.includes('Авіаційні матеріали'));assert(!html.includes('class="project-card"'));assert(html.includes('aria-valuenow="35"'));
  const hostile=renderProjectTable(input,{showProjectGlobe:false,showProjectFlag:false},{view:'table'},'projects','2026-05-01');assert(!hostile.includes('<img'));assert(!hostile.includes('javascript:'));assert(hostile.includes('&lt;img'));assert(!hostile.includes('class="project-origin'));
 });
+test('таблиця є початковим виглядом, перемикач пропонує її першою; картки залишаються доступними',()=>{
+ const initial=renderProjectTable(table);assert(initial.includes('project-records-table'));assert(initial.includes('project-view-table'));assert(initial.indexOf('data-project-view="table"')<initial.indexOf('data-project-view="cards"'));
+ const cards=renderProjectTable(table,{}, {view:'cards'});assert(cards.includes('project-grid'));assert(!cards.includes('project-records-table'));
+ assert(renderProjectTable(table).includes('project-catalog row-zebra'));assert(!renderProjectTable(table,{zebraRows:false}).includes('row-zebra'));
+});

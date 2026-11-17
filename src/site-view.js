@@ -1,12 +1,12 @@
-import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=metric-percent-20261116';
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=metric-percent-20261116';
-import {defaultCatalogBinding} from './catalog-schema.js?v=metric-percent-20261116';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=metric-percent-20261116';
-import { createChartRenderer } from './chart-runtime.js?v=metric-percent-20261116';
-import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=metric-percent-20261116';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=metric-percent-20261116';
-import { icon } from './icons.js?v=metric-percent-20261116';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=metric-percent-20261116';
+import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=table-zebra-20261117';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=table-zebra-20261117';
+import {defaultCatalogBinding} from './catalog-schema.js?v=table-zebra-20261117';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=table-zebra-20261117';
+import { createChartRenderer } from './chart-runtime.js?v=table-zebra-20261117';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=table-zebra-20261117';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=table-zebra-20261117';
+import { icon } from './icons.js?v=table-zebra-20261117';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=table-zebra-20261117';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPeriodBar(page,years,year){
  if(page&&page.showYear===false)return '';
@@ -105,7 +105,7 @@ export function createSiteView(options){
         else if(b.source==='patents'&&b.catalog)body=renderCatalog(b,catalogTable(b),catalogFilters.get(b.id));
         else if(b.source==='publications')body=b.catalog?renderCatalog(b,catalogTable(b),catalogFilters.get(b.id)):renderPublicationCatalog(editableTable(b),s,publicationFilters.get(b.id),b.id,options.getBlockPeriod(b));
         else if(b.dataMode==='manual'&&['insight','revenueNotice'].includes(b.source))body=`<div class="${b.source==='insight'?'insight-card':'notice'}"><p>${editableTable(b).rows.map(r=>e(r.join(' · '))).join('<br>')}</p></div>`;
-        else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll);
+        else if(b.dataMode==='manual'||b.source==='fundingTable')body=renderBlockTable(editableTable(b),s.showAll,s.zebraRows);
         else body=`<div class="cms-analytics-content ${s.showAll?'show-all':''}">${options.renderAnalytics(b.source,s)}</div>`;
       }
       else if(b.type==='existing')body=options.renderExisting(b.source);
@@ -114,8 +114,8 @@ export function createSiteView(options){
       else if(b.type==='catalog'){note=catalogTable(b);body=renderCatalog(b,note,catalogFilters.get(b.id));}
       else if(b.type==='dataNote'){note=noteResult(b);body=renderDataNote(b,note);}
       else if(b.type==='text')body=renderTextBlock(b);
-      else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
-      else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll)}`;
+      else if(b.type==='list')body=`<div class="cms-data-scroll ${s.showAll?'show-all':''}"><${b.ordered?'ol':'ul'} class="cms-list${s.zebraRows?' row-zebra':''}">${b.items.map(item=>`<li>${e(item)}</li>`).join('')}</${b.ordered?'ol':'ul'}></div>`;
+      else if(b.type==='table')body=`${b.caption?`<p class="cms-field-help">${e(b.caption)}</p>`:''}${renderBlockTable(editableTable(b),s.showAll,s.zebraRows)}`;
       else if(b.type==='dataMetrics'){note=dataMetricsResult(b);body=renderDataMetrics(b,note);}
       else if(b.type==='metrics')body=renderMetricTable(editableTable(b),s);
       const backgroundStyle=b.type==='text'&&s.background==='custom'?';'+customBackgroundStyle(s.backgroundColor):'';

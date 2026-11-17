@@ -1,5 +1,5 @@
-import {catalogFieldValues} from './catalog-view.js?v=metric-percent-20261116';
-import {NOTE_SOURCES,FEATURE_ICONS,TEXT_BACKGROUNDS,defaultDataMetricCard} from './cms-data.js?v=metric-percent-20261116';
+import {catalogFieldValues} from './catalog-view.js?v=table-zebra-20261117';
+import {NOTE_SOURCES,FEATURE_ICONS,TEXT_BACKGROUNDS,defaultDataMetricCard} from './cms-data.js?v=table-zebra-20261117';
 const dataMetricEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function dataMetricsEditor(block,{sources,getTable,preview}){
  const e=dataMetricEscape,button=(action,label,attrs='')=>`<button type="button" class="button secondary small" data-cms-action="data-metric-${action}" ${attrs}>${label}</button>`;

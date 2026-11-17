@@ -474,3 +474,10 @@ dialog{background:var(--surface)}
 .cms-metric-grid .stat-top>span:first-child{min-width:0;overflow-wrap:anywhere}.cms-metric-grid .stat-value{overflow-wrap:anywhere}
 
 .import-affiliation-repair{margin:16px 0;padding:14px;border:1px solid var(--line);border-radius:8px;min-width:0}.import-affiliation-choice{display:flex;align-items:flex-start;gap:10px;font-size:14px;line-height:1.5}.import-affiliation-choice input{width:18px;min-height:18px;flex:0 0 18px;margin-top:2px}.import-affiliation-repair p{font-size:13px;margin:10px 0 0}
+
+/* Alternating record rows follow the active site theme. */
+.cms-data-scroll.row-zebra>table>tbody>tr:nth-child(even)>*,
+.data-catalog.row-zebra .data-catalog-table>tbody>tr:nth-child(even)>*,
+.project-catalog.row-zebra .project-records-table>tbody>tr:nth-child(even)>*,
+.cms-list.row-zebra>li:nth-child(even){background:var(--surface-soft)}
+.cms-list.row-zebra>li{padding:8px 12px}
