@@ -1,10 +1,10 @@
-import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=metric-palette-20261117';
-import { createAnalytics } from './analytics.js?v=metric-palette-20261117';
-import { renderPeriodBar, createSiteView, observePeriodHeader } from './site-view.js?v=metric-palette-20261117';
-import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=metric-palette-20261117';
-import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=metric-palette-20261117';
-import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=metric-palette-20261117';
-import { icon } from './icons.js?v=metric-palette-20261117';
+import { sidebarTextSections, sidebarBrand, sidebarMenuHeading } from './sidebar-view.js?v=note-highlight-20261117';
+import { createAnalytics } from './analytics.js?v=note-highlight-20261117';
+import { renderPeriodBar, createSiteView, observePeriodHeader } from './site-view.js?v=note-highlight-20261117';
+import { validateBundle, reportingYears, currentReportingYear } from './data.js?v=note-highlight-20261117';
+import { expandSiteBlocks, cmsRoute } from './cms-data.js?v=note-highlight-20261117';
+import { STYLE_FIELDS, defaultSiteStyles, siteStyleVariables } from './style-data.js?v=note-highlight-20261117';
+import { icon } from './icons.js?v=note-highlight-20261117';
 const $=selector=>document.querySelector(selector);
 const e=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const date=value=>new Intl.DateTimeFormat('uk-UA',{timeZone:'UTC'}).format(new Date(value));

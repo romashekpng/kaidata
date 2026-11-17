@@ -32,6 +32,14 @@ test('legacy manual notes remain unchanged; invalid comparison configuration is 
  const c=block('share');c.cards[0].noteCalculation.decimals=7;assert.throws(()=>validateCMSBlock(c));c.cards[0].noteCalculation.decimals=1;c.cards[0].noteCalculation.mode='unknown';assert.throws(()=>validateCMSBlock(c));
 });
 test('complete percentage rules survive JSON and CSV/XLSX export/import',async()=>{
- const b=block('share'),c=b.cards[0];Object.assign(c.noteCalculation,{useCardFilters:false,numeratorFilters:[{column:'Міжнародний',match:'exact',values:['true']}],denominatorFilters:[{column:'Індексація',match:'tokens',values:['Scopus']}]});
+ const b=block('share'),c=b.cards[0];Object.assign(c.noteCalculation,{background:'custom',backgroundColor:'#123456',useCardFilters:false,numeratorFilters:[{column:'Міжнародний',match:'exact',values:['true']}],denominatorFilters:[{column:'Індексація',match:'tokens',values:['Scopus']}]});
  const valid=validateCMSBlock(b);for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:valid}),'block',valid),importCMSBlockCSV(cmsBlockCSV(valid),valid),await importCMSBlockXLSX(await cmsBlockXLSX(valid,ExcelJS),valid,ExcelJS)]){assert.deepEqual(copy,valid);assert.equal(result(copy).percentage,50);}
+});
+test('percentage highlights target calculated tokens only, escape text and keep the card background independent',async()=>{
+ const {renderDataMetrics}=await import('../src/data-metrics.js');const b=block('share'),c=b.cards[0];c.background='amber';Object.assign(c.noteCalculation,{background:'green',backgroundColor:'#123456'});c.note='<img src=x> {percent} від усіх; текст 100%';
+ let r=resolveDataMetrics(b,ctx()),html=renderDataMetrics(b,r);assert(html.includes('cms-metric-note-highlight cms-text-bg-green'));assert(html.includes('cms-card-background cms-text-bg-amber'));assert(!html.includes('<img src=x>'));assert(html.includes('&lt;img src=x&gt;'));assert.equal((html.match(/cms-metric-note-highlight/g)||[]).length,1);assert(html.includes('текст 100%'));
+ c.noteCalculation.background='custom';html=renderDataMetrics(b,resolveDataMetrics(b,ctx()));assert(html.includes('--text-block-bg:#123456'));assert(html.includes('--text-block-ink:#ffffff'));
+ c.note='від усіх';assert(renderDataMetrics(b,resolveDataMetrics(b,ctx())).includes('cms-metric-note-highlight'));
+ c.noteCalculation.background='default';assert(!renderDataMetrics(b,resolveDataMetrics(b,ctx())).includes('cms-metric-note-highlight'));
+ c.noteCalculation.mode='delta';c.noteCalculation.background='green';assert(!renderDataMetrics(b,resolveDataMetrics(b,ctx(2024))).includes('cms-metric-note-highlight'));
 });

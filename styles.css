@@ -481,3 +481,5 @@ dialog{background:var(--surface)}
 .project-catalog.row-zebra .project-records-table>tbody>tr:nth-child(even)>*,
 .cms-list.row-zebra>li:nth-child(even){background:var(--surface-soft)}
 .cms-list.row-zebra>li{padding:8px 12px}
+
+.cms-metric-note-highlight{display:inline-block;padding:2px 5px;border-radius:4px;background:var(--text-block-bg);color:var(--text-block-ink);font-variant-numeric:tabular-nums}

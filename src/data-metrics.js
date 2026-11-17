@@ -1,7 +1,7 @@
-import {isAffiliationColumn,affiliationMatches} from './data.js?v=metric-palette-20261117';
-import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=metric-palette-20261117';
-import {resolveChartData,catalogTokens} from './catalog-view.js?v=metric-palette-20261117';
-import {renderMetricTable} from './block-view.js?v=metric-palette-20261117';
+import {isAffiliationColumn,affiliationMatches} from './data.js?v=note-highlight-20261117';
+import {validateDataMetricCard,NOTE_SOURCES,defaultBlockSettings} from './cms-data.js?v=note-highlight-20261117';
+import {resolveChartData,catalogTokens} from './catalog-view.js?v=note-highlight-20261117';
+import {renderMetricTable} from './block-view.js?v=note-highlight-20261117';
 export function dataMetricSource(card,context){return resolveChartData({binding:card.binding,columns:['Назва','Значення'],rows:[]},context,true);}
 function metricFilterRows(filters){return table=>{
  const conditions=filters.map(f=>{const index=table.headers.indexOf(f.column);if(index<0)throw new Error(`Колонку умови «${f.column}» не знайдено.`);return {...f,index};});
@@ -35,7 +35,9 @@ export function resolveDataMetrics(block,context){
    const card=validateDataMetricCard(input),result=metricValue(card,context),calculation=metricNoteCalculation(card,context,result);
    const number=result.number,formatted=number===null?card.emptyText:new Intl.NumberFormat('uk-UA',{maximumFractionDigits:card.decimals}).format(number),source=card.binding.kind==='builtin'?NOTE_SOURCES[card.binding.source]:context.getBlock(card.binding.blockId)?.title||'Таблиця',tokens={value:formatted,period:result.period,unit:card.unit,source,...calculation},fill=text=>text.replace(/\{(value|period|unit|source|percent|previous|previousPeriod|numerator|denominator)\}/g,(_,key)=>tokens[key]);
    const note=fill(card.note),auto=card.noteCalculation.mode!=='manual'&&!card.note.includes('{percent}');
-   results.push({card,number,value:formatted,label:fill(card.label),note:auto?`${calculation.percent}${note?' '+note:''}`:note,period:result.period,error:'',...calculation});
+   const highlighted={text:calculation.percent,background:calculation.percentage!==null&&card.noteCalculation.mode!=='manual'?card.noteCalculation.background:'default',backgroundColor:card.noteCalculation.backgroundColor};
+   const noteParts=auto?[highlighted,...(note?[{text:' '+note}]:[])]:card.note.split(/(\{percent\})/g).map(text=>text==='{percent}'?highlighted:{text:fill(text)});
+   results.push({noteParts,card,number,value:formatted,label:fill(card.label),note:auto?`${calculation.percent}${note?' '+note:''}`:note,period:result.period,error:'',...calculation});
   }catch(error){results.push({card:input,number:null,value:input.emptyText||'—',label:input.label,note:error.message,period:'',error:error.message});}
  }
  const periods=[...new Set(results.map(r=>r.period).filter(Boolean))];
@@ -43,5 +45,5 @@ export function resolveDataMetrics(block,context){
 }
 export function renderDataMetrics(block,result){
  if(!result.results.length)return '<div class="empty"><p>Немає видимих карток.</p></div>';
- return renderMetricTable(result.table,{...defaultBlockSettings(),...block.settings});
+ return renderMetricTable(result.table,{...defaultBlockSettings(),...block.settings},result.results.map(r=>r.noteParts));
 }
