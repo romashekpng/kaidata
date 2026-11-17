@@ -1,18 +1,18 @@
-import {dataMetricsEditor,updateDataMetricField,dataMetricEditorAction} from './data-metrics-editor.js?v=table-zebra-20261117';
-import {renderDataMetrics} from './data-metrics.js?v=table-zebra-20261117';
-import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=table-zebra-20261117';
-import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=table-zebra-20261117';
-import {CATALOG_ROW_NUMBER,patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=table-zebra-20261117';
-import {catalogFieldValues,renderCatalog} from './catalog-view.js?v=table-zebra-20261117';
-import { createProjectReportsEditor } from './project-reports.js?v=table-zebra-20261117';
-import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=table-zebra-20261117';
-import { createSiteView } from './site-view.js?v=table-zebra-20261117';
-import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=table-zebra-20261117';
-import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=table-zebra-20261117';
-import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=table-zebra-20261117';
-import { validateBundle } from './data.js?v=table-zebra-20261117';
+import {dataMetricsEditor,updateDataMetricField,dataMetricEditorAction} from './data-metrics-editor.js?v=metric-palette-20261117';
+import {renderDataMetrics} from './data-metrics.js?v=metric-palette-20261117';
+import {catalogEditorFields,updateCatalogField,catalogEditorAction} from './catalog-editor.js?v=metric-palette-20261117';
+import {readCatalogUpload,catalogSheetTable} from './catalog-io.js?v=metric-palette-20261117';
+import {CATALOG_ROW_NUMBER,patentCatalogConfig,inferCatalogConfig,publicationCatalogConfig} from './catalog-schema.js?v=metric-palette-20261117';
+import {catalogFieldValues,renderCatalog} from './catalog-view.js?v=metric-palette-20261117';
+import { createProjectReportsEditor } from './project-reports.js?v=metric-palette-20261117';
+import { PUBLICATION_ASSETS, VISITOR_ASSETS, buildPublicationFiles } from './publication.js?v=metric-palette-20261117';
+import { createSiteView } from './site-view.js?v=metric-palette-20261117';
+import { CHART_SORTS, defaultChartBinding, NOTE_SOURCES, NOTE_OPERATIONS, BLOCK_WIDTH_MODES, blockWidthLabel, FEATURE_ICONS, FEATURE_LINK_ICONS, validateFeatureStyle, validateMetricBackground, isHorizontalChartType, CHART_LIBRARIES, LIBRARY_SETTING_KEYS, chartSettingsForLibrary, rememberChartSettings, selectChartLibrary, CORE_PAGES, BLOCK_TYPES, ANALYTICS, CHART_SOURCES, CHART_TYPES, TEXT_BACKGROUNDS, BLOCK_PALETTES, isMetricBlock, metricColorTable, metricAppearanceFromTable, applyMetricAppearance, expandSiteBlocks, moveTableItem, validateSite, validateCMSPage, validateCMSBlock, defaultCMSBlock, defaultBlockSubtitle, newCMSId, cmsRoute } from './cms-data.js?v=metric-palette-20261117';
+import { tableToCMSBlock, cmsBlockCSV, importCMSBlockCSV, cmsBlockXLSX, importCMSBlockXLSX, readCMSJSON } from './cms-io.js?v=metric-palette-20261117';
+import { renderChartTable, renderDataNote, renderBlockTable } from './block-view.js?v=metric-palette-20261117';
+import { validateBundle } from './data.js?v=metric-palette-20261117';
 import { createSiteZip } from './zip.js';
-import { icon } from './icons.js?v=table-zebra-20261117';
+import { icon } from './icons.js?v=metric-palette-20261117';
 const CMS_KEY = 'kai-science.pages.v1';
 const escapeCMS = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 const recordCatalogBlock=block=>block?.type==='analytics'&&['publications','patents'].includes(block.source);
@@ -187,7 +187,7 @@ export function createCMS(options) {
     const columns={'':'Підібрати автоматично','*':'Усі числові колонки (разом)',...Object.fromEntries(headers.map(h=>[h,h]))};if(b.column&&!Object.hasOwn(columns,b.column))columns[b.column]=b.column+' (відсутня у джерелі)';
     return `<fieldset><legend>Джерело та період даних</legend>${select('kind','Звідки брати дані',{builtin:'Таблиці аналітики сайта',block:'Обрана таблиця або діаграма на сторінках',manual:'Вказати власне значення або текст'})}${b.kind==='builtin'?select('source','Таблиця аналітики',NOTE_SOURCES):b.kind==='block'?select('blockId','Таблиця / діаграма',blockOptions):field('manualValue','Власне значення або текст')}${select('periodMode','Як реагувати на перемикання року',{year:'Оновлювати за вибраним роком сторінки',fixed:'Показувати фіксований рік або період'})}${b.periodMode==='fixed'?field('period','Рік або період','placeholder="2021-2025" maxlength="20"'):''}<p class="cms-field-help">Для фіксованого періоду значення та підпис не змінюються при перемиканні року. Для власної таблиці додайте колонку «Рік» або колонки 2024, 2025 тощо; без року її дані залишаються однаковими.</p>${b.kind==='manual'?'':`${select('operation','Що показувати',NOTE_OPERATIONS)}${!['count','distinct'].includes(b.operation)?select('column','Колонка даних',columns):''}${field('row','Рядок за назвою з першої колонки (необов’язково)','list="cms-note-row-options" placeholder="Усі рядки"')}<datalist id="cms-note-row-options">${rows.map(row=>`<option value="${e(row)}"></option>`).join('')}</datalist><p class="cms-field-help">Сума, середнє, мінімум і максимум обчислюються з числових клітинок. «Значення одного рядка» може показувати й текст. Порожні клітинки та «—» не вважаються нулями.</p>`}<div class="form-grid">${field('unit','Одиниця виміру (необов’язково)')}${field('decimals','Знаків після коми','type="number" min="0" max="6" step="1"')}</div></fieldset><fieldset><legend>Попередній перегляд результату</legend><div id="cms-note-preview" aria-live="polite">${renderDataNote(block,view.noteResult(block))}</div></fieldset>`;
   }
-  function dataMetricsFields(block){return dataMetricsEditor(block,{sources:noteSourceOptions(block.id),getTable:view.dataMetricsTable,preview:renderDataMetrics(block,view.dataMetricsResult(block))});}
+  function dataMetricsFields(block){return dataMetricsEditor(block,{sources:noteSourceOptions(block.id),getTable:view.dataMetricsTable,preview:renderDataMetrics(block,view.dataMetricsResult(block)),backgroundEditor:(card,i)=>metricBackgroundEditor({headers:['background','backgroundColor']},[card.background,card.backgroundColor],i)});}
   function refreshDataMetricsPreview(){if(widgetState?.block.type==='dataMetrics'&&$('#cms-data-metrics-preview'))$('#cms-data-metrics-preview').innerHTML=renderDataMetrics(widgetState.block,view.dataMetricsResult(widgetState.block));}
   function chartSeriesFields(binding,table){
     const rules=binding.seriesRules||[];
@@ -223,9 +223,10 @@ export function createCMS(options) {
     const background=row[table.headers.indexOf('background')]||'default',color=row[table.headers.indexOf('backgroundColor')]||'#25395d';
     return `<div class="cms-metric-background-editor" data-metric-background-index="${index}"><label for="metric-background-${index}">Фон картки ${index+1}</label>${button('metric-background-open',`<i class="cms-metric-background-swatch cms-text-bg-${background}" ${background==='custom'?`style="--text-block-bg:${color}"`:''} aria-hidden="true"></i><span>${e(TEXT_BACKGROUNDS[background])}</span>${icon('chevron')}`,`id="metric-background-${index}" data-row="${index}" aria-label="Вибрати фон картки ${index+1}" aria-haspopup="dialog" aria-controls="cms-metric-background-dialog"`,'secondary cms-metric-background-trigger')}</div>`;
   }
+  function metricBackgroundTable(){return widgetState.block.type==='dataMetrics'?{headers:['label','background','backgroundColor'],rows:widgetState.block.cards.map(c=>[c.label,c.background,c.backgroundColor])}:widgetState.table;}
   function openMetricBackground(index){
-    if(!widgetState||widgetState.kind!=='edit'||!isMetricBlock(widgetState.block)||!widgetState.table.rows[index])return;
-    const table=widgetState.table,row=table.rows[index];
+    if(!widgetState||!(widgetState.block.type==='dataMetrics'||widgetState.kind==='edit'&&isMetricBlock(widgetState.block)))return;
+    const table=metricBackgroundTable(),row=table?.rows[index];if(!row)return;
     metricPalette={index,background:row[table.headers.indexOf('background')]||'default',backgroundColor:row[table.headers.indexOf('backgroundColor')]||'#25395d'};
     let dialog=$('#cms-metric-background-dialog');if(!dialog){dialog=document.createElement('dialog');dialog.id='cms-metric-background-dialog';document.body.append(dialog);dialog.addEventListener('input',updateMetricBackground);dialog.addEventListener('change',updateMetricBackground);dialog.addEventListener('cancel',()=>{metricPalette=null;});}
     const label=table.headers.indexOf('label'),name=label<0?'':row[label];
@@ -240,9 +241,9 @@ export function createCMS(options) {
   function closeMetricBackground(apply=false){
     if(!metricPalette)return;
     const {index,background,backgroundColor}=metricPalette;
-    if(apply){const table=widgetState.table,row=table.rows[index],valid=validateMetricBackground(background,backgroundColor);row[table.headers.indexOf('background')]=valid.background;row[table.headers.indexOf('backgroundColor')]=valid.backgroundColor;}
+    if(apply){const valid=validateMetricBackground(background,backgroundColor);if(widgetState.block.type==='dataMetrics')Object.assign(widgetState.block.cards[index],valid);else{const table=widgetState.table,row=table.rows[index];row[table.headers.indexOf('background')]=valid.background;row[table.headers.indexOf('backgroundColor')]=valid.backgroundColor;}}
     $('#cms-metric-background-dialog').close();metricPalette=null;
-    if(apply){const editor=$(`#cms-widget-dialog [data-metric-background-index="${index}"]`);editor.outerHTML=metricBackgroundEditor(widgetState.table,widgetState.table.rows[index],index);$(`#metric-background-${index}`).focus();}
+    if(apply){const editor=$(`#cms-widget-dialog [data-metric-background-index="${index}"]`);const table=metricBackgroundTable();editor.outerHTML=metricBackgroundEditor(table,table.rows[index],index);if(widgetState.block.type==='dataMetrics')refreshDataMetricsPreview();$(`#metric-background-${index}`).focus();}
   }
   function widgetSettings(){return chartSettingsForLibrary(widgetState.block.settings,widgetState.editLibrary,widgetState.block.source);}
   function storeWidgetSetting(key,value){
