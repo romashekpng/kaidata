@@ -1,5 +1,5 @@
-import {catalogFieldValues} from './catalog-view.js?v=note-highlight-20261117';
-import {NOTE_SOURCES,FEATURE_ICONS,defaultDataMetricCard} from './cms-data.js?v=note-highlight-20261117';
+import {catalogFieldValues} from './catalog-view.js?v=filter-width-20261117';
+import {NOTE_SOURCES,FEATURE_ICONS,defaultDataMetricCard} from './cms-data.js?v=filter-width-20261117';
 const dataMetricEscape=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function dataMetricsEditor(block,{sources,getTable,preview,backgroundEditor}){
  const e=dataMetricEscape,button=(action,label,attrs='')=>`<button type="button" class="button secondary small" data-cms-action="data-metric-${action}" ${attrs}>${label}</button>`;

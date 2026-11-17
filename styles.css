@@ -483,3 +483,6 @@ dialog{background:var(--surface)}
 .cms-list.row-zebra>li{padding:8px 12px}
 
 .cms-metric-note-highlight{display:inline-block;padding:2px 5px;border-radius:4px;background:var(--text-block-bg);color:var(--text-block-ink);font-variant-numeric:tabular-nums}
+
+.catalog-toolbar .catalog-filter-fixed{flex:0 1 var(--catalog-filter-width);width:var(--catalog-filter-width);max-width:100%}
+@media(max-width:720px){.catalog-toolbar .catalog-filter-fixed{flex-basis:100%;width:100%}}

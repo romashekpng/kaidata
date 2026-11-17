@@ -10,3 +10,9 @@ test('legacy catalogs retain inherited alignment; invalid alignments are rejecte
  const b=block();b.catalog.columns[0].align='center';const html=renderCatalog(b,{table,error:''});assert.match(html,/<td[^>]*text-align:center/);assert(html.includes('--catalog-content-justify:center'));
  for(const key of ['contentAlign','align']){const clone=structuredClone(b);if(key==='align')clone.catalog.columns[0].lines[0].align='justify';else clone.catalog.columns[0][key]='justify';assert.throws(()=>validateCMSBlock(clone),/вирівнювання/);}
 });
+test('filter widths are independent, validated and retained through JSON, CSV and XLSX',async()=>{
+ const b=block();b.catalog.filters=[{label:'Номер',field:'Номер',multiple:false,width:280},{label:'Автоматично',field:'Номер',multiple:false,width:0}];const valid=validateCMSBlock(b),html=renderCatalog(valid,{table,error:''});assert(html.includes('--catalog-filter-width:280px'));assert.equal((html.match(/catalog-filter-fixed/g)||[]).length,1);
+ for(const copy of [readCMSJSON(JSON.stringify({blockVersion:1,block:valid}),'block',valid),importCMSBlockCSV(cmsBlockCSV(valid),valid),await importCMSBlockXLSX(await cmsBlockXLSX(valid,ExcelJS),valid,ExcelJS)])assert.deepEqual(copy.catalog.filters,valid.catalog.filters);
+ for(const width of [-1,1601,2.5,'300']){const invalid=structuredClone(b);invalid.catalog.filters[0].width=width;assert.throws(()=>validateCMSBlock(invalid),/Ширина фільтра/);}
+ delete b.catalog.filters[0].width;assert(!renderCatalog(validateCMSBlock(b),{table,error:''}).includes('catalog-filter-fixed'));
+});

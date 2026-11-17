@@ -1,12 +1,12 @@
-import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=note-highlight-20261117';
-import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=note-highlight-20261117';
-import {defaultCatalogBinding} from './catalog-schema.js?v=note-highlight-20261117';
-import { reportingYears, reportDate, currentReportingYear } from './data.js?v=note-highlight-20261117';
-import { createChartRenderer } from './chart-runtime.js?v=note-highlight-20261117';
-import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=note-highlight-20261117';
-import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=note-highlight-20261117';
-import { icon } from './icons.js?v=note-highlight-20261117';
-import { resolveDataNote, noteTableSource } from './data-note.js?v=note-highlight-20261117';
+import {dataMetricSource,resolveDataMetrics,renderDataMetrics} from './data-metrics.js?v=filter-width-20261117';
+import {resolveChartData,resolveCatalog,renderCatalog,catalogYears} from './catalog-view.js?v=filter-width-20261117';
+import {defaultCatalogBinding} from './catalog-schema.js?v=filter-width-20261117';
+import { reportingYears, reportDate, currentReportingYear } from './data.js?v=filter-width-20261117';
+import { createChartRenderer } from './chart-runtime.js?v=filter-width-20261117';
+import { defaultPageDisplay, blockTitleWithPeriod, chartSettingsForLibrary, defaultBlockSettings, defaultBlockSubtitle, defaultMetricAppearance, CHART_SOURCES, isMetricBlock, validateCMSBlock, applyMetricAppearance, restoreMetricSnapshot, customBackgroundStyle, metricDataEqual, metricAppearanceFromTable, blockTableData } from './cms-data.js?v=filter-width-20261117';
+import { renderDataNote, renderTextBlock, renderFeatureCard, renderChartTable, renderMetricTable, renderProjectTable, renderPublicationCatalog, renderBlockTable } from './block-view.js?v=filter-width-20261117';
+import { icon } from './icons.js?v=filter-width-20261117';
+import { resolveDataNote, noteTableSource } from './data-note.js?v=filter-width-20261117';
 const escapeView=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function renderPeriodBar(page,years,year){
  if(page&&page.showYear===false)return '';

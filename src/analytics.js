@@ -1,8 +1,8 @@
-import { formatMoney } from './money.js?v=note-highlight-20261117';
-import { affiliationValues,affiliationMatches, EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=note-highlight-20261117';
-import { icon } from './icons.js?v=note-highlight-20261117';
-import { renderProjectCard } from './block-view.js?v=note-highlight-20261117';
-import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=note-highlight-20261117';
+import { formatMoney } from './money.js?v=filter-width-20261117';
+import { affiliationValues,affiliationMatches, EXTRA_COLUMN_KEYS, BLOCKS, reportingYears, currentReportingYear, reportDate, projectReceipts, summarize, groupCount } from './data.js?v=filter-width-20261117';
+import { icon } from './icons.js?v=filter-width-20261117';
+import { renderProjectCard } from './block-view.js?v=filter-width-20261117';
+import { defaultBlockSettings, formatBlockPeriod, inferTablePeriod } from './cms-data.js?v=filter-width-20261117';
 const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=v=>new Intl.NumberFormat('uk-UA').format(v);
 const money=formatMoney;
